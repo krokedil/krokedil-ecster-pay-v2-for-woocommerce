@@ -1,0 +1,5 @@
+node_modules
+/npm-debug.log
+.DS_Store
+SyncToy_a24a13c0-eda6-4955-a9d3-afa6fb08c74d.dat
+*.dat
