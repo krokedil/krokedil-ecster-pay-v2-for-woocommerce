@@ -42,10 +42,8 @@ class Ecster_Api_Callbacks {
 	}
 
 	public function execute_osn_callback( $decoded, $order_id = '' ) {
-
-		/*
-		$internal_reference = $decoded->internalReference;
-		$external_reference = $decoded->externalReference;
+		$internal_reference = $decoded->orderId;
+		$external_reference = $decoded->orderReference;
 		$request            = new WC_Ecster_Request_Get_Order( $this->api_key, $this->merchant_key, $this->testmode );
 		$response           = $request->response( $internal_reference );
 		$response_body      = json_decode( $response['body'] );
@@ -69,7 +67,7 @@ class Ecster_Api_Callbacks {
 			if ( is_object( $order ) ) {
 				$this->update_order_reference_in_ecster( $internal_reference, $order );
 			}
-		} // End if().*/
+		} // End if().
 	}
 
 	/**
@@ -123,7 +121,7 @@ class Ecster_Api_Callbacks {
 			return;
 		}
 
-		switch ( $response_body->response->order->status ) {
+		switch ( $response_body->status ) {
 			case 'awaitingContract': // Do nothing - these order statuses should be handled in process_payment()
 				break;
 			case 'ready':
