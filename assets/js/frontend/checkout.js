@@ -5,6 +5,7 @@
 	var wc_ecster_cart_key = null;
 	var wc_ecster_on_customer_authenticated_data = false;
 	var wc_ecster_on_changed_delivery_address_data = false;
+	var wc_ecster_cart_key = wc_ecster.ecster_checkout_cart_key;
 
 	var wc_ecster_body_class = function wc_ecster_body_class() {
 		if ("ecster" === $("input[name='payment_method']:checked").val()) {
@@ -22,76 +23,77 @@
 	};*/
 
 	var wc_ecster_create_cart = function wc_ecster_create_cart() {
-			wc_ecster_cart_key = wc_ecster.ecster_checkout_cart_key
-			//wc_ecster_add_container();
+		console.log( 'create' );
+		//wc_ecster_add_container();
 
-			/*$('#billing_first_name, #billing_last_name, #billing_company, #billing_email, #billing_phone, #billing_country, #billing_address_1, #billing_address_2, #billing_postcode, #billing_city').val('');
-			$('#shipping_first_name, #shipping_last_name, #shipping_company, #shipping_country, #shipping_address_1, #shipping_address_2, #shipping_postcode, #shipping_city').val('');
-			*/
+		/*$('#billing_first_name, #billing_last_name, #billing_company, #billing_email, #billing_phone, #billing_country, #billing_address_1, #billing_address_2, #billing_postcode, #billing_city').val('');
+		$('#shipping_first_name, #shipping_last_name, #shipping_company, #shipping_country, #shipping_address_1, #shipping_address_2, #shipping_postcode, #shipping_city').val('');
+		*/
 
-			// Check if Ecster is selected, Ecster library loaded and Ecster container exists
-			if ("ecster" === $("input[name='payment_method']:checked").val() && typeof window.EcsterPay === "object" && $("#ecster-pay-ctr").length) {
-				if (null !== wc_ecster_cart_key) {
-					EcsterPay.start({
-						cartKey: wc_ecster_cart_key, // from create cart REST call
-						shopTermsUrl: wc_ecster.terms,
-						showCart: false,
-						showPaymentResult: false,
-						onCheckoutStartInit: function () {
-							$("#order_review").block({
-								message: null,
-								overlayCSS: {
-									background: "#fff",
-									opacity: 0.6
-								}
-							});
-						},
-						onCheckoutStartSuccess: function () {
-							$("#order_review").unblock();
-							wc_ecster_initialized = true; // Mark Ecster as initialized on success
-						},
-						onCheckoutStartFailure: function (failureData) {
-							$("#order_review").unblock();
-						},
-						onCheckoutUpdateInit: function () {
-							$("#order_review").block({
-								message: null,
-								overlayCSS: {
-									background: "#fff",
-									opacity: 0.6
-								}
-							});
-						},
-						onCheckoutUpdateSuccess: function () {
-							$("#order_review").unblock();
-							$('#ecster-pay-ctr').unblock();
-						},
-						onCheckoutUpdateFailure: function () {
-							$("#order_review").unblock();
-						},
-						onCustomerAuthenticated: function (authenticatedData) {
-							wc_ecster_on_customer_authenticated_data = authenticatedData.customer;
-							wc_ecster_on_customer_authenticated(authenticatedData.customer);
-						},
-						onChangedDeliveryMethod: function (newDeliveryMethod) {
-						},
-						onChangedDeliveryAddress: function (newDeliveryAddress) {
-							wc_ecster_on_changed_delivery_address_data = newDeliveryAddress;
-							wc_ecster_on_changed_delivery_address(newDeliveryAddress);
-						},
-						onPaymentSuccess: function (paymentData) {
-							wc_ecster_on_payment_success(paymentData);
-						},
-						onPaymentFailure: function () {
-							wc_ecster_fail_local_order('failed');
-						},
-						onPaymentDenied: function (deniedData) {
-							wc_ecster_fail_local_order('denied');
-						}
-					});
-				}
+		// Check if Ecster is selected, Ecster library loaded and Ecster container exists
+		if ("ecster" === $("input[name='payment_method']:checked").val() && typeof window.EcsterPay === "object" && $("#ecster-pay-ctr").length) {
+			if (null !== wc_ecster_cart_key) {
+				EcsterPay.start({
+					cartKey: wc_ecster_cart_key, // from create cart REST call
+					shopTermsUrl: wc_ecster.terms,
+					showCart: false,
+					showPaymentResult: false,
+					onCheckoutStartInit: function () {
+						$("#order_review").block({
+							message: null,
+							overlayCSS: {
+								background: "#fff",
+								opacity: 0.6
+							}
+						});
+					},
+					onCheckoutStartSuccess: function () {
+						$("#order_review").unblock();
+						wc_ecster_initialized = true; // Mark Ecster as initialized on success
+						$("body").trigger("update_checkout");
+					},
+					onCheckoutStartFailure: function (failureData) {
+						$("#order_review").unblock();
+					},
+					onCheckoutUpdateInit: function () {
+						$("#order_review").block({
+							message: null,
+							overlayCSS: {
+								background: "#fff",
+								opacity: 0.6
+							}
+						});
+					},
+					onCheckoutUpdateSuccess: function () {
+						$("#order_review").unblock();
+						$('#ecster-pay-ctr').unblock();
+					},
+					onCheckoutUpdateFailure: function () {
+						$("#order_review").unblock();
+					},
+					onCustomerAuthenticated: function (authenticatedData) {
+						wc_ecster_on_customer_authenticated_data = authenticatedData.customer;
+						wc_ecster_on_customer_authenticated(authenticatedData.customer);
+					},
+					onChangedDeliveryMethod: function (newDeliveryMethod) {
+					},
+					onChangedDeliveryAddress: function (newDeliveryAddress) {
+						wc_ecster_on_changed_delivery_address_data = newDeliveryAddress;
+						wc_ecster_on_changed_delivery_address(newDeliveryAddress);
+					},
+					onPaymentSuccess: function (paymentData) {
+						wc_ecster_on_payment_success(paymentData);
+					},
+					onPaymentFailure: function () {
+						wc_ecster_fail_local_order('failed');
+					},
+					onPaymentDenied: function (deniedData) {
+						wc_ecster_fail_local_order('denied');
+					}
+				});
 			}
-		};
+		}
+	};
 
 	var wc_ecster_update_cart = function wc_ecster_update_cart() {
 		var updated_cart_callback = EcsterPay.updateCart(wc_ecster_cart_key);
