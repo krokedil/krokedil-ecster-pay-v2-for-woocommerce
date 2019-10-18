@@ -188,11 +188,7 @@ class WC_Ecster_Ajax {
 	/**
 	 * On changed delivery address.
 	 *
-	 * Maybe create local order.
-	 * Populate local order.
-	 * Populate session customer data.
-	 * Calculate cart totals.
-	 * Update order cart hash.
+	 * Set delivery address
 	 */
 	function ajax_on_changed_delivery_address() {
 		if ( ! wp_verify_nonce( $_REQUEST['nonce'], 'wc_ecster_nonce' ) ) { // Input var okay.
@@ -202,26 +198,15 @@ class WC_Ecster_Ajax {
 
 		$delivery_address = $_POST['delivery_address']; // Input var okay.
 
-		$local_order_id = $this->helper_maybe_create_local_order();
+		WC()->customer->set_shipping_address_1( $delivery_address['address'] );
+		WC()->customer->set_shipping_city( $delivery_address['city'] );
+		WC()->customer->set_shipping_postcode( $delivery_address['zip'] );
+		WC()->customer->set_shipping_country( $delivery_address['countryCode'] );
+		WC()->customer->set_shipping_first_name( $delivery_address['firstName'] );
+		WC()->customer->set_shipping_last_name( $delivery_address['lastName'] );
+		WC()->customer->save();
 
-		if ( get_post_meta( $local_order_id, '_wc_ecster_customer_authenticated', true ) ) {
-			$addresses = array( 'shipping' );
-		} else {
-			$addresses = array( 'billing', 'shipping' );
-		}
-
-		$this->helper_add_items_to_local_order( $local_order_id );
-		$this->helper_add_customer_data_to_local_order( $local_order_id, $delivery_address, $addresses );
-		$this->helper_add_customer_data_to_session( $delivery_address, $addresses );
-		$this->helper_calculate_cart_totals();
-		$this->helper_calculate_order_totals( $local_order_id );
-		$this->helper_calculate_order_cart_hash( $local_order_id );
-
-		wp_send_json_success(
-			array(
-				'local_order_id' => $local_order_id,
-			)
-		);
+		wp_send_json_success();
 		wp_die();
 	}
 
@@ -237,7 +222,6 @@ class WC_Ecster_Ajax {
 			WC_Gateway_Ecster::log( 'Nonce can not be verified - on_payment_success.' );
 			exit( 'Nonce can not be verified.' );
 		}
-
 		$payment_data = $_POST['payment_data']; // Input var okay.
 		WC()->session->set( 'ecster_order_id', $payment_data['internalReference'] );
 		if ( isset( $payment_data['fees'] ) ) {

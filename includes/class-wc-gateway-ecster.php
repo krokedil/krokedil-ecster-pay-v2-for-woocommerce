@@ -88,7 +88,7 @@ class WC_Gateway_Ecster extends WC_Payment_Gateway {
 		$decoded   = json_decode( $post_body );
 		$order_id  = isset( $_GET['order_id'] ) ? $_GET['order_id'] : '';
 
-		wp_schedule_single_event( time() + 10, 'ecster_execute_osn_callback', array( $decoded, $order_id ) );
+		wp_schedule_single_event( time() + 120, 'ecster_execute_osn_callback', array( $decoded, $order_id ) );
 
 		header( 'HTTP/1.0 200 OK' );
 	}
@@ -194,26 +194,70 @@ class WC_Gateway_Ecster extends WC_Payment_Gateway {
 	 */
 	public function process_payment( $order_id, $retry = false ) {
 		$order = wc_get_order( $order_id );
-		if ( WC()->session->get( 'wc_ecster_invoice_fee' ) ) {
-			$fees = WC()->session->get( 'wc_ecster_invoice_fee' );
-			foreach ( $fees as $fee ) {
-				$ecster_fee            = new stdClass();
-				$ecster_fee->id        = sanitize_title( __( 'Ecster Invoice Fee', 'krokedil-ecster-pay-for-woocommerce' ) );
-				$ecster_fee->name      = __( 'Invoice Fee', 'krokedil-ecster-pay-for-woocommerce' );
-				$ecster_fee->amount    = $fee / 100;
-				$ecster_fee->taxable   = false;
-				$ecster_fee->tax       = 0;
-				$ecster_fee->tax_data  = array();
-				$ecster_fee->tax_class = '';
-				$fee_id                = $order->add_fee( $ecster_fee );
+		$internal_reference = WC()->session->get( 'ecster_order_id' );
+		update_post_meta( $order_id, '_wc_ecster_internal_reference', $internal_reference );
+		$ecster_status = '';
+		if ( $internal_reference ) {
+			// Update reference
+			$request  = new WC_Ecster_Request_Update_Reference( $this->api_key, $this->merchant_key, $this->testmode );
+			$response = $request->response( $internal_reference, $order_id );
 
-				if ( ! $fee_id ) {
-					$order->add_order_note( __( 'Unable to add Ecster invoice fee to the order.', 'krokedil-ecster-pay-for-woocommerce' ) );
-				}
-				$order->calculate_totals( true );
-				WC()->session->__unset( 'wc_ecster_invoice_fee' );
+			// Get purchase data from Ecster
+			$request       = new WC_Ecster_Request_Get_Order( $this->api_key, $this->merchant_key, $this->testmode );
+			$response      = $request->response( $internal_reference );
+			$response_body = json_decode( $response['body'] );
+
+			// Check if we have an invoice fee.
+			if ( isset( $response_body->properties->invoiceFee ) ) {
+				$ecster_fee = new WC_Order_Item_Fee();
+				$ecster_fee->set_name( __( 'Invoice Fee', 'krokedil-ecster-pay-for-woocommerce' ) );
+				$ecster_fee->set_total( $response_body->properties->invoiceFee / 100 );
+				$ecster_fee->set_tax_status( 'none' );
+				$ecster_fee->save();
+				$order->add_item( $ecster_fee );
+				$order->calculate_totals();
 			}
+
+			$ecster_status = $response_body->status;
 		}
+
+		WC_Gateway_Ecster::log( 'Process payment for order ID ' . $order_id . '. Ecster internal reference ' . $internal_reference . '. Response body - ' . json_encode( $response_body ) );
+
+		if ( $ecster_status ) {
+			// Check Ecster order status
+			switch ( $ecster_status ) {
+				case 'PENDING_SIGNATURE': // Part payment with no contract signed yet
+					$order->update_status( 'on-hold', __( 'Ecster payment approved but Ecster awaits signed customer contract. Order can NOT be delivered yet.', 'krokedil-ecster-pay-for-woocommerce' ) );
+					break;
+				case 'READY': // Card payment/invoice
+				case 'FULLY_DELIVERED': // Card payment
+					if ( ! $order->has_status( array( 'processing', 'completed' ) ) ) {
+						$order->payment_complete();
+					}
+					break;
+				default:
+						$order->add_order_note( __( 'Thank you page rendered but purchase in Ecster is not finalized. Ecster status: ' . $ecster_status, 'krokedil-ecster-pay-for-woocommerce' ) );
+					break;
+			}
+
+			// Payment method title.
+			$payment_method_title = wc_ecster_get_payment_method_name( $response_body->properties->method );
+
+			$order->add_order_note( sprintf( __( 'Payment via Ecster Pay %s.', 'krokedil-ecster-pay-for-woocommerce' ), $payment_method_title ) );
+			$order->set_payment_method_title( apply_filters( 'wc_ecster_payment_method_title', sprintf( __( '%s via Ecster Pay', 'krokedil-ecster-pay-for-woocommerce' ), $payment_method_title ), $payment_method_title ) );
+			$order->save();
+
+		} else {
+			// No Ecster order sttus detected
+			$order->add_order_note( __( 'Thank you page rendered but no Ecster order status was decected.', 'krokedil-ecster-pay-for-woocommerce' ) );
+		}
+
+		WC()->session->__unset( 'order_awaiting_payment' );
+		WC()->session->__unset( 'wc_ecster_method' );
+		WC()->session->__unset( 'wc_ecster_invoice_fee' );
+		WC()->session->__unset( 'ecster_checkout_cart_key' );
+		WC()->session->__unset( 'ecster_order_id' );
+
 		return array(
 			'result'   => 'success',
 			'redirect' => $this->get_return_url( $order ),
@@ -225,61 +269,7 @@ class WC_Gateway_Ecster extends WC_Payment_Gateway {
 	 * Add Ecster iframe to thankyou page.
 	 */
 	public function ecster_thankyou( $order_id ) {
-		$order = wc_get_order( $order_id );
-		if ( ! $order->has_status( array( 'on-hold', 'processing', 'completed' ) ) ) {
-
-			$internal_reference = WC()->session->get( 'ecster_order_id' );
-			update_post_meta( $order_id, '_wc_ecster_internal_reference', $internal_reference );
-			$ecster_status = '';
-			if ( $internal_reference ) {
-				// Update reference
-				$request  = new WC_Ecster_Request_Update_Reference( $this->api_key, $this->merchant_key, $this->testmode );
-				$response = $request->response( $internal_reference, $order_id );
-
-				// Get purchase data from Ecster
-				$request       = new WC_Ecster_Request_Get_Order( $this->api_key, $this->merchant_key, $this->testmode );
-				$response      = $request->response( $internal_reference );
-				$response_body = json_decode( $response['body'] );
-				$ecster_status = $response_body->status;
-			}
-
-			WC_Gateway_Ecster::log( 'Thank you page hit for order ID ' . $order_id . '. Ecster internal reference ' . $internal_reference . '. Response body - ' . json_encode( $response_body ) );
-
-			if ( $ecster_status ) {
-				// Check Ecster order status
-				switch ( $ecster_status ) {
-					case 'PENDING_SIGNATURE': // Part payment with no contract signed yet
-						$order->update_status( 'on-hold', __( 'Ecster payment approved but Ecster awaits signed customer contract. Order can NOT be delivered yet.', 'krokedil-ecster-pay-for-woocommerce' ) );
-						break;
-					case 'READY': // Card payment/invoice
-					case 'FULLY_DELIVERED': // Card payment
-						if ( ! $order->has_status( array( 'processing', 'completed' ) ) ) {
-							$order->payment_complete();
-						}
-						break;
-					default:
-							$order->add_order_note( __( 'Thank you page rendered but purchase in Ecster is not finalized. Ecster status: ' . $ecster_status, 'krokedil-ecster-pay-for-woocommerce' ) );
-						break;
-				}
-
-				// Payment method title.
-				$payment_method_title = wc_ecster_get_payment_method_name( $response_body->properties->method );
-
-				$order->add_order_note( sprintf( __( 'Payment via Ecster Pay %s.', 'krokedil-ecster-pay-for-woocommerce' ), $payment_method_title ) );
-				$order->set_payment_method_title( apply_filters( 'wc_ecster_payment_method_title', sprintf( __( '%s via Ecster Pay', 'krokedil-ecster-pay-for-woocommerce' ), $payment_method_title ), $payment_method_title ) );
-				$order->save();
-
-			} else {
-				// No Ecster order sttus detected
-				$order->add_order_note( __( 'Thank you page rendered but no Ecster order status was decected.', 'krokedil-ecster-pay-for-woocommerce' ) );
-			}
-
-			WC()->session->__unset( 'order_awaiting_payment' );
-			WC()->session->__unset( 'wc_ecster_method' );
-			WC()->session->__unset( 'wc_ecster_invoice_fee' );
-			WC()->session->__unset( 'ecster_checkout_cart_key' );
-			WC()->session->__unset( 'ecster_order_id' );
-		}
+		
 	}
 
 	/**

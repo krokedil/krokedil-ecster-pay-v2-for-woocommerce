@@ -239,7 +239,6 @@
 
     // on Ecster payment success
     var wc_ecster_on_payment_success = function wc_ecster_on_payment_success(paymentData) {
-		console.log( '?!?!' );
         // Block the iframe until page reloads
         $("#ecster-pay-ctr").block({
             message: null,

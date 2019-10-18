@@ -40,7 +40,6 @@ class WC_Ecster_Request_Debit_Order extends WC_Ecster_Request {
 			'body'    => $this->get_request_body( $order_id ),
 			'method'  => $this->request_method
 		);
-
 		return $request_args;
 	}
 
