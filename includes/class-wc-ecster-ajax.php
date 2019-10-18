@@ -96,6 +96,7 @@ class WC_Ecster_Ajax {
 		$data     = array();
 		$request  = new WC_Ecster_Request_Update_Cart( $this->api_key, $this->merchant_key, $this->testmode );
 		$response = $request->response( $cart_key );
+		$response_body = json_decode( $response['body'] );
 		WC()->session->set( 'ecster_checkout_cart_key', $response_body->checkoutCart->key );
 
 		if ( ! is_wp_error( $response ) && 200 == $response['response']['code'] ) {

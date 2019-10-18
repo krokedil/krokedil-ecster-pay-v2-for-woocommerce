@@ -327,6 +327,7 @@
         // Set body class when DOM is ready
 	$(document).ready(function () {
 		wc_ecster_body_class();
+		wc_ecster_init();
 	});
 
 	// When payment method is changed:

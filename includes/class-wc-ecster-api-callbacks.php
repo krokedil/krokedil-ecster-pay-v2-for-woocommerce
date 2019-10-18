@@ -190,7 +190,6 @@ class Ecster_Api_Callbacks {
 	 * @throws Exception WC_Data_Exception.
 	 */
 	private function create_woocommerce_order( $response_body, $internal_reference, $external_reference ) {
-
 		WC_Gateway_Ecster::log( 'Order ID is missing in OSN callback and we could not find Internal reference ' . $internal_reference . ' in an existing order. Starting backup order creation...' );
 
 		// Create local order
@@ -205,15 +204,15 @@ class Ecster_Api_Callbacks {
 		}
 
 		// Add/update customer and order info to order
-		$billing_first_name = ( $response_body->response->customer->firstName ?: $response_body->response->recipient->firstName );
-		$billing_last_name  = ( $response_body->response->customer->lastName ?: $response_body->response->recipient->lastName );
-		$billing_postcode   = ( $response_body->response->customer->zip ?: $response_body->response->recipient->zip );
-		$billing_address    = ( $response_body->response->customer->address ?: $response_body->response->recipient->address );
-		$billing_city       = ( $response_body->response->customer->city ?: $response_body->response->recipient->city );
-		if ( ! isset( $response_body->response->customer->countryCode ) ) {
+		$billing_first_name = ( $response_body->consumer->name->firstName ?: $response_body->recipient->firstName );
+		$billing_last_name  = ( $response_body->consumer->name->lastName ?: $response_body->recipient->lastName );
+		$billing_postcode   = ( $response_body->consumer->address->zip ?: $response_body->recipient->zip );
+		$billing_address    = ( $response_body->consumer->address->line1 ?: $response_body->recipient->address );
+		$billing_city       = ( $response_body->consumer->address->city ?: $response_body->recipient->city );
+		if ( ! isset( $response_body->consumer->address->country ) ) {
 			$billing_country = 'SE';
 		} else {
-			$billing_country = $response_body->response->customer->countryCode;
+			$billing_country = $response_body->consumer->address->country;
 		}
 
 		$order->set_billing_first_name( sanitize_text_field( $billing_first_name ) );
@@ -222,27 +221,27 @@ class Ecster_Api_Callbacks {
 		$order->set_billing_address_1( sanitize_text_field( $billing_address ) );
 		$order->set_billing_city( sanitize_text_field( $billing_city ) );
 		$order->set_billing_postcode( sanitize_text_field( $billing_postcode ) );
-		$order->set_billing_phone( sanitize_text_field( $response_body->response->customer->cellular ) );
-		$order->set_billing_email( sanitize_text_field( $response_body->response->customer->email ) );
+		$order->set_billing_phone( sanitize_text_field( $response_body->consumer->contactInfo->cellular->number ) );
+		$order->set_billing_email( sanitize_text_field( $response_body->consumer->contactInfo->email ) );
 
-		if ( isset( $response_body->response->recipient ) ) {
-			$order->set_shipping_first_name( sanitize_text_field( $response_body->response->recipient->firstName ) );
-			$order->set_shipping_last_name( sanitize_text_field( $response_body->response->recipient->lastName ) );
-			$order->set_shipping_country( sanitize_text_field( $response_body->response->recipient->countryCode ) );
-			$order->set_shipping_address_1( sanitize_text_field( $response_body->response->recipient->address ) );
-			$order->set_shipping_city( sanitize_text_field( $response_body->response->recipient->city ) );
-			$order->set_shipping_postcode( sanitize_text_field( $response_body->response->recipient->zip ) );
+		if ( isset( $response_body->recipient ) ) {
+			$order->set_shipping_first_name( sanitize_text_field( $response_body->recipient->name->firstName ) );
+			$order->set_shipping_last_name( sanitize_text_field( $response_body->recipient->name->lastName ) );
+			$order->set_shipping_country( sanitize_text_field( $response_body->recipient->address->country ) );
+			$order->set_shipping_address_1( sanitize_text_field( $response_body->recipient->address->line1 ) );
+			$order->set_shipping_city( sanitize_text_field( $response_body->recipient->address->city ) );
+			$order->set_shipping_postcode( sanitize_text_field( $response_body->recipient->address->zip ) );
 		} else {
-			$order->set_shipping_first_name( sanitize_text_field( $response_body->response->customer->firstName ) );
-			$order->set_shipping_last_name( sanitize_text_field( $response_body->response->customer->lastName ) );
+			$order->set_shipping_first_name( sanitize_text_field( $response_body->consumer->name->firstName ) );
+			$order->set_shipping_last_name( sanitize_text_field( $response_body->consumer->name->lastName ) );
 			$order->set_shipping_country( sanitize_text_field( $billing_country ) );
-			$order->set_shipping_address_1( sanitize_text_field( $response_body->response->customer->address ) );
-			$order->set_shipping_city( sanitize_text_field( $response_body->response->customer->city ) );
-			$order->set_shipping_postcode( sanitize_text_field( $response_body->response->customer->zip ) );
+			$order->set_shipping_address_1( sanitize_text_field( $response_body->consumer->address->line1 ) );
+			$order->set_shipping_city( sanitize_text_field( $response_body->consumer->address->city ) );
+			$order->set_shipping_postcode( sanitize_text_field( $response_body->consumer->address->zip ) );
 		}
 
 		$order->set_created_via( 'ecster_api' );
-		$order->set_currency( sanitize_text_field( $response_body->response->order->currency ) );
+		$order->set_currency( sanitize_text_field( $response_body->currency ) );
 		$order->set_prices_include_tax( 'yes' === get_option( 'woocommerce_prices_include_tax' ) );
 
 		$available_gateways = WC()->payment_gateways->payment_gateways();
@@ -250,27 +249,29 @@ class Ecster_Api_Callbacks {
 		$order->set_payment_method( $payment_method );
 
 		// Add items to order
-		foreach ( $response_body->response->order->rows as $order_row ) {
-			if ( isset( $order_row->partNumber ) ) { // partNumber is only set for product order items.
-				if ( isset( $product ) ) {
-					unset( $product );
-				}
-
-				if ( wc_get_product( $order_row->partNumber ) ) { // If we got product ID.
-					$product = wc_get_product( $order_row->partNumber );
-				} else { // Get product ID based on SKU.
-					global $wpdb;
-					$product_id = $wpdb->get_var( $wpdb->prepare( "SELECT post_id FROM $wpdb->postmeta WHERE meta_key='_sku' AND meta_value='%s' LIMIT 1", $order_row->partNumber ) );
-					if ( $product_id ) {
-						$product = wc_get_product( $product_id );
+		foreach ( $response_body->transactions as $transactions ) {
+			foreach ( $transactions->rows as $order_row ) {
+				if ( isset( $order_row->partNumber ) ) { // partNumber is only set for product order items.
+					if ( isset( $product ) ) {
+						unset( $product );
 					}
-				}
 
-				if ( $product ) {
-					$item_id = $order->add_product( $product, $order_row->quantity, array() );
-					if ( ! $item_id ) {
-						WC_Gateway_Ecster::log( 'Error. Unable to add product to order ' . $order->get_id() . '. add_product() response - ' . var_export( $item_id, true ) );
-						throw new Exception( sprintf( __( 'Error %d: Unable to add product. Please try again.', 'woocommerce' ), 525 ) );
+					if ( wc_get_product( $order_row->partNumber ) ) { // If we got product ID.
+						$product = wc_get_product( $order_row->partNumber );
+					} else { // Get product ID based on SKU.
+						global $wpdb;
+						$product_id = $wpdb->get_var( $wpdb->prepare( "SELECT post_id FROM $wpdb->postmeta WHERE meta_key='_sku' AND meta_value='%s' LIMIT 1", $order_row->partNumber ) );
+						if ( $product_id ) {
+							$product = wc_get_product( $product_id );
+						}
+					}
+
+					if ( $product ) {
+						$item_id = $order->add_product( $product, $order_row->quantity, array() );
+						if ( ! $item_id ) {
+							WC_Gateway_Ecster::log( 'Error. Unable to add product to order ' . $order->get_id() . '. add_product() response - ' . var_export( $item_id, true ) );
+							throw new Exception( sprintf( __( 'Error %d: Unable to add product. Please try again.', 'woocommerce' ), 525 ) );
+						}
 					}
 				}
 			}
@@ -287,13 +288,13 @@ class Ecster_Api_Callbacks {
 
 		update_post_meta( $order_id, '_wc_ecster_internal_reference', $internal_reference );
 		update_post_meta( $order_id, '_wc_ecster_external_reference', $external_reference );
-		update_post_meta( $order_id, '_wc_ecster_payment_method', $response_body->response->paymentMethod->type );
+		update_post_meta( $order_id, '_wc_ecster_payment_method', $response_body->properties->method );
 
 		$order->calculate_totals();
 		$order->save();
 
 		// Check Ecster order status
-		switch ( $response_body->response->order->status ) {
+		switch ( $response_body->status ) {
 			case 'awaitingContract': // Part payment with no contract signed yet
 				$order->update_status( 'on-hold', __( 'Ecster payment approved but Ecster awaits signed customer contract. Order can NOT be delivered yet.', 'krokedil-ecster-pay-for-woocommerce' ) );
 				break;

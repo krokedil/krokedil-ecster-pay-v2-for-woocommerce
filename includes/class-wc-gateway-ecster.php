@@ -88,7 +88,7 @@ class WC_Gateway_Ecster extends WC_Payment_Gateway {
 		$decoded   = json_decode( $post_body );
 		$order_id  = isset( $_GET['order_id'] ) ? $_GET['order_id'] : '';
 
-		wp_schedule_single_event( time() + 120, 'ecster_execute_osn_callback', array( $decoded, $order_id ) );
+		wp_schedule_single_event( time() + 10, 'ecster_execute_osn_callback', array( $decoded, $order_id ) );
 
 		header( 'HTTP/1.0 200 OK' );
 	}
