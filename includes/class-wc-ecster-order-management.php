@@ -43,7 +43,7 @@ class WC_Ecster_Order_Management {
 				$order->add_order_note( __( 'Ecster reservation is already cancelled.', 'krokedil-ecster-pay-for-woocommerce' ) );
 				return;
 			}
-			$request  = new WC_Ecster_Request_Annul_Order( $this->username, $this->password, $this->testmode, $this->api_key, $this->merchant_key );
+			$request  = new WC_Ecster_Request_Annul_Order( $this->api_key, $this->merchant_key, $this->testmode );
 			$response = $request->response( $order_id );
 			$decoded  = json_decode( $response['body'] );
 
@@ -76,7 +76,7 @@ class WC_Ecster_Order_Management {
 				$order->add_order_note( __( 'Ecster reservation is already captured.', 'krokedil-ecster-pay-for-woocommerce' ) );
 				return;
 			}
-			$request  = new WC_Ecster_Request_Debit_Order( $this->username, $this->password, $this->testmode, $this->api_key, $this->merchant_key );
+			$request  = new WC_Ecster_Request_Debit_Order( $this->api_key, $this->merchant_key, $this->testmode );
 			$response = $request->response( $order_id );
 			$decoded  = json_decode( $response['body'] );
 			

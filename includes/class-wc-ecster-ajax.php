@@ -46,6 +46,10 @@ class WC_Ecster_Ajax {
 
 		add_action( 'wp_ajax_wc_ecster_on_checkout_error', array( $this, 'ajax_on_checkout_error' ) );
 		add_action( 'wp_ajax_nopriv_wc_ecster_on_checkout_error', array( $this, 'ajax_on_checkout_error' ) );
+
+		
+		add_action( 'wp_ajax_wc_change_to_ecster', array( $this, 'wc_change_to_ecster' ) );
+		add_action( 'wp_ajax_nopriv_wc_change_to_ecster', array( $this, 'wc_change_to_ecster' ) );
 	}
 
 	/**
@@ -579,5 +583,31 @@ class WC_Ecster_Ajax {
 		$order->set_payment_method( $payment_method );
 	}
 
+	public function wc_change_to_ecster() {
+		if ( ! wp_verify_nonce( $_POST['nonce'], 'wc_change_to_ecster_nonce' ) ) {
+			wp_send_json_error( 'bad_nonce' );
+			exit;
+		}
+		$available_gateways = WC()->payment_gateways()->get_available_payment_gateways();
+		if ( 'false' === $_POST['ecster'] ) {
+			// Set chosen payment method to first gateway that is not PaysonCheckout for WooCommerce.
+			$first_gateway = reset( $available_gateways );
+			if ( 'ecster' !== $first_gateway->id ) {
+				WC()->session->set( 'chosen_payment_method', $first_gateway->id );
+			} else {
+				$second_gateway = next( $available_gateways );
+				WC()->session->set( 'chosen_payment_method', $second_gateway->id );
+			}
+		} else {
+			WC()->session->set( 'chosen_payment_method', 'ecster' );
+		}
+		WC()->payment_gateways()->set_current_gateway( $available_gateways );
+		$redirect = wc_get_checkout_url();
+		$data     = array(
+			'redirect' => $redirect,
+		);
+		wp_send_json_success( $data );
+		wp_die();
+	}
 }
 $wc_ecster_ajax = new WC_Ecster_Ajax();

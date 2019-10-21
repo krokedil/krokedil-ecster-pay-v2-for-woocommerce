@@ -113,12 +113,19 @@ class WC_Gateway_Ecster extends WC_Payment_Gateway {
 				WC_ECSTER_VERSION,
 				true
 			);
+			$available_gateways = WC()->payment_gateways()->get_available_payment_gateways();
+			$add_change_method_button = 0;
+			if ( count( $available_gateways ) > 1 ) {
+				$add_change_method_button = 1;
+			}
 			wp_localize_script(
 				'ecster_checkout', 'wc_ecster', array(
 					'ajaxurl'                     => admin_url( 'admin-ajax.php' ),
 					'terms'                       => wc_get_page_permalink( 'terms' ),
 					'select_another_method_text'  => $select_another_method_text,
+					'add_change_method_button'    => $add_change_method_button,
 					'wc_ecster_nonce'             => wp_create_nonce( 'wc_ecster_nonce' ),
+					'wc_change_to_ecster_nonce'   => wp_create_nonce( 'wc_change_to_ecster_nonce' ),
 					'move_checkout_fields'        => apply_filters( 'wc_ecster_move_checkout_fields', array( '' ) ),
 					'move_checkout_fields_origin' => apply_filters( 'wc_ecster_move_checkout_fields_origin', '.woocommerce-shipping-fields' ),
 					'ecster_checkout_cart_key'    => $checkout_cart_key,
@@ -279,7 +286,7 @@ class WC_Gateway_Ecster extends WC_Payment_Gateway {
 		// Check if amount equals total order
 		$order = wc_get_order( $order_id );
 
-		$credit_order = new WC_Ecster_Request_Credit_Order( $this->username, $this->password, $this->testmode, $this->api_key, $this->merchant_key );
+		$credit_order = new WC_Ecster_Request_Credit_Order( $this->api_key, $this->merchant_key, $this->testmode );
 		$response     = $credit_order->response( $order_id, $amount, $reason );
 		$decoded      = json_decode( $response['body'] );
 

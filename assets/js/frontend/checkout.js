@@ -353,33 +353,17 @@
 			} else {
 				wc_ecster_update_cart();
 			}
+
+			// Add "choose another payment method" link
+			if ( wc_ecster.add_change_method_button == 1 ) {
+				wc_ecster.add_change_method_button = 0;
+				$('<p><a href="#" class="button">' + wc_ecster.select_another_method_text + '</a></p>').appendTo('#ecster-wrapper').addClass('ecster-pay-choose-other');
+			}
 		}
 	});
 
 	$(document.body).on('click', '.ecster-pay-choose-other a', function (e) {
-		e.preventDefault();
-
-		$('.ecster-pay-cart').detach().prependTo('#order_review');
-		$('.ecster-pay-order-notes').detach().appendTo('.woocommerce-shipping-fields');
-		
-		// Move CSS id's and/or classes (defined in wc_ecster_move_checkout_fields) back to their origial place.
-		// Original place defaults to .woocommerce-shipping-fields (defined via filter wc_ecster_move_checkout_fields_origin).
-		var extra_div_counter = 0;
-		$.each(wc_ecster.move_checkout_fields, function (index, value) {
-			extra_div_counter ++;
-			$('.ecster-pay-moved-div-'+extra_div_counter).detach().appendTo(wc_ecster.move_checkout_fields_origin);
-		});
-		
-		$('.ecster-pay-choose-other').remove();
-
-		// Deselect Ecster and select the first available non-Ecster method
-		$("input[name='payment_method']:checked").prop('checked', false);
-		if ("ecster" === $("input[name='payment_method']:eq(0)").val()) {
-			$("input[name='payment_method']:eq(1)").prop("checked", true);
-		} else {
-			$("input[name='payment_method']:eq(0)").prop("checked", true);
-		}
-		wc_ecster_body_class();
+		changePaymentMethod( false );
 	});
 	
 	
@@ -412,4 +396,45 @@
 			
 		}
 	});
+	$(document.body).on('change', 'input[name="payment_method"]', function() {
+		if ( 'ecster' === $(this).val() ) { 
+			changePaymentMethod( true );
+		}
+	});
+
+	function changePaymentMethod( bool ) {
+		console.log( bool );
+
+		$('form.checkout').block({
+			message: null,
+			overlayCSS: {
+				background: '#fff',
+				opacity: 0.6
+			}
+		});
+
+		$('.woocommerce-info').remove();
+
+		$.ajax(
+			wc_ecster.ajaxurl,
+			{
+				type: "POST",
+				dataType: "json",
+				async: true,
+				data: {
+					ecster: 	bool,
+					action:		"wc_change_to_ecster",
+					nonce:		wc_ecster.wc_change_to_ecster_nonce
+				},
+				success: function (data) {
+				},
+				error: function (data) {
+				},
+				complete: function (data) {
+					console.log( data );
+					window.location.href = data.responseJSON.data.redirect;
+				}
+			}
+		);
+	};
 }(jQuery));

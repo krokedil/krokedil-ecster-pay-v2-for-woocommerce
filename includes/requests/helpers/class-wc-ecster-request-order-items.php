@@ -95,12 +95,13 @@ class WC_Ecster_Get_Order_Items {
      * @return array
      */
     private static function get_fee( $fee, $line_number ) {
-		$fee_tax_rate = round( $fee->tax / $fee->amount * 100 );
-		if ( in_array( $fee_tax_rate, array( 0, 6, 12, 25 ) ) ) {
-			$fee_vat_code = $fee_tax_rate * 100;
-		} else {
-			$fee_vat_code = 0;
-		}
+        $fee_vat_code = 0;
+        if( isset( $fee->tax ) && 0 !== $fee->tax ) {
+            $fee_tax_rate = round( $fee->tax / $fee->amount * 100 );
+            if ( in_array( $fee_tax_rate, array( 0, 6, 12, 25 ) ) ) {
+                $fee_vat_code = $fee_tax_rate * 100;
+            }
+        }
 
         return array(
 			'name'				=>  $fee->get_name(),
