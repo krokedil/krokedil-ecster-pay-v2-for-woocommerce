@@ -270,12 +270,11 @@
                     payment_data: paymentData,
                     nonce:        wc_ecster.wc_ecster_nonce
                 },
-                success: function() {
+           success: function() {
 					console.log( 'success' );
-                    // Clear WooCommerce checkout form
+                    // Clear WooCommerce checkout form.
                     $('#ship-to-different-address-checkbox').prop('checked', true);
-					console.log( paymentData );
-                    // Populate the form and submit it.
+					// Populate the form and submit it.
                     var customerCountry;
                     var customerPhone;
 
@@ -288,23 +287,23 @@
                     if (paymentData.consumer.contactInfo.cellular.number.indexOf("*") > -1) {
                         customerPhone = '0';
                     } else {
-                        customerPhone = paymentData.consumer.cellular;
-                    }
-
-                    $("form.checkout #billing_first_name").val(paymentData.consumer.name.firstName);
-                    $("form.checkout #billing_last_name").val(paymentData.consumer.name.lastName);
-                    $("form.checkout #billing_email").val(paymentData.consumer.contactInfo.email);
-                    $("form.checkout #billing_country").val(customerCountry);
-                    $("form.checkout #billing_address_1").val(paymentData.consumer.address.line1);
-                    $("form.checkout #billing_city").val(paymentData.consumer.address.city);
-                    $("form.checkout #billing_postcode").val(paymentData.consumer.address.zip);
-                    $("form.checkout #billing_phone").val(customerPhone);
+                        customerPhone = paymentData.consumer.contactInfo.cellular.number;
+					}
+				
+					$("form.checkout #billing_first_name").val(paymentData.consumer.name.firstName);
+					$("form.checkout #billing_last_name").val(paymentData.consumer.name.lastName);
+					$("form.checkout #billing_email").val(paymentData.consumer.contactInfo.email);
+					$("form.checkout #billing_country").val(customerCountry);
+					$("form.checkout #billing_address_1").val(paymentData.consumer.address.line1);
+					$("form.checkout #billing_city").val(paymentData.consumer.address.city);
+					$("form.checkout #billing_postcode").val(paymentData.consumer.address.zip);
+					$("form.checkout #billing_phone").val(customerPhone);
 
                     // Check if there's separate shipping address
-                    if (paymentData.recipient) {
+                   if (paymentData.recipient) {
                         $("form.checkout #shipping_first_name").val(paymentData.recipient.name.firstName);
                         $("form.checkout #shipping_last_name").val(paymentData.recipient.name.lastName);
-                        $("form.checkout #shipping_country").val(paymentData.recipient.countryCode);
+                        $("form.checkout #shipping_country").val(paymentData.recipient.address.country);
                         $("form.checkout #shipping_address_1").val(paymentData.recipient.address.line1);
                         $("form.checkout #shipping_city").val(paymentData.recipient.address.city);
                         $("form.checkout #shipping_postcode").val(paymentData.recipient.address.zip);
@@ -323,7 +322,7 @@
         );
     };
 
-        // Set body class when DOM is ready
+    // Set body class when DOM is ready
 	$(document).ready(function () {
 		wc_ecster_body_class();
 		wc_ecster_init();
