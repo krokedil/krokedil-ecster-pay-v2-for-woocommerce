@@ -33,8 +33,7 @@ class WC_Gateway_Ecster extends WC_Payment_Gateway {
 	public function __construct() {
 		$this->id                 = 'ecster';
 		$this->method_title       = __( 'Ecster Pay', 'krokedil-ecster-pay-for-woocommerce' );
-		$this->method_description = __( 'Ecster Pay description', 'krokedil-ecster-pay-for-woocommerce' );
-		$this->method_description = sprintf( __( 'Documentation <a href="%s" target="_blank">can be found here</a>.', 'krokedil-ecster-pay-for-woocommerce' ), 'http://docs.krokedil.com/se/documentation/ecster-pay-woocommerce/' );
+		$this->method_description = sprintf( __( 'Take payments via Ecster Pay v2. Documentation <a href="%s" target="_blank">can be found here</a>.', 'krokedil-ecster-pay-for-woocommerce' ), 'http://docs.krokedil.com/se/documentation/ecster-pay-woocommerce/' );
 		$this->has_fields         = true;
 		$this->supports           = array( 'products', 'refunds' );
 		// Load the form fields.
@@ -113,13 +112,15 @@ class WC_Gateway_Ecster extends WC_Payment_Gateway {
 				WC_ECSTER_VERSION,
 				true
 			);
-			$available_gateways = WC()->payment_gateways()->get_available_payment_gateways();
+			$available_gateways       = WC()->payment_gateways()->get_available_payment_gateways();
 			$add_change_method_button = 0;
 			if ( count( $available_gateways ) > 1 ) {
 				$add_change_method_button = 1;
 			}
 			wp_localize_script(
-				'ecster_checkout', 'wc_ecster', array(
+				'ecster_checkout',
+				'wc_ecster',
+				array(
 					'ajaxurl'                     => admin_url( 'admin-ajax.php' ),
 					'terms'                       => wc_get_page_permalink( 'terms' ),
 					'select_another_method_text'  => $select_another_method_text,
@@ -200,7 +201,7 @@ class WC_Gateway_Ecster extends WC_Payment_Gateway {
 	 * @return array
 	 */
 	public function process_payment( $order_id, $retry = false ) {
-		$order = wc_get_order( $order_id );
+		$order              = wc_get_order( $order_id );
 		$internal_reference = WC()->session->get( 'ecster_order_id' );
 		update_post_meta( $order_id, '_wc_ecster_internal_reference', $internal_reference );
 		$ecster_status = '';
@@ -228,7 +229,7 @@ class WC_Gateway_Ecster extends WC_Payment_Gateway {
 			$ecster_status = $response_body->status;
 		}
 
-		WC_Gateway_Ecster::log( 'Process payment for order ID ' . $order_id . '. Ecster internal reference ' . $internal_reference . '. Response body - ' . json_encode( $response_body ) );
+		self::log( 'Process payment for order ID ' . $order_id . '. Ecster internal reference ' . $internal_reference . '. Response body - ' . json_encode( $response_body ) );
 
 		if ( $ecster_status ) {
 			// Check Ecster order status
@@ -276,7 +277,7 @@ class WC_Gateway_Ecster extends WC_Payment_Gateway {
 	 * Add Ecster iframe to thankyou page.
 	 */
 	public function ecster_thankyou( $order_id ) {
-		
+
 	}
 
 	/**
