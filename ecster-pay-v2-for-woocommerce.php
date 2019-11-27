@@ -1,16 +1,16 @@
 <?php
 /*
- * Plugin Name: Krokedil Ecster Pay v2 for WooCommerce
+ * Plugin Name: Ecster Pay v2 for WooCommerce
  * Plugin URI: https://krokedil.se/
  * Description: Take payments in your store using Ecster Pay.
  * Author: Krokedil
  * Author URI: https://krokedil.se/
- * Version: 2.0.0
+ * Version: 0.1.0
  * Text Domain: krokedil-ecster-pay-for-woocommerce
  * Domain Path: /languages
  *
- * WC requires at least: 3.0
- * WC tested up to: 3.5.7
+ * WC requires at least: 3.5.0
+ * WC tested up to: 3.8.0
  *
  * Copyright (c) 2016-2019 Krokedil
  *
@@ -35,9 +35,9 @@ if ( ! defined( 'ABSPATH' ) ) {
 /**
  * Required minimums and constants
  */
-define( 'WC_ECSTER_VERSION', '2.0.0' );
+define( 'WC_ECSTER_VERSION', '0.1.0' );
 define( 'WC_ECSTER_MIN_PHP_VER', '5.3.0' );
-define( 'WC_ECSTER_MIN_WC_VER', '3.0.0' );
+define( 'WC_ECSTER_MIN_WC_VER', '3.5.0' );
 define( 'WC_ECSTER_MAIN_FILE', __FILE__ );
 define( 'WC_ECSTER_PLUGIN_URL', untrailingslashit( plugins_url( basename( plugin_dir_path( __FILE__ ) ), basename( __FILE__ ) ) ) );
 define( 'WC_ECSTER_PLUGIN_PATH', untrailingslashit( plugin_dir_path( __FILE__ ) ) );
@@ -286,7 +286,7 @@ if ( ! class_exists( 'WC_Ecster' ) ) {
 /**
  * Removes mandatory from checkout fields if Ecster is the selected payment method.
  */
-function wc_ecster_remove_required_from_checkout_fields() {
+function wc_ecster_v2_remove_required_from_checkout_fields() {
 	if ( 'ecster' === WC()->session->get( 'chosen_payment_method' ) ) {
 		$checkout_fields = WC()->checkout->checkout_fields;
 
@@ -299,18 +299,4 @@ function wc_ecster_remove_required_from_checkout_fields() {
 
 	WC()->checkout->checkout_fields = $checkout_fields;
 }
-add_action( 'woocommerce_checkout_process', 'wc_ecster_remove_required_from_checkout_fields' );
-
-/**
- * Add Ecster invoice fee to cart if invoice is the selected payment method and a fee is received from Ecster.
- * The fee is added in ajax_on_payment_success.
- */
-function wc_ecster_add_invoice_fee() {
-	if ( WC()->session->get( 'wc_ecster_invoice_fee' ) ) {
-		$fees = WC()->session->get( 'wc_ecster_invoice_fee' );
-		foreach ( $fees as $fee ) {
-			WC()->cart->add_fee( __( 'Ecster Invoice Fee', 'krokedil-ecster-pay-for-woocommerce' ), $fee / 100, false, '' );
-		}
-	}
-}
-// add_action( 'woocommerce_cart_calculate_fees', 'wc_ecster_add_invoice_fee' );
+add_action( 'woocommerce_checkout_process', 'wc_ecster_v2_remove_required_from_checkout_fields' );
