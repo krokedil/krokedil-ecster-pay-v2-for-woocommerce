@@ -47,7 +47,6 @@ class WC_Ecster_Ajax {
 		add_action( 'wp_ajax_wc_ecster_on_checkout_error', array( $this, 'ajax_on_checkout_error' ) );
 		add_action( 'wp_ajax_nopriv_wc_ecster_on_checkout_error', array( $this, 'ajax_on_checkout_error' ) );
 
-		
 		add_action( 'wp_ajax_wc_change_to_ecster', array( $this, 'wc_change_to_ecster' ) );
 		add_action( 'wp_ajax_nopriv_wc_change_to_ecster', array( $this, 'wc_change_to_ecster' ) );
 	}
@@ -96,10 +95,11 @@ class WC_Ecster_Ajax {
 			WC_Gateway_Ecster::log( 'Nonce can not be verified - update_cart.' );
 			exit( 'Nonce can not be verified.' );
 		}
-		$cart_key = $_POST['cart_key'];
-		$data     = array();
-		$request  = new WC_Ecster_Request_Update_Cart( $this->api_key, $this->merchant_key, $this->testmode );
-		$response = $request->response( $cart_key );
+		$customer_type = ! empty( $_POST['customer_type'] ) ? $_POST['customer_type'] : null;
+		$cart_key      = $_POST['cart_key'];
+		$data          = array();
+		$request       = new WC_Ecster_Request_Update_Cart( $this->api_key, $this->merchant_key, $this->testmode );
+		$response      = $request->response( $cart_key, $customer_type );
 		$response_body = json_decode( $response['body'] );
 		WC()->session->set( 'ecster_checkout_cart_key', $response_body->checkoutCart->key );
 

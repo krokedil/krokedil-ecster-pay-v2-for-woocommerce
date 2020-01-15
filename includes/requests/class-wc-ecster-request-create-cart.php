@@ -45,9 +45,14 @@ class WC_Ecster_Request_Create_Cart extends WC_Ecster_Request {
 	 * @return false|string
 	 */
 	private function get_request_body() {
+		$settings      = get_option( 'woocommerce_ecster_settings' );
+		$customer_type = isset( $settings['customer_types'] ) ? $settings['customer_types'] : 'b2c';
+		if ( in_array( $customer_type, array( 'b2cb', 'b2bc' ), true ) ) {
+			$customer_type = substr( $customer_type, 0, -1 );
+		}
 		$formatted_request_body = array(
 			'locale'          => $this->locale(),
-			'parameters'      => $this->get_parameters(),
+			'parameters'      => $this->get_parameters( $customer_type ),
 			'deliveryMethods' => $this->delivery_methods(),
 			'cart'            => $this->cart(),
 			'orderReference'  => 'TempOrderRef',

@@ -149,7 +149,7 @@ class WC_Ecster_Request {
 	}
 	*/
 
-	protected function get_parameters() {
-		return WC_Ecster_Request_Parameters::get_parameters();
+	protected function get_parameters( $customer_type ) {
+		return WC_Ecster_Request_Parameters::get_parameters( $customer_type );
 	}
 }

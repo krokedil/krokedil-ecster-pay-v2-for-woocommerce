@@ -97,7 +97,7 @@
 
 	var wc_ecster_update_cart = function wc_ecster_update_cart() {
 		var updated_cart_callback = EcsterPay.updateCart(wc_ecster_cart_key);
-
+		var customer_type = ( $('input[name="ecster-customer-type"]:checked').val() ) ? $('input[name="ecster-customer-type"]:checked').val() : null;
 		$.ajax(
 			wc_ecster.ajaxurl,
 			{
@@ -107,6 +107,7 @@
 				data: {
 					action: "wc_ecster_update_cart",
 					cart_key: wc_ecster_cart_key,
+					customer_type: customer_type,
 					nonce: wc_ecster.wc_ecster_nonce
 				},
 				success: function (response) {
@@ -339,6 +340,10 @@
 		if ("ecster" === event.target.value) {
 			$("body").trigger("update_checkout");
 		}
+	});
+
+	$(document.body).on("change", "input[name='ecster-customer-type']", function (event) {
+		wc_ecster_update_cart();
 	});
 
 	// When checkout gets updated

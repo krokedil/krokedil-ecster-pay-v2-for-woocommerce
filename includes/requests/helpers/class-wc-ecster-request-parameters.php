@@ -5,9 +5,12 @@ if ( ! defined( 'ABSPATH' ) ) {
 
 class WC_Ecster_Request_Parameters {
 
-	public static function get_parameters() {
+	public static function get_parameters( $customer_type = 'b2c' ) {
 		return array(
 			'shopTermsUrl' => get_permalink( wc_get_page_id( 'terms' ) ),
+			'purchaseType' => array(
+				'type' => $customer_type,
+			),
 		);
 	}
 

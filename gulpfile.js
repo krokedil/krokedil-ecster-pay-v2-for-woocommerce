@@ -8,7 +8,6 @@ var uglify   = require('gulp-uglify');
 var rename   = require('gulp-rename');
 var pump     = require('pump');
 var cleanCSS = require('gulp-clean-css');
-var zip      = require('gulp-zip');
 
 gulp.task('makePOT', function () {
 	return gulp.src('**/*.php')
@@ -22,21 +21,6 @@ gulp.task('makePOT', function () {
 			team: 'Krokedil <info@krokedil.se>'
 		}))
 		.pipe(gulp.dest('.'));
-});
-
-gulp.task('createZIP', function () {
-	var version = argv.version ? argv.version : '';
-	return gulp.src([
-		'assets/**/*',
-		'includes/**/*',
-		'languages/**/*',
-		'views/**/*',
-		'krokedil-ecster-pay-for-woocommerce.php',
-		'readme.txt',
-		'changelog.txt'
-	], {"base": "."})
-		.pipe(zip('krokedil-ecster-pay-for-woocommerce.zip'))
-		.pipe(gulp.dest('build/' + version));
 });
 
 gulp.task('compressJS', function (cb) {
@@ -58,8 +42,6 @@ gulp.task('compressCSS', function () {
 });
 
 gulp.task('watch', function () {
-	gulp.watch('assets/css/frontend/checkout.css', ['compressCSS']);
-	gulp.watch('assets/js/frontend/checkout.js', ['compressJS']);
+	gulp.watch('assets/css/frontend/checkout.css', gulp.series( ['compressCSS'] ));
+	gulp.watch('assets/js/frontend/checkout.js', gulp.series( ['compressJS'] ));
 });
-
-gulp.task('build', ['makePOT', 'compressJS', 'compressCSS', 'createZIP']);
