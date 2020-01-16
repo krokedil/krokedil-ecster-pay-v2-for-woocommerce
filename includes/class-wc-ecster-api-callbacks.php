@@ -122,15 +122,15 @@ class Ecster_Api_Callbacks {
 		}
 
 		switch ( $response_body->status ) {
-			case 'awaitingContract': // Do nothing - these order statuses should be handled in process_payment()
+			case 'AWAITING_CONTRACT': // Do nothing - these order statuses should be handled in process_payment()
 				break;
-			case 'ready':
+			case 'READY':
 				if ( ! $order->has_status( array( 'processing', 'completed' ) ) ) {
 					$order->payment_complete();
 					$order->add_order_note( __( 'Ecster reported order status ready.', 'krokedil-ecster-pay-for-woocommerce' ) );
 				}
 				break;
-			case 'fullyDelivered':
+			case 'FULLY_DELIVERED':
 				if ( 'INVOICE' == $response_body->response->paymentMethod->type || 'ACCOUNT' == $response_body->response->paymentMethod->type ) {
 					$order->add_order_note( __( 'Ecster reported order fully delivered.', 'krokedil-ecster-pay-for-woocommerce' ) );
 				}
@@ -139,35 +139,35 @@ class Ecster_Api_Callbacks {
 					$order->add_order_note( __( 'Ecster reported order status fully delivered.', 'krokedil-ecster-pay-for-woocommerce' ) );
 				}
 				break;
-			case 'partiallyDelivered':
+			case 'PARTIALLY_DELIVERED':
 				$order->add_order_note( __( 'Ecster reported order partially delivered.', 'krokedil-ecster-pay-for-woocommerce' ) );
 				break;
-			case 'denied':
+			case 'DENIED':
 				if ( ! $order->has_status( array( 'processing', 'completed' ) ) ) {
 					$order->update_status( 'cancelled', __( 'Ecster reported order Denied', 'krokedil-ecster-pay-for-woocommerce' ) );
 				}
 				break;
-			case 'failed':
+			case 'FAILED':
 				if ( ! $order->has_status( array( 'processing', 'completed' ) ) ) {
 					$order->update_status( 'failed', __( 'Ecster reported order Failed', 'krokedil-ecster-pay-for-woocommerce' ) );
 				}
 				break;
-			case 'aborted':
+			case 'ABORTED':
 				if ( ! $order->has_status( array( 'processing', 'completed' ) ) ) {
 					$order->update_status( 'cancelled', __( 'Ecster reported order Aborted', 'krokedil-ecster-pay-for-woocommerce' ) );
 				}
 				break;
-			case 'annuled':
+			case 'ANNULED':
 				if ( ! $order->has_status( array( 'processing', 'completed' ) ) ) {
 					$order->update_status( 'cancelled', __( 'Ecster reported order Annuled', 'krokedil-ecster-pay-for-woocommerce' ) );
 				}
 				break;
-			case 'expired':
+			case 'EXPIRED':
 				if ( ! $order->has_status( array( 'processing', 'completed' ) ) ) {
 					$order->update_status( 'cancelled', __( 'Ecster reported order Expired', 'krokedil-ecster-pay-for-woocommerce' ) );
 				}
 				break;
-			case 'stopped':
+			case 'STOPPED':
 				if ( ! $order->has_status( array( 'processing', 'completed' ) ) ) {
 					$order->update_status( 'cancelled', __( 'Ecster reported order Stopped', 'krokedil-ecster-pay-for-woocommerce' ) );
 				}
@@ -295,11 +295,11 @@ class Ecster_Api_Callbacks {
 
 		// Check Ecster order status
 		switch ( $response_body->status ) {
-			case 'awaitingContract': // Part payment with no contract signed yet
+			case 'AWAITING_CONTRACT': // Part payment with no contract signed yet
 				$order->update_status( 'on-hold', __( 'Ecster payment approved but Ecster awaits signed customer contract. Order can NOT be delivered yet.', 'krokedil-ecster-pay-for-woocommerce' ) );
 				break;
-			case 'ready': // Invoice
-			case 'fullyDelivered': // Card payment with direct charge
+			case 'READY': // Invoice
+			case 'FULLY_DELIVERED': // Card payment with direct charge
 				$order->update_status( 'on-hold' );
 				break;
 			default:
