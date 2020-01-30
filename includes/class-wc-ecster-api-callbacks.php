@@ -250,27 +250,29 @@ class Ecster_Api_Callbacks {
 
 		// Add items to order
 		foreach ( $response_body->transactions as $transactions ) {
-			foreach ( $transactions->rows as $order_row ) {
-				if ( isset( $order_row->partNumber ) ) { // partNumber is only set for product order items.
-					if ( isset( $product ) ) {
-						unset( $product );
-					}
-
-					if ( wc_get_product( $order_row->partNumber ) ) { // If we got product ID.
-						$product = wc_get_product( $order_row->partNumber );
-					} else { // Get product ID based on SKU.
-						global $wpdb;
-						$product_id = $wpdb->get_var( $wpdb->prepare( "SELECT post_id FROM $wpdb->postmeta WHERE meta_key='_sku' AND meta_value='%s' LIMIT 1", $order_row->partNumber ) );
-						if ( $product_id ) {
-							$product = wc_get_product( $product_id );
+			// Only use ORIGINAL type of transactions.
+			if ( 'ORIGINAL' === $transactions->type ) {
+				foreach ( $transactions->rows as $order_row ) {
+					if ( isset( $order_row->partNumber ) ) { // partNumber is only set for product order items.
+						if ( isset( $product ) ) {
+							unset( $product );
 						}
-					}
 
-					if ( $product ) {
-						$item_id = $order->add_product( $product, $order_row->quantity, array() );
-						if ( ! $item_id ) {
-							WC_Gateway_Ecster::log( 'Error. Unable to add product to order ' . $order->get_id() . '. add_product() response - ' . var_export( $item_id, true ) );
-							throw new Exception( sprintf( __( 'Error %d: Unable to add product. Please try again.', 'woocommerce' ), 525 ) );
+						if ( wc_get_product( $order_row->partNumber ) ) { // If we got product ID.
+							$product = wc_get_product( $order_row->partNumber );
+						} else { // Get product ID based on SKU.
+							$product_id = wc_get_product_id_by_sku( $order_row->partNumber );
+							if ( $product_id ) {
+								$product = wc_get_product( $product_id );
+							}
+						}
+
+						if ( $product ) {
+							$item_id = $order->add_product( $product, $order_row->quantity, array() );
+							if ( ! $item_id ) {
+								WC_Gateway_Ecster::log( 'Error. Unable to add product to order ' . $order->get_id() . '. add_product() response - ' . var_export( $item_id, true ) );
+								throw new Exception( sprintf( __( 'Error %d: Unable to add product. Please try again.', 'woocommerce' ), 525 ) );
+							}
 						}
 					}
 				}

@@ -240,7 +240,7 @@ class WC_Gateway_Ecster extends WC_Payment_Gateway {
 				case 'READY': // Card payment/invoice
 				case 'FULLY_DELIVERED': // Card payment
 					if ( ! $order->has_status( array( 'processing', 'completed' ) ) ) {
-						$order->payment_complete();
+						$order->payment_complete( $internal_reference );
 					}
 					break;
 				default:
