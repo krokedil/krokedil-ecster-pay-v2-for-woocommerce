@@ -79,8 +79,8 @@ function ecster_create_order() {
 			$error_detail = $response->get_error_message();
 		} else {
 			$response_body = json_decode( $response['body'] );
-			$error_title   = $response_body->title;
-			$error_detail  = $response_body->detail;
+			$error_title   = isset( $response_body->title ) ? $response_body->title : '';
+			$error_detail  = isset( $response_body->detail ) ? $response_body->detail : '';
 		}
 		WC_Gateway_Ecster::log( 'Ecster create cart ' . $error_title . ': ' . $error_detail );
 		return __( 'Ecster Pay create cart request failed ' . $error_title . ' (' . $error_detail . ').', 'krokedil-ecster-pay-for-woocommerce' );
