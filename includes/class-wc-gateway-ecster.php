@@ -208,7 +208,7 @@ class WC_Gateway_Ecster extends WC_Payment_Gateway {
 		if ( $internal_reference ) {
 			// Update reference
 			$request  = new WC_Ecster_Request_Update_Reference( $this->api_key, $this->merchant_key, $this->testmode );
-			$response = $request->response( $internal_reference, $order_id );
+			$response = $request->response( $internal_reference, $order->get_order_number() );
 
 			// Get purchase data from Ecster
 			$request       = new WC_Ecster_Request_Get_Order( $this->api_key, $this->merchant_key, $this->testmode );
@@ -232,6 +232,13 @@ class WC_Gateway_Ecster extends WC_Payment_Gateway {
 		self::log( 'Process payment for order ID ' . $order_id . '. Ecster internal reference ' . $internal_reference . '. Response body - ' . json_encode( $response_body ) );
 
 		if ( $ecster_status ) {
+
+			// Payment method title.
+			$payment_method_title = wc_ecster_get_payment_method_name( $response_body->properties->method );
+			$order->add_order_note( sprintf( __( 'Payment via Ecster Pay %s.', 'krokedil-ecster-pay-for-woocommerce' ), $payment_method_title ) );
+			$order->set_payment_method_title( apply_filters( 'wc_ecster_payment_method_title', sprintf( __( '%s via Ecster Pay', 'krokedil-ecster-pay-for-woocommerce' ), $payment_method_title ), $payment_method_title ) );
+			$order->save();
+
 			// Check Ecster order status
 			switch ( $ecster_status ) {
 				case 'PENDING_SIGNATURE': // Part payment with no contract signed yet
@@ -247,16 +254,8 @@ class WC_Gateway_Ecster extends WC_Payment_Gateway {
 						$order->add_order_note( __( 'Thank you page rendered but purchase in Ecster is not finalized. Ecster status: ' . $ecster_status, 'krokedil-ecster-pay-for-woocommerce' ) );
 					break;
 			}
-
-			// Payment method title.
-			$payment_method_title = wc_ecster_get_payment_method_name( $response_body->properties->method );
-
-			$order->add_order_note( sprintf( __( 'Payment via Ecster Pay %s.', 'krokedil-ecster-pay-for-woocommerce' ), $payment_method_title ) );
-			$order->set_payment_method_title( apply_filters( 'wc_ecster_payment_method_title', sprintf( __( '%s via Ecster Pay', 'krokedil-ecster-pay-for-woocommerce' ), $payment_method_title ), $payment_method_title ) );
-			$order->save();
-
 		} else {
-			// No Ecster order sttus detected
+			// No Ecster order status detected
 			$order->add_order_note( __( 'Thank you page rendered but no Ecster order status was decected.', 'krokedil-ecster-pay-for-woocommerce' ) );
 		}
 

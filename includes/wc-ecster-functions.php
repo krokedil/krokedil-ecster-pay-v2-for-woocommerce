@@ -13,13 +13,13 @@ if ( ! defined( 'ABSPATH' ) ) {
 function wc_ecster_get_payment_method_name( $payment_method ) {
 	switch ( $payment_method ) {
 		case 'INVOICE':
-			$payment_method = __( 'Invoice', 'collector-checkout-for-woocommerce' );
+			$payment_method = __( 'Invoice', 'krokedil-ecster-pay-for-woocommerce' );
 			break;
 		case 'ACCOUNT':
-			$payment_method = __( 'Part payment', 'collector-checkout-for-woocommerce' );
+			$payment_method = __( 'Part payment', 'krokedil-ecster-pay-for-woocommerce' );
 			break;
 		case 'CARD':
-			$payment_method = __( 'Card payment', 'collector-checkout-for-woocommerce' );
+			$payment_method = __( 'Card payment', 'krokedil-ecster-pay-for-woocommerce' );
 			break;
 		default:
 			break;
