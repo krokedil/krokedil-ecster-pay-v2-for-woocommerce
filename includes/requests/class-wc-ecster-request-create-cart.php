@@ -52,6 +52,7 @@ class WC_Ecster_Request_Create_Cart extends WC_Ecster_Request {
 		}
 		$formatted_request_body = array(
 			'locale'          => $this->locale(),
+			'countryCode'     => WC()->customer->get_billing_country(),
 			'parameters'      => $this->get_parameters( $customer_type ),
 			'deliveryMethods' => $this->delivery_methods(),
 			'cart'            => $this->cart(),

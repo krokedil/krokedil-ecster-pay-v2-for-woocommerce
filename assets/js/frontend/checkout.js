@@ -213,7 +213,6 @@
                 },
                 success: function() {
                     var customerDeliveryCountry;
-
                     if (delivery_address.countryCode) {
                         customerDeliveryCountry = delivery_address.countryCode;
                     } else {
@@ -221,7 +220,7 @@
                     }
                     
                     if (wc_ecster_on_customer_authenticated_data) { // If authentication is done
-                        // Update country and ZIP, so shipping can be calculated on update_checkout
+						// Update country and ZIP, so shipping can be calculated on update_checkout
                         $("form.checkout #ship-to-different-address-checkbox").prop("checked", true);
                         $("form.checkout #shipping_country").val(customerDeliveryCountry);
                         $("form.checkout #shipping_postcode").val(delivery_address.zip);
@@ -278,9 +277,8 @@
 					// Populate the form and submit it.
                     var customerCountry;
                     var customerPhone;
-
-                    if (paymentData.consumer.countryCode) {
-                        customerCountry = paymentData.consumer.countryCode;
+                    if (paymentData.consumer.address.country) {
+                        customerCountry = paymentData.consumer.address.country;
                     } else {
                         customerCountry = 'SE';
                     }
