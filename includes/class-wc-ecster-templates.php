@@ -112,9 +112,9 @@ class Ecster_For_WooCommerce_Templates {
 
 		if ( in_array( $customer_type, array( 'b2cb', 'b2bc' ), true ) ) {
 			?>
-			<label for="ecster-b2c"><?php echo esc_html( __( 'Person', 'krokedil-ecster-pay-for-woocommerce' ) ); ?></label>
+			<label for="ecster-b2c"><?php echo esc_html( __( 'Consumer', 'krokedil-ecster-pay-for-woocommerce' ) ); ?></label>
 			<input type="radio" name="ecster-customer-type" id="ecster-b2c" value="b2c" <?php ( 'b2cb' === $customer_type ) ? esc_attr_e( 'checked' ) : ''; ?>>
-			<label for="ecster-b2b"><?php echo esc_html( __( 'Company', 'krokedil-ecster-pay-for-woocommerce' ) ); ?></label>
+			<label for="ecster-b2b"><?php echo esc_html( __( 'Business', 'krokedil-ecster-pay-for-woocommerce' ) ); ?></label>
 			<input type="radio" name="ecster-customer-type" id="ecster-b2b" value="b2b" <?php ( 'b2bc' === $customer_type ) ? esc_attr_e( 'checked' ) : ''; ?>>
 			<?php
 		}
