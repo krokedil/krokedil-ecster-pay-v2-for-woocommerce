@@ -208,7 +208,7 @@ class WC_Gateway_Ecster extends WC_Payment_Gateway {
 		if ( $internal_reference ) {
 			// Update reference
 			$request  = new WC_Ecster_Request_Update_Reference( $this->api_key, $this->merchant_key, $this->testmode );
-			$response = $request->response( $internal_reference, $order_id );
+			$response = $request->response( $internal_reference, $order->get_order_number() );
 
 			// Get purchase data from Ecster
 			$request       = new WC_Ecster_Request_Get_Order( $this->api_key, $this->merchant_key, $this->testmode );
