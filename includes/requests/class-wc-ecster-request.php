@@ -78,14 +78,14 @@ class WC_Ecster_Request {
 	 */
 	protected function locale() {
 		$iso_code = explode( '_', get_locale() );
-		if ( 'en' == $iso_code[0] ) {
+		if ( in_array( $iso_code[0], array( 'sv', 'en', 'no', 'da', 'fi' ), true ) ) {
 			$lang = $iso_code[0];
 		} else {
 			$lang = 'sv';
 		}
 		$ecster_locale = array(
 			'language' => $lang,
-			'country'  => 'SE',
+			'country'  => WC()->customer->get_country(),
 		);
 
 		return apply_filters( 'wc_ecster_locale', $ecster_locale );
