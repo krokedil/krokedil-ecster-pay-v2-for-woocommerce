@@ -83,9 +83,12 @@ class WC_Ecster_Request {
 		} else {
 			$lang = 'en';
 		}
+
+		$country = isset( $iso_code[1] ) ? $iso_code[1] : WC()->customer->get_billing_country();
+
 		$ecster_locale = array(
 			'language' => $lang,
-			'country'  => strtoupper( $iso_code[1] ),
+			'country'  => strtoupper( $country ),
 		);
 
 		return apply_filters( 'wc_ecster_locale', $ecster_locale );
