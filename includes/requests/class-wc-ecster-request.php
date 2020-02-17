@@ -81,11 +81,11 @@ class WC_Ecster_Request {
 		if ( in_array( $iso_code[0], array( 'sv', 'en', 'no', 'da', 'fi' ), true ) ) {
 			$lang = $iso_code[0];
 		} else {
-			$lang = 'sv';
+			$lang = 'en';
 		}
 		$ecster_locale = array(
 			'language' => $lang,
-			'country'  => WC()->customer->get_country(),
+			'country'  => strtoupper( $iso_code[1] ),
 		);
 
 		return apply_filters( 'wc_ecster_locale', $ecster_locale );
