@@ -69,7 +69,10 @@ class WC_Ecster_Order_Management {
 	 */
 	public function complete_ecster_order( $order_id ) {
 		$order = wc_get_order( $order_id );
-		if ( 'ecster' === $order->get_payment_method() && 'yes' == $this->manage_orders && ! empty( $this->api_key ) && ! empty( $this->merchant_key ) ) {
+
+		$payment_method_title = get_post_meta( $order_id, '_payment_method_title', true );
+		$swish_order          = ( false !== stripos( $payment_method_title, 'swish' ) ) ? true : false; // Dont make debit request if the order is a Swish order.
+		if ( 'ecster' === $order->get_payment_method() && 'yes' == $this->manage_orders && ! empty( $this->api_key ) && ! empty( $this->merchant_key ) && ! $swish_order ) {
 			if ( get_post_meta( $order_id, '_ecster_order_captured_id', true ) ) {
 				$order->add_order_note( __( 'Ecster reservation is already captured.', 'krokedil-ecster-pay-for-woocommerce' ) );
 				return;
