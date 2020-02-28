@@ -2,9 +2,9 @@
 Contributors: krokedil, niklashogefjord
 Tags: ecommerce, e-commerce, woocommerce, ecster
 Requires at least: 4.5
-Tested up to: 5.3.0
+Tested up to: 5.3.2
 WC requires at least: 3.5.0
-WC tested up to: 3.8.0
+WC tested up to: 3.9.2
 License: GPLv3
 License URI: http://www.gnu.org/licenses/gpl-3.0.html
 Stable tag: trunk
@@ -30,5 +30,5 @@ More information on how to get started can be found in the [plugin documentation
 
 == CHANGELOG ==
 
-= 2019.11.27    - version 0.1.0 =
+= 2020.02.28    - version 0.1.0 =
 * Initial release.
