@@ -1,7 +1,7 @@
 <?php
 /*
  * Plugin Name: Ecster Pay v2 for WooCommerce
- * Plugin URI: https://krokedil.se/
+ * Plugin URI: hhttps://krokedil.se/ecster/
  * Description: Take payments in your store using Ecster Pay.
  * Author: Krokedil
  * Author URI: https://krokedil.se/
@@ -10,9 +10,9 @@
  * Domain Path: /languages
  *
  * WC requires at least: 3.5.0
- * WC tested up to: 3.8.0
+ * WC tested up to: 3.9.2
  *
- * Copyright (c) 2016-2019 Krokedil
+ * Copyright (c) 2020 Krokedil
  *
  * This program is free software: you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -99,13 +99,14 @@ if ( ! class_exists( 'WC_Ecster' ) ) {
 			add_action( 'admin_init', array( $this, 'check_environment' ) );
 			add_action( 'admin_notices', array( $this, 'admin_notices' ), 15 );
 			add_action( 'plugins_loaded', array( $this, 'init' ) );
+			add_action( 'plugins_loaded', array( $this, 'check_version' ) );
 		}
 
 		/**
 		 * Init the plugin after plugins_loaded so environment variables are set.
 		 */
 		public function init() {
-			// Don't hook anything else in the plugin if we're in an incompatible environment
+			// Don't hook anything else in the plugin if we're in an incompatible environment.
 			if ( self::get_environment_warning() ) {
 				return;
 			}
@@ -119,7 +120,7 @@ if ( ! class_exists( 'WC_Ecster' ) ) {
 		}
 
 		/**
-		 * Allow this class and other classes to add slug keyed notices (to avoid duplication)
+		 * Allow this class and other classes to add slug keyed notices (to avoid duplication).
 		 */
 		public function add_admin_notice( $slug, $class, $message ) {
 			$this->notices[ $slug ] = array(
@@ -263,6 +264,21 @@ if ( ! class_exists( 'WC_Ecster' ) ) {
 
 			load_plugin_textdomain( 'krokedil-ecster-pay-for-woocommerce', false, plugin_basename( dirname( __FILE__ ) ) . '/languages' );
 			add_filter( 'woocommerce_payment_gateways', array( $this, 'add_gateways' ) );
+		}
+
+		/**
+		 * Checks the plugin version.
+		 *
+		 * @return void
+		 */
+		public function check_version() {
+			require WC_ECSTER_PLUGIN_PATH . '/includes/plugin_update_check.php';
+			$KernlUpdater = new PluginUpdateChecker_2_0 (
+				'https://kernl.us/api/v1/updates/5e5f798c61ed601988fa257a/',
+				__FILE__,
+				'krokedil-ecster-pay-v2-for-woocommerce',
+				1
+			);
 		}
 
 		/**
