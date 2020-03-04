@@ -1,7 +1,7 @@
 <?php
 /*
  * Plugin Name: Ecster Pay v2 for WooCommerce
- * Plugin URI: https://krokedil.se/
+ * Plugin URI: hhttps://krokedil.se/ecster/
  * Description: Take payments in your store using Ecster Pay.
  * Author: Krokedil
  * Author URI: https://krokedil.se/
@@ -12,7 +12,7 @@
  * WC requires at least: 3.5.0
  * WC tested up to: 3.9.2
  *
- * Copyright (c) 2016-2020 Krokedil
+ * Copyright (c) 2020 Krokedil
  *
  * This program is free software: you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -105,7 +105,7 @@ if ( ! class_exists( 'WC_Ecster' ) ) {
 		 * Init the plugin after plugins_loaded so environment variables are set.
 		 */
 		public function init() {
-			// Don't hook anything else in the plugin if we're in an incompatible environment
+			// Don't hook anything else in the plugin if we're in an incompatible environment.
 			if ( self::get_environment_warning() ) {
 				return;
 			}
@@ -119,7 +119,7 @@ if ( ! class_exists( 'WC_Ecster' ) ) {
 		}
 
 		/**
-		 * Allow this class and other classes to add slug keyed notices (to avoid duplication)
+		 * Allow this class and other classes to add slug keyed notices (to avoid duplication).
 		 */
 		public function add_admin_notice( $slug, $class, $message ) {
 			$this->notices[ $slug ] = array(
