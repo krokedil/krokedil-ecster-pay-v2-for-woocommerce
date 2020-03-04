@@ -99,6 +99,7 @@ if ( ! class_exists( 'WC_Ecster' ) ) {
 			add_action( 'admin_init', array( $this, 'check_environment' ) );
 			add_action( 'admin_notices', array( $this, 'admin_notices' ), 15 );
 			add_action( 'plugins_loaded', array( $this, 'init' ) );
+			add_action( 'plugins_loaded', array( $this, 'check_version' ) );
 		}
 
 		/**
@@ -263,6 +264,21 @@ if ( ! class_exists( 'WC_Ecster' ) ) {
 
 			load_plugin_textdomain( 'krokedil-ecster-pay-for-woocommerce', false, plugin_basename( dirname( __FILE__ ) ) . '/languages' );
 			add_filter( 'woocommerce_payment_gateways', array( $this, 'add_gateways' ) );
+		}
+
+		/**
+		 * Checks the plugin version.
+		 *
+		 * @return void
+		 */
+		public function check_version() {
+			require WC_ECSTER_PLUGIN_PATH . '/includes/plugin_update_check.php';
+			$KernlUpdater = new PluginUpdateChecker_2_0 (
+				'https://kernl.us/api/v1/updates/5e5f798c61ed601988fa257a/',
+				__FILE__,
+				'krokedil-ecster-pay-v2-for-woocommerce',
+				1
+			);
 		}
 
 		/**
