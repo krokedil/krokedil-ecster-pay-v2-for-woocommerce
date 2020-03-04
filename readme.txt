@@ -30,5 +30,8 @@ More information on how to get started can be found in the [plugin documentation
 
 == CHANGELOG ==
 
-= 2020.02.28    - version 0.1.0 =
+= 2020.03.04        - version 1.0.0 =
+* Enhancement       -Automatic update feature via kernl.us.
+
+= 2020.02.28        - version 0.1.0 =
 * Initial release.
