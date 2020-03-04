@@ -13,11 +13,11 @@ Ecster Pay for WooCommerce is a plugin that extends WooCommerce, allowing you to
 
 
 == DESCRIPTION ==
-Ecster Pay is a new e-commerce checkout solution that gives you more than the individual purchase. The checkout is built to provide more repeat customers and an increased average order value.
+Ecster Pay is an e-commerce checkout solution that gives you more than the individual purchase. The checkout is built to provide more repeat customers and an increased average order value.
 
 To get started with Ecster Pay you need to [sign up](https://www.ecster.se/foretag/ehandel/ecster-pay/bestall-ecster-pay) for an account.
 
-More information on how to get started can be found in the [plugin documentation](http://docs.krokedil.com/se/documentation/ecster-pay-woocommerce/).
+More information on how to get started can be found in the [plugin documentation](https://docs.krokedil.com/article/313-ecster-pay-v2-introduction).
 
 
 == INSTALLATION	 ==
@@ -26,7 +26,7 @@ More information on how to get started can be found in the [plugin documentation
 3. Upload the entire plugin directory to your /wp-content/plugins/ directory.
 4. Activate the plugin through the 'Plugins' menu in WordPress Administration.
 5. Go WooCommerce Settings --> Payment Gateways and configure your Ecster Pay settings.
-6. Read more about the configuration process in the [plugin documentation](http://docs.krokedil.com/se/documentation/ecster-pay-woocommerce/).
+6. Read more about the configuration process in the [plugin documentation](https://docs.krokedil.com/article/313-ecster-pay-v2-introduction).
 
 == CHANGELOG ==
 
