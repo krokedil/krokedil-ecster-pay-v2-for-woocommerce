@@ -26,7 +26,7 @@ class WC_Ecster_OSF {
 		$this->api_key      = $ecster_settings['api_key'];
 		$this->merchant_key = $ecster_settings['merchant_key'];
 
-		add_action( 'init', array( $this, 'maybe_create_backup_order_finalization' ) );
+		// add_action( 'init', array( $this, 'maybe_create_backup_order_finalization' ) );
 	}
 
 	/**
