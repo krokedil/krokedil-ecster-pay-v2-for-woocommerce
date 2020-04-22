@@ -28,6 +28,7 @@ More information on how to get started can be found in the [plugin documentation
 5. Go WooCommerce Settings --> Payment Gateways and configure your Ecster Pay settings.
 6. Read more about the configuration process in the [plugin documentation](https://docs.krokedil.com/article/313-ecster-pay-v2-introduction).
 
+
 == CHANGELOG ==
 
 = 2020.04.22        - version 1.1.0 =
