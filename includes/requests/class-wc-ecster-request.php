@@ -95,6 +95,23 @@ class WC_Ecster_Request {
 	}
 
 	/**
+	 * Gets country code for Ecster purchase.
+	 *
+	 * @return string
+	 */
+	protected function get_country_code() {
+		// Try to use customer country if available.
+		if ( ! empty( WC()->customer->get_billing_country() ) && strlen( WC()->customer->get_billing_country() ) === 2 ) {
+			return WC()->customer->get_billing_country( 'edit' );
+		}
+
+		$base_location = wc_get_base_location();
+		$country       = $base_location['country'];
+
+		return $country;
+	}
+
+	/**
 	 * Returns platform information (WooCommerce and version) for Ecster API requests.
 	 *
 	 * @return array
@@ -153,6 +170,8 @@ class WC_Ecster_Request {
 	*/
 
 	protected function get_parameters( $customer_type ) {
-		return WC_Ecster_Request_Parameters::get_parameters( $customer_type );
+		$parameters                           = WC_Ecster_Request_Parameters::get_parameters( $customer_type );
+		$parameters['defaultDeliveryCountry'] = $this->get_country_code();
+		return $parameters;
 	}
 }

@@ -244,29 +244,70 @@ class WC_Ecster_Ajax {
 			wp_send_json_error( 'bad_nonce' );
 			exit;
 		}
+		WC_Gateway_Ecster::log( 'Ecster checkout_error triggered' );
+		$ecster_order_id = WC()->session->get( 'ecster_order_id' );
+		$redirect_url    = $this->check_if_order_exists( $ecster_order_id );
 
-		$local_order_id = $this->helper_maybe_create_local_order();
-		$order          = wc_get_order( $local_order_id );
+		if ( empty( $redirect_url ) ) {
 
-		// Add order fees.
-		$this->helper_add_order_fees( $order );
+			$request       = new WC_Ecster_Request_Get_Order( $this->api_key, $this->merchant_key, $this->testmode );
+			$response      = $request->response( $ecster_order_id );
+			$response_body = json_decode( $response['body'] );
 
-		// Add Ecster invoice fee
-		$this->helper_maybe_add_invoice_fee( $order );
+			$order    = wc_create_order();
+			$order_id = $order->get_id();
+			WC_Gateway_Ecster::log( 'Ecster checkout_error - creating order id ' . $order_id );
 
-		// Add order shipping.
-		$this->helper_add_order_shipping( $order );
+			update_post_meta( $order_id, '_wc_ecster_internal_reference', $ecster_order_id );
 
-		// Add order taxes.
-		$this->helper_add_order_tax_rows( $order );
+			$this->add_order_payment_method( $order ); // Store payment method.
 
-		// Store coupons.
-		$this->helper_add_order_coupons( $order );
+			$this->helper_add_customer_data_to_local_order( $order, $response_body );
 
-		// Save order totals
-		$this->helper_calculate_order_totals( $local_order_id );
+			$this->helper_add_items_to_local_order( $order );
 
-		$redirect_url = wc_get_endpoint_url( 'order-received', '', wc_get_page_permalink( 'checkout' ) );
+			// Add order fees.
+			$this->helper_add_order_fees( $order );
+
+			// Add Ecster invoice fee
+			$this->helper_maybe_add_invoice_fee( $order );
+
+			// Add order shipping.
+			$this->helper_add_order_shipping( $order );
+
+			// Add order taxes.
+			$this->helper_add_order_tax_rows( $order );
+
+			// Store coupons.
+			$this->helper_add_order_coupons( $order );
+
+			// Save order totals
+			$this->helper_calculate_order_totals( $order );
+
+			// Add order note
+			if ( ! empty( $_POST['error_message'] ) ) { // Input var okay.
+				$error_message = 'Error message: ' . sanitize_text_field( trim( $_POST['error_message'] ) );
+			} else {
+				$error_message = 'Error message could not be retreived';
+			}
+			$order->set_status( 'on-hold' );
+			$order->save();
+
+			/**
+			 * Added to simulate WCs own order creation.
+			 *
+			 * TODO: Add the order content into a $data variable and pass as second parameter to the hook.
+			 */
+			do_action( 'woocommerce_checkout_update_order_meta', $order_id, array() );
+
+			$note = sprintf( __( 'This order was made as a fallback due to an error in the checkout (%s). Please verify the order with Ecster.', 'krokedil-ecster-pay-for-woocommerce' ), $error_message );
+			$order->add_order_note( $note );
+			
+
+			$redirect_url = $order->get_checkout_order_received_url();
+		}
+
+		/*
 		$redirect_url = add_query_arg(
 			array(
 				'ecster-osf' => 'true',
@@ -274,6 +315,7 @@ class WC_Ecster_Ajax {
 			),
 			$redirect_url
 		);
+		*/
 
 		wp_send_json_success( array( 'redirect' => $redirect_url ) );
 		wp_die();
@@ -286,40 +328,52 @@ class WC_Ecster_Ajax {
 
 
 	/**
-	 * Creates WooCommerce order, if needed.
+	 * Check if an order already exist with the current Ecster internal reference.
 	 *
-	 * @return int $local_order_id WooCommerce order ID.
+	 * @return void.
 	 */
-	function helper_maybe_create_local_order() {
-		if ( WC()->session->get( 'order_awaiting_payment' ) > 0 ) { // Create local order if there already isn't an order awaiting payment.
-			$local_order_id = WC()->session->get( 'order_awaiting_payment' );
-			$local_order    = wc_get_order( $local_order_id );
-			$this->add_order_payment_method( $local_order ); // Store payment method.
-			$local_order->update_status( 'pending' ); // If the order was failed in the past, unfail it because customer was successfully authenticated again.
-		} else {
-			$local_order    = wc_create_order();
-			$local_order_id = $local_order->id;
-			$this->add_order_payment_method( $local_order ); // Store payment method.
-			WC()->session->set( 'order_awaiting_payment', $local_order_id );
-			do_action( 'woocommerce_checkout_update_order_meta', $local_order_id, array() ); // Let plugins add their own meta data.
+	public function check_if_order_exists( $ecster_order_id = null ) {
+		$query                  = new WC_Order_Query(
+			array(
+				'limit'          => -1,
+				'orderby'        => 'date',
+				'order'          => 'DESC',
+				'return'         => 'ids',
+				'payment_method' => 'ecster',
+				'date_created'   => '>' . ( time() - DAY_IN_SECONDS ),
+			)
+		);
+		$orders                 = $query->get_orders();
+		$order_id_match         = null;
+		foreach ( $orders as $order_id ) {
+			$ecster_internal_reference = get_post_meta( $order_id, '_wc_ecster_internal_reference', true );
+			if ( strtolower( $ecster_internal_reference ) === strtolower( $ecster_order_id ) ) {
+				$order_id_match = $order_id;
+				break;
+			}
 		}
-
-		return $local_order_id;
+		// _wc_ecster_internal_reference already exist in an order. Let's redirect the customer to the thankyou page for that order.
+		if ( $order_id_match ) {
+			$order = wc_get_order( $order_id_match );
+			return $order->get_checkout_order_received_url();
+		}
+		return false;
 	}
+
 
 	/**
 	 * Adds order items to ongoing order.
 	 *
-	 * @param  integer $local_order_id WooCommerce order ID.
+	 * @param  integer $order WooCommerce order.
 	 * @throws Exception PHP Exception.
 	 */
-	function helper_add_items_to_local_order( $local_order_id ) {
-		$local_order = wc_get_order( $local_order_id );
+	public function helper_add_items_to_local_order( $order ) {
+
 		// Remove items as to stop the item lines from being duplicated.
-		$local_order->remove_order_items();
+		$order->remove_order_items();
 
 		foreach ( WC()->cart->get_cart() as $cart_item_key => $values ) { // Store the line items to the new/resumed order.
-			$item_id = $local_order->add_product(
+			$item_id = $order->add_product(
 				$values['data'],
 				$values['quantity'],
 				array(
@@ -349,32 +403,43 @@ class WC_Ecster_Ajax {
 	 * @param array   $customer_data  Customer data returned by Ecster.
 	 * @param array   $addresses      Addresses to update (shipping and/or billing).
 	 */
-	function helper_add_customer_data_to_local_order( $local_order_id, $customer_data, $addresses ) {
+	public function helper_add_customer_data_to_local_order( $order, $response_body ) {
 
-		$country = isset( $customer_data['countryCode'] ) ? $customer_data['countryCode'] : 'SE';
-
-		if ( in_array( 'billing', $addresses, true ) ) {
-			update_post_meta( $local_order_id, '_billing_first_name', $customer_data['firstName'] );
-			update_post_meta( $local_order_id, '_billing_last_name', $customer_data['lastName'] );
-			update_post_meta( $local_order_id, '_billing_address_1', $customer_data['address'] );
-			update_post_meta( $local_order_id, '_billing_city', $customer_data['city'] );
-			update_post_meta( $local_order_id, '_billing_postcode', $customer_data['zip'] );
-			update_post_meta( $local_order_id, '_billing_country', $country );
-			if ( $customer_data['cellular'] ) {
-				update_post_meta( $local_order_id, '_billing_phone', $customer_data['cellular'] );
-			}
-			if ( $customer_data['email'] ) {
-				update_post_meta( $local_order_id, '_billing_email', $customer_data['email'] );
-			}
+		// Add/update customer and order info to order
+		$billing_first_name = ( $response_body->consumer->name->firstName ?: $response_body->recipient->firstName );
+		$billing_last_name  = ( $response_body->consumer->name->lastName ?: $response_body->recipient->lastName );
+		$billing_postcode   = ( $response_body->consumer->address->zip ?: $response_body->recipient->zip );
+		$billing_address    = ( $response_body->consumer->address->line1 ?: $response_body->recipient->address );
+		$billing_city       = ( $response_body->consumer->address->city ?: $response_body->recipient->city );
+		if ( ! isset( $response_body->consumer->address->country ) ) {
+			$billing_country = 'SE';
+		} else {
+			$billing_country = $response_body->consumer->address->country;
 		}
 
-		if ( in_array( 'shipping', $addresses, true ) ) {
-			update_post_meta( $local_order_id, '_shipping_first_name', $customer_data['firstName'] );
-			update_post_meta( $local_order_id, '_shipping_last_name', $customer_data['lastName'] );
-			update_post_meta( $local_order_id, '_shipping_address_1', $customer_data['address'] );
-			update_post_meta( $local_order_id, '_shipping_city', $customer_data['city'] );
-			update_post_meta( $local_order_id, '_shipping_postcode', $customer_data['zip'] );
-			update_post_meta( $local_order_id, '_shipping_country', $country );
+		$order->set_billing_first_name( sanitize_text_field( $billing_first_name ) );
+		$order->set_billing_last_name( sanitize_text_field( $billing_last_name ) );
+		$order->set_billing_country( sanitize_text_field( $billing_country ) );
+		$order->set_billing_address_1( sanitize_text_field( $billing_address ) );
+		$order->set_billing_city( sanitize_text_field( $billing_city ) );
+		$order->set_billing_postcode( sanitize_text_field( $billing_postcode ) );
+		$order->set_billing_phone( sanitize_text_field( $response_body->consumer->contactInfo->cellular->number ) );
+		$order->set_billing_email( sanitize_text_field( $response_body->consumer->contactInfo->email ) );
+
+		if ( isset( $response_body->recipient ) ) {
+			$order->set_shipping_first_name( sanitize_text_field( $response_body->recipient->name->firstName ) );
+			$order->set_shipping_last_name( sanitize_text_field( $response_body->recipient->name->lastName ) );
+			$order->set_shipping_country( sanitize_text_field( $response_body->recipient->address->country ) );
+			$order->set_shipping_address_1( sanitize_text_field( $response_body->recipient->address->line1 ) );
+			$order->set_shipping_city( sanitize_text_field( $response_body->recipient->address->city ) );
+			$order->set_shipping_postcode( sanitize_text_field( $response_body->recipient->address->zip ) );
+		} else {
+			$order->set_shipping_first_name( sanitize_text_field( $response_body->consumer->name->firstName ) );
+			$order->set_shipping_last_name( sanitize_text_field( $response_body->consumer->name->lastName ) );
+			$order->set_shipping_country( sanitize_text_field( $billing_country ) );
+			$order->set_shipping_address_1( sanitize_text_field( $response_body->consumer->address->line1 ) );
+			$order->set_shipping_city( sanitize_text_field( $response_body->consumer->address->city ) );
+			$order->set_shipping_postcode( sanitize_text_field( $response_body->consumer->address->zip ) );
 		}
 	}
 
@@ -428,13 +493,9 @@ class WC_Ecster_Ajax {
 	/**
 	 * Calculates cart totals.
 	 */
-	function helper_calculate_order_totals( $order_id ) {
-		$order = wc_get_order( $order_id );
+	function helper_calculate_order_totals( $order ) {
 		$order->calculate_totals();
-		if ( krokedil_wc_gte_3_0() ) {
-			$order->save();
-		}
-
+		$order->save();
 	}
 
 	/**
@@ -577,8 +638,7 @@ class WC_Ecster_Ajax {
 	 * @access public
 	 */
 	public function add_order_payment_method( $order ) {
-		global $woocommerce;
-		$available_gateways = $woocommerce->payment_gateways->payment_gateways();
+		$available_gateways = WC()->payment_gateways->payment_gateways();
 		$payment_method     = $available_gateways['ecster'];
 		$order->set_payment_method( $payment_method );
 	}

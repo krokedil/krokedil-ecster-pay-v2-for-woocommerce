@@ -61,7 +61,7 @@ class WC_Gateway_Ecster extends WC_Payment_Gateway {
 		add_action( 'woocommerce_update_options_payment_gateways_' . $this->id, array( $this, 'process_admin_options' ) );
 		add_action( 'wp_enqueue_scripts', array( $this, 'checkout_scripts' ) );
 		add_action( 'woocommerce_api_wc_gateway_ecster', array( $this, 'osn_listener' ) );
-		add_action( 'woocommerce_thankyou_ecster', array( $this, 'ecster_thankyou' ) );
+		add_action( 'woocommerce_thankyou', array( $this, 'ecster_thankyou' ) );
 	}
 
 	/**
@@ -259,11 +259,7 @@ class WC_Gateway_Ecster extends WC_Payment_Gateway {
 			$order->add_order_note( __( 'Thank you page rendered but no Ecster order status was decected.', 'krokedil-ecster-pay-for-woocommerce' ) );
 		}
 
-		WC()->session->__unset( 'order_awaiting_payment' );
-		WC()->session->__unset( 'wc_ecster_method' );
-		WC()->session->__unset( 'wc_ecster_invoice_fee' );
-		WC()->session->__unset( 'ecster_checkout_cart_key' );
-		WC()->session->__unset( 'ecster_order_id' );
+		wc_ecster_unset_sessions();
 
 		return array(
 			'result'   => 'success',
@@ -276,7 +272,7 @@ class WC_Gateway_Ecster extends WC_Payment_Gateway {
 	 * Add Ecster iframe to thankyou page.
 	 */
 	public function ecster_thankyou( $order_id ) {
-
+		wc_ecster_unset_sessions();
 	}
 
 	/**

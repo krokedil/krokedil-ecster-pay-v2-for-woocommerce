@@ -100,3 +100,27 @@ function ecster_get_order( $checkout_cart_key ) {
 
 	return $response_body;
 }
+
+/**
+ * Unset Ecster session
+ */
+function wc_ecster_unset_sessions() {
+
+	if ( method_exists( WC()->session, '__unset' ) ) {
+		if ( WC()->session->get( 'order_awaiting_payment' ) ) {
+			WC()->session->__unset( 'order_awaiting_payment' );
+		}
+		if ( WC()->session->get( 'wc_ecster_method' ) ) {
+			WC()->session->__unset( 'wc_ecster_method' );
+		}
+		if ( WC()->session->get( 'wc_ecster_invoice_fee' ) ) {
+			WC()->session->__unset( 'wc_ecster_invoice_fee' );
+		}
+		if ( WC()->session->get( 'ecster_checkout_cart_key' ) ) {
+			WC()->session->__unset( 'ecster_checkout_cart_key' );
+		}
+		if ( WC()->session->get( 'ecster_order_id' ) ) {
+			WC()->session->__unset( 'ecster_order_id' );
+		}
+	}
+}

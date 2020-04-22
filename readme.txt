@@ -2,9 +2,9 @@
 Contributors: krokedil, niklashogefjord
 Tags: ecommerce, e-commerce, woocommerce, ecster
 Requires at least: 4.5
-Tested up to: 5.3.2
+Tested up to: 5.4
 WC requires at least: 3.5.0
-WC tested up to: 3.9.2
+WC tested up to: 4.0.1
 License: GPLv3
 License URI: http://www.gnu.org/licenses/gpl-3.0.html
 Stable tag: trunk
@@ -29,6 +29,12 @@ More information on how to get started can be found in the [plugin documentation
 6. Read more about the configuration process in the [plugin documentation](https://docs.krokedil.com/article/313-ecster-pay-v2-introduction).
 
 == CHANGELOG ==
+
+= 2020.04.22        - version 1.1.0 =
+* Tweak             - Add order note about cause of problem when order is created via checkout error flow.
+* Tweak             - Moved unsetting of sessions to wc_ecster_unset_sessions() function.
+* Tweak             - Defaulting countryCode and defaultDeliveryCountry to wc base location (if not set by customer).
+* Fix               - Fixed double order problem in checkout error flow.
 
 = 2020.03.04        - version 1.0.0 =
 * Enhancement       -Automatic update feature via kernl.us.
