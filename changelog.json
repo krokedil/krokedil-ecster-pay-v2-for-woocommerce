@@ -1,0 +1,7 @@
+{
+     "1.1.0" : {
+          "description" : "<ul><li>Tweak - Add order note about cause of problem when order is created via checkout error flow.</li><li>Tweak - Moved unsetting of sessions to wc_ecster_unset_sessions() function.</li><li>Fix - Fixed double order problem in checkout error flow.</li></ul>",
+          "requires" : "4.7.0",
+          "tested" : "5.4"
+     }
+}
