@@ -32,6 +32,7 @@ More information on how to get started can be found in the [plugin documentation
 == CHANGELOG ==
 
 = 2020.04.30        - version 1.1.1 =
+* Tweak             - Updated a couple of strings in Swedish translation.
 * Fix               - Don't run Ecster js scripts on thank you page. Could cause a new session request to Ecster.
 * Fix               - Don't try to create order in Woo on backup order creation callback if the callback data contain info regarding a failed payment.
 
