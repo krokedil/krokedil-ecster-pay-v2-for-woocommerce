@@ -96,8 +96,8 @@ class WC_Gateway_Ecster extends WC_Payment_Gateway {
 	 * Enqueue checkout page scripts
 	 */
 	function checkout_scripts() {
-		$checkout_cart_key = ecster_maybe_create_order();
-		if ( is_checkout() ) {
+		if ( is_checkout() && ! is_wc_endpoint_url( 'order-received' ) ) {
+			$checkout_cart_key = ecster_maybe_create_order();
 			if ( $this->testmode ) {
 				wp_register_script( 'ecster_pay', 'https://labs.ecster.se/pay/integration/ecster-pay-labs.js', array(), false, false );
 			} else {

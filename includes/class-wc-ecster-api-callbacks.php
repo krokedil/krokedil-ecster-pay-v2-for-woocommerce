@@ -59,13 +59,18 @@ class Ecster_Api_Callbacks {
 
 			$this->update_woocommerce_order( $response_body, $order_id );
 
-		} else { // We can't find a coresponding Order ID. Let's create an order
+		} else { // We can't find a coresponding Order ID.
+			if ( 'FAILED' !== $response_body->status ) {
 
-			$order = $this->create_woocommerce_order( $response_body, $internal_reference, $external_reference );
+				// Create the order in Woo.
+				$order = $this->create_woocommerce_order( $response_body, $internal_reference, $external_reference );
 
-			// Send order number to Ecster
-			if ( is_object( $order ) ) {
-				$this->update_order_reference_in_ecster( $internal_reference, $order );
+				// Send order number to Ecster.
+				if ( is_object( $order ) ) {
+					$this->update_order_reference_in_ecster( $internal_reference, $order );
+				}
+			} else {
+				WC_Gateway_Ecster::log( 'OSN callback. No corresponding order ID in Woo but Ecster order status: ' . $response_body->status . '. No backup order creation needed.' ); // Input var okay.
 			}
 		} // End if().
 	}
