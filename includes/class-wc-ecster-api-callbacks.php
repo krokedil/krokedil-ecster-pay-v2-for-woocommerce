@@ -330,7 +330,7 @@ class Ecster_Api_Callbacks {
 	 */
 	public function update_order_reference_in_ecster( $internal_reference, $order ) {
 
-		$request  = new WC_Ecster_Request_Update_Reference( $this->username, $this->password, $this->testmode );
+		$request  = new WC_Ecster_Request_Update_Reference( $this->api_key, $this->merchant_key, $this->testmode );
 		$response = $request->response( $internal_reference, $order->get_order_number() );
 
 		WC_Gateway_Ecster::log( 'Update Ecster order reference in backup order creation (for internal reference ' . $internal_reference . ') ' . $order->get_order_number() );
