@@ -259,8 +259,10 @@ class WC_Ecster_Ajax {
 			WC_Gateway_Ecster::log( 'Ecster checkout_error - creating order id ' . $order_id );
 
 			update_post_meta( $order_id, '_wc_ecster_internal_reference', $ecster_order_id );
+			update_post_meta( $order_id, '_transaction_id', $ecster_order_id );
+			update_post_meta( $order_id, '_wc_ecster_payment_method', $response_body->properties->method );
 
-			$this->add_order_payment_method( $order ); // Store payment method.
+			$this->add_order_payment_method( $order, $response_body ); // Store payment method.
 
 			$this->helper_add_customer_data_to_local_order( $order, $response_body );
 
@@ -302,7 +304,6 @@ class WC_Ecster_Ajax {
 
 			$note = sprintf( __( 'This order was made as a fallback due to an error in the checkout (%s). Please verify the order with Ecster.', 'krokedil-ecster-pay-for-woocommerce' ), $error_message );
 			$order->add_order_note( $note );
-			
 
 			$redirect_url = $order->get_checkout_order_received_url();
 		}
@@ -333,7 +334,7 @@ class WC_Ecster_Ajax {
 	 * @return void.
 	 */
 	public function check_if_order_exists( $ecster_order_id = null ) {
-		$query                  = new WC_Order_Query(
+		$query          = new WC_Order_Query(
 			array(
 				'limit'          => -1,
 				'orderby'        => 'date',
@@ -343,8 +344,8 @@ class WC_Ecster_Ajax {
 				'date_created'   => '>' . ( time() - DAY_IN_SECONDS ),
 			)
 		);
-		$orders                 = $query->get_orders();
-		$order_id_match         = null;
+		$orders         = $query->get_orders();
+		$order_id_match = null;
 		foreach ( $orders as $order_id ) {
 			$ecster_internal_reference = get_post_meta( $order_id, '_wc_ecster_internal_reference', true );
 			if ( strtolower( $ecster_internal_reference ) === strtolower( $ecster_order_id ) ) {
@@ -637,10 +638,14 @@ class WC_Ecster_Ajax {
 	 * @since  1.4.1
 	 * @access public
 	 */
-	public function add_order_payment_method( $order ) {
+	public function add_order_payment_method( $order, $response_body ) {
 		$available_gateways = WC()->payment_gateways->payment_gateways();
 		$payment_method     = $available_gateways['ecster'];
 		$order->set_payment_method( $payment_method );
+		// Payment method title.
+		$payment_method_title = wc_ecster_get_payment_method_name( $response_body->properties->method );
+		$order->add_order_note( sprintf( __( 'Payment via Ecster Pay %s.', 'krokedil-ecster-pay-for-woocommerce' ), $payment_method_title ) );
+		$order->set_payment_method_title( apply_filters( 'wc_ecster_payment_method_title', sprintf( __( '%s via Ecster Pay', 'krokedil-ecster-pay-for-woocommerce' ), $payment_method_title ), $payment_method_title ) );
 	}
 
 	public function wc_change_to_ecster() {
