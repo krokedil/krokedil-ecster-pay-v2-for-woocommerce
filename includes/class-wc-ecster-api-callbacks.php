@@ -136,7 +136,7 @@ class Ecster_Api_Callbacks {
 				}
 				break;
 			case 'FULLY_DELIVERED':
-				if ( 'INVOICE' == $response_body->response->paymentMethod->type || 'ACCOUNT' == $response_body->response->paymentMethod->type ) {
+				if ( 'INVOICE' == $response_body->properties->method || 'ACCOUNT' == $response_body->properties->method ) {
 					$order->add_order_note( __( 'Ecster reported order fully delivered.', 'krokedil-ecster-pay-for-woocommerce' ) );
 				}
 				if ( ! $order->has_status( array( 'processing', 'completed' ) ) ) {
@@ -180,11 +180,6 @@ class Ecster_Api_Callbacks {
 			default:
 				break;
 		} // End switch().
-
-		if ( $order->get_user_id() > 0 ) {
-			update_user_meta( $order->get_user_id(), 'billing_phone', $response_body->response->customer->cellular );
-		}
-
 	}
 
 	/**
