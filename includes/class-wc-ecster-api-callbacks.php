@@ -297,6 +297,11 @@ class Ecster_Api_Callbacks {
 		update_post_meta( $order_id, '_wc_ecster_external_reference', $external_reference );
 		update_post_meta( $order_id, '_wc_ecster_payment_method', $response_body->properties->method );
 
+		// Payment method title.
+		$payment_method_title = wc_ecster_get_payment_method_name( $response_body->properties->method );
+		$order->add_order_note( sprintf( __( 'Payment via Ecster Pay %s.', 'krokedil-ecster-pay-for-woocommerce' ), $payment_method_title ) );
+		$order->set_payment_method_title( apply_filters( 'wc_ecster_payment_method_title', sprintf( __( '%s via Ecster Pay', 'krokedil-ecster-pay-for-woocommerce' ), $payment_method_title ), $payment_method_title ) );
+
 		$order->calculate_totals();
 		$order->save();
 
@@ -316,12 +321,6 @@ class Ecster_Api_Callbacks {
 				break;
 		}
 		$order->add_order_note( __( 'Order created via Ecster Pay API callback. Please verify the order in Ecsters system.', 'krokedil-ecster-pay-for-woocommerce' ) );
-		$order->add_order_note(
-			sprintf(
-				__( 'Payment via Ecster Pay %s.', 'krokedil-ecster-pay-for-woocommerce' ),
-				$response_body->response->paymentMethod->type
-			)
-		);
 
 		return $order;
 	}
