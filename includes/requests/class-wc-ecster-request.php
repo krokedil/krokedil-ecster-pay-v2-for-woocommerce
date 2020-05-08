@@ -119,7 +119,7 @@ class WC_Ecster_Request {
 	protected function platform() {
 		$ecster_platform = array(
 			'reference' => WC_ECSTER_ECP_ID,
-			'info'      => 'WooCommerce ' . WC_VERSION,
+			'info'      => 'Ecster plugin version ' . WC_ECSTER_VERSION . '. WooCommerce version ' . WC_VERSION,
 		);
 
 		return $ecster_platform;
