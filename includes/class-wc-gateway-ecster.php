@@ -235,6 +235,7 @@ class WC_Gateway_Ecster extends WC_Payment_Gateway {
 
 			// Payment method title.
 			$payment_method_title = wc_ecster_get_payment_method_name( $response_body->properties->method );
+			update_post_meta( $order_id, '_wc_ecster_payment_method', $response_body->properties->method );
 			$order->add_order_note( sprintf( __( 'Payment via Ecster Pay %s.', 'krokedil-ecster-pay-for-woocommerce' ), $payment_method_title ) );
 			$order->set_payment_method_title( apply_filters( 'wc_ecster_payment_method_title', sprintf( __( '%s via Ecster Pay', 'krokedil-ecster-pay-for-woocommerce' ), $payment_method_title ), $payment_method_title ) );
 			$order->save();
