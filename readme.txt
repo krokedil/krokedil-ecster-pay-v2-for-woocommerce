@@ -2,9 +2,9 @@
 Contributors: krokedil, niklashogefjord
 Tags: ecommerce, e-commerce, woocommerce, ecster
 Requires at least: 4.5
-Tested up to: 5.4
+Tested up to: 5.4.1
 WC requires at least: 3.5.0
-WC tested up to: 4.0.1
+WC tested up to: 4.1.0
 License: GPLv3
 License URI: http://www.gnu.org/licenses/gpl-3.0.html
 Stable tag: trunk
@@ -30,6 +30,15 @@ More information on how to get started can be found in the [plugin documentation
 
 
 == CHANGELOG ==
+
+= 2020.05.08        - version 2.0.0 =
+* Tweak             - Major version bump to easier be able to distinguish between EP1 & EP2.
+* Tweak             - Added plugin version to header in requests sent to Ecster.
+* Tweak             - Save _wc_ecster_payment_method order post meta in regular checkout flow.
+* Fix               - Save phone number and email in order if it hasen't been saved during regular checkout form submission.
+* Fix               - Set correct payment method in backup order creation flow.
+* Fix               - Fixed bug in WC_Ecster_Request_Update_Reference request in backup order creation flow.
+* Fix               - Set correct Ecster payment method name and save _transaction_id in submission error (checkout_error) sequence.
 
 = 2020.04.30        - version 1.1.1 =
 * Tweak             - Updated a couple of strings in Swedish translation.
