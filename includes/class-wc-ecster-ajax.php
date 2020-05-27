@@ -49,6 +49,9 @@ class WC_Ecster_Ajax {
 
 		add_action( 'wp_ajax_wc_change_to_ecster', array( $this, 'wc_change_to_ecster' ) );
 		add_action( 'wp_ajax_nopriv_wc_change_to_ecster', array( $this, 'wc_change_to_ecster' ) );
+
+		add_action( 'wp_ajax_wc_ecster_on_checkout_start_failure', array( $this, 'ajax_on_checkout_start_failure' ) );
+		add_action( 'wp_ajax_nopriv_wc_ecster_on_checkout_start_failure', array( $this, 'ajax_on_checkout_start_failure' ) );
 	}
 
 	/**
@@ -319,6 +322,27 @@ class WC_Ecster_Ajax {
 		*/
 
 		wp_send_json_success( array( 'redirect' => $redirect_url ) );
+		wp_die();
+	}
+
+	/**
+	 * Ecster checkout start failure. Triggered when Ecster cart session has expired.
+	 * Removes the ecster_checkout_cart_key session.
+	 */
+	public function ajax_on_checkout_start_failure() {
+		if ( ! wp_verify_nonce( $_REQUEST['nonce'], 'wc_ecster_nonce' ) ) {
+			WC_Gateway_Ecster::log( 'Nonce can not be verified - ajax_on_checkout_start_failure.' );
+			exit( 'Nonce can not be verified.' );
+		}
+
+		if ( method_exists( WC()->session, '__unset' ) ) {
+			if ( WC()->session->get( 'ecster_checkout_cart_key' ) ) {
+				WC()->session->__unset( 'ecster_checkout_cart_key' );
+			}
+			wp_send_json_success();
+		} else {
+			wp_send_json_error();
+		}
 		wp_die();
 	}
 
