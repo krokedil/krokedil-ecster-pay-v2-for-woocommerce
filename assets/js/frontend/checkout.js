@@ -32,7 +32,7 @@
 
 		// Check if Ecster is selected, Ecster library loaded and Ecster container exists
 		if ("ecster" === $("input[name='payment_method']:checked").val() && typeof window.EcsterPay === "object" && $("#ecster-pay-ctr").length) {
-			if (null !== wc_ecster_cart_key) {
+			if (null !== wc_ecster_cart_key && true !== wc_ecster_cart_key.includes( 'Error' ) ) {
 				EcsterPay.start({
 					cartKey: wc_ecster_cart_key, // from create cart REST call
 					shopTermsUrl: wc_ecster.terms,
@@ -54,6 +54,9 @@
 					},
 					onCheckoutStartFailure: function (failureData) {
 						$("#order_review").unblock();
+						console.log('onCheckoutStartFailure');
+						console.log(failureData);
+						wc_ecster_on_checkout_start_failure(failureData);
 					},
 					onCheckoutUpdateInit: function () {
 						$("#order_review").block({
@@ -91,6 +94,11 @@
 						wc_ecster_fail_local_order('denied');
 					}
 				});
+			} else {
+				console.log('wc_ecster_cart_key');
+				console.log(wc_ecster_cart_key);
+				document.querySelector('#ecster-pay-ctr').innerHTML = '<div class="woocommerce-error">' + wc_ecster_cart_key + '</div>';
+				
 			}
 		}
 	};
@@ -145,6 +153,28 @@
 	var wc_ecster_init = function wc_ecster_init() {
 		wc_ecster_create_cart();
 	};
+
+	// on Ecster checkout start failure. Triggered when Ecster cart session has expired.
+    var wc_ecster_on_checkout_start_failure = function wc_ecster_on_checkout_start_failure(paymentData) {
+
+        // Delete the current cart key and reload the page.
+        $.ajax(
+            wc_ecster.ajaxurl,
+            {
+                type: "POST",
+                dataType: "json",
+                async: true,
+                data: {
+                    action:       "wc_ecster_on_checkout_start_failure",
+                    payment_data: paymentData,
+                    nonce:        wc_ecster.wc_ecster_nonce
+                },
+           	success: function() {
+				window.location.reload(true);
+            }
+            }
+        );
+    };
 
     // on customer authentication
     var wc_ecster_on_customer_authenticated = function wc_ecster_on_customer_authenticated(customer_data) {
