@@ -13,5 +13,10 @@
           "description" : "<ul><li>Tweak - Major version bump to easier be able to distinguish between EP1 & EP2.</li><li>Tweak - Added plugin version to header in requests sent to Ecster.</li><li>Tweak - Save _wc_ecster_payment_method order post meta in regular checkout flow.</li><li>Fix - Save phone number and email in order if it hasen't been saved during regular checkout form submission.</li><li>Fix - Set correct payment method in backup order creation flow.</li><li>Fix - Fixed bug in WC_Ecster_Request_Update_Reference request in backup order creation flow.</li><li>Fix - Set correct Ecster payment method name and save _transaction_id in submission error (checkout_error) sequence.</li></ul>",
           "requires" : "4.7.0",
           "tested" : "5.4.1"
+     },
+     "2.0.1" : {
+          "description" : "<ul><li>Tweak - Improved displaying of error message in checkout if wrong API keys are entered in settings.</li><li>Fix - Remove current Ecster session and create a new if it has expired. Avoids eternal Ecster spinner in checkout.</li><li>Fix - Change vatRate for fees to work with new API.</li><li>Fix - Rounding fix in fee amount and cart total amount.</li></ul>",
+          "requires" : "4.7.0",
+          "tested" : "5.4.1"
      }
 }

@@ -30,7 +30,7 @@ class WC_Ecster_Request_Cart {
 				$product_id = $item['product_id'];
 			}
 
-			$ecster_cart_rows[]  = array(
+			$ecster_cart_rows[] = array(
 				'partNumber'     => self::product_part_number( $product ),
 				'name'           => self::product_name( $product, $item ), // Mandatory.
 				'quantity'       => $item['quantity'],                     // Mandatory
@@ -50,20 +50,20 @@ class WC_Ecster_Request_Cart {
 				// @TODO: Throw an error if tax rate is not in the array
 				$fee_tax_rate = round( $fee->tax / $fee->amount * 100 );
 				if ( in_array( $fee_tax_rate, array( 0, 6, 12, 25 ) ) ) {
-					$fee_vat_code = $fee_tax_rate . '%';
+					$fee_vat_code = intval( $fee_tax_rate * 100 );
 				} else {
-					$fee_vat_code = '0%';
+					$fee_vat_code = 0;
 				}
 				$ecster_cart_rows[]  = array(
 					'name'           => $fee->name,
 					'description'    => $fee->id,
 					'quantity'       => 1,
-					'unitAmount'     => ( $fee->amount + $fee->tax ) * 100,
+					'unitAmount'     => round( ( $fee->amount + $fee->tax ) * 100 ),
 					'unit'           => ' ',
 					'vatRate'        => $fee_vat_code,
 					'discountAmount' => 0,
 				);
-				$ecster_cart_amount += ( $fee->amount + $fee->tax ) * 100;
+				$ecster_cart_amount += round( ( $fee->amount + $fee->tax ) * 100 );
 			}
 		}
 
