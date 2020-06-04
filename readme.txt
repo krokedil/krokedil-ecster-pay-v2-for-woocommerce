@@ -3,8 +3,8 @@ Contributors: krokedil, niklashogefjord
 Tags: ecommerce, e-commerce, woocommerce, ecster
 Requires at least: 4.5
 Tested up to: 5.4.1
-WC requires at least: 3.5.0
-WC tested up to: 4.1.0
+WC requires at least: 3.7.0
+WC tested up to: 4.2.0
 License: GPLv3
 License URI: http://www.gnu.org/licenses/gpl-3.0.html
 Stable tag: trunk
@@ -30,6 +30,12 @@ More information on how to get started can be found in the [plugin documentation
 
 
 == CHANGELOG ==
+
+= 2020.06.04        - version 2.0.1 =
+* Tweak             - Improved displaying of error message in checkout if wrong API keys are entered in settings.
+* Fix               - Remove current Ecster session and create a new if it has expired. Avoids eternal Ecster spinner in checkout.
+* Fix               - Change vatRate for fees to work with new API.
+* Fix               - Rounding fix in fee amount and cart total amount.
 
 = 2020.05.08        - version 2.0.0 =
 * Tweak             - Major version bump to easier be able to distinguish between EP1 & EP2.
