@@ -58,12 +58,12 @@ class WC_Ecster_Request_Cart {
 					'name'           => $fee->name,
 					'description'    => $fee->id,
 					'quantity'       => 1,
-					'unitAmount'     => ( $fee->amount + $fee->tax ) * 100,
+					'unitAmount'     => round( ( $fee->amount + $fee->tax ) * 100 ),
 					'unit'           => ' ',
 					'vatRate'        => $fee_vat_code,
 					'discountAmount' => 0,
 				);
-				$ecster_cart_amount += ( $fee->amount + $fee->tax ) * 100;
+				$ecster_cart_amount += round( ( $fee->amount + $fee->tax ) * 100 );
 			}
 		}
 
