@@ -385,12 +385,6 @@
 			} else {
 				wc_ecster_update_cart();
 			}
-
-			// Add "choose another payment method" link
-			if ( wc_ecster.add_change_method_button == 1 ) {
-				wc_ecster.add_change_method_button = 0;
-				$('<p><a href="#" class="button">' + wc_ecster.select_another_method_text + '</a></p>').appendTo('#ecster-wrapper').addClass('ecster-pay-choose-other');
-			}
 		}
 	});
 

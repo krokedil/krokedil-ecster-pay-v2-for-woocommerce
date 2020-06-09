@@ -103,8 +103,7 @@ class WC_Gateway_Ecster extends WC_Payment_Gateway {
 			} else {
 				wp_register_script( 'ecster_pay', 'https://secure.ecster.se/pay/integration/ecster-pay.js', array(), false, true );
 			}
-			$suffix                     = defined( 'SCRIPT_DEBUG' ) && SCRIPT_DEBUG ? '' : '.min';
-			$select_another_method_text = ( $this->select_another_method_text ?: __( 'Select another payment method', 'krokedil-ecster-pay-for-woocommerce' ) );
+			$suffix = defined( 'SCRIPT_DEBUG' ) && SCRIPT_DEBUG ? '' : '.min';
 			wp_register_script(
 				'ecster_checkout',
 				WC_ECSTER_PLUGIN_URL . '/assets/js/frontend/checkout' . $suffix . '.js',
@@ -112,19 +111,13 @@ class WC_Gateway_Ecster extends WC_Payment_Gateway {
 				WC_ECSTER_VERSION,
 				true
 			);
-			$available_gateways       = WC()->payment_gateways()->get_available_payment_gateways();
-			$add_change_method_button = 0;
-			if ( count( $available_gateways ) > 1 ) {
-				$add_change_method_button = 1;
-			}
+
 			wp_localize_script(
 				'ecster_checkout',
 				'wc_ecster',
 				array(
 					'ajaxurl'                     => admin_url( 'admin-ajax.php' ),
 					'terms'                       => wc_get_page_permalink( 'terms' ),
-					'select_another_method_text'  => $select_another_method_text,
-					'add_change_method_button'    => $add_change_method_button,
 					'wc_ecster_nonce'             => wp_create_nonce( 'wc_ecster_nonce' ),
 					'wc_change_to_ecster_nonce'   => wp_create_nonce( 'wc_change_to_ecster_nonce' ),
 					'move_checkout_fields'        => apply_filters( 'wc_ecster_move_checkout_fields', array( '' ) ),
