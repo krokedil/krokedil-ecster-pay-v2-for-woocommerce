@@ -302,23 +302,32 @@
                 },
            success: function() {
 					console.log( 'success' );
-                    // Clear WooCommerce checkout form.
-                    $('#ship-to-different-address-checkbox').prop('checked', true);
-					// Populate the form and submit it.
-                    var customerCountry;
-                    var customerPhone;
+					var customerCountry;
+					var customerPhone;
+					var customerType;
+
+                    // Separate billing and shipping address checkbox checked.
+					$('#ship-to-different-address-checkbox').prop('checked', true);
+					
+					// Set customerType if it exist.
+					if( $("input[name='ecster-customer-type']").length > 0 ){
+						customerType = $("input[name='ecster-customer-type']:checked").val();
+					}
+					
+                    // Set country.
                     if (paymentData.consumer.address.country) {
                         customerCountry = paymentData.consumer.address.country;
                     } else {
                         customerCountry = 'SE';
                     }
 
+					// Set phone.
                     if (paymentData.consumer.contactInfo.cellular.number.indexOf("*") > -1) {
                         customerPhone = '0';
                     } else {
                         customerPhone = paymentData.consumer.contactInfo.cellular.number;
 					}
-				
+					// Populate the form and submit it.
 					$("form.checkout #billing_first_name").val(paymentData.consumer.name.firstName);
 					$("form.checkout #billing_last_name").val(paymentData.consumer.name.lastName);
 					$("form.checkout #billing_email").val(paymentData.consumer.contactInfo.email);
@@ -328,6 +337,13 @@
 					$("form.checkout #billing_postcode").val(paymentData.consumer.address.zip);
 					$("form.checkout #billing_phone").val(customerPhone);
 
+					if( 'b2b' === customerType ) {
+						$("form.checkout #billing_company").val(paymentData.consumer.address.line2);
+					} else {
+						$("form.checkout #billing_company").val('');
+						$("form.checkout #billing_address_2").val(paymentData.consumer.address.line2);
+					}
+
                     // Check if there's separate shipping address
                    if (paymentData.recipient) {
                         $("form.checkout #shipping_first_name").val(paymentData.recipient.name.firstName);
@@ -335,7 +351,14 @@
                         $("form.checkout #shipping_country").val(paymentData.recipient.address.country);
                         $("form.checkout #shipping_address_1").val(paymentData.recipient.address.line1);
                         $("form.checkout #shipping_city").val(paymentData.recipient.address.city);
-                        $("form.checkout #shipping_postcode").val(paymentData.recipient.address.zip);
+						$("form.checkout #shipping_postcode").val(paymentData.recipient.address.zip);
+						
+						if( 'b2b' === customerType ) {
+							$("form.checkout #shipping_company").val(paymentData.recipient.address.line2);
+						} else {
+							$("form.checkout #shipping_company").val('');
+							$("form.checkout #shipping_address_2").val(paymentData.recipient.address.line2);
+						}
                     } else {
                         $("form.checkout #ship-to-different-address-checkbox").prop("checked", false);
                     }
