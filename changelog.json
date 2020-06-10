@@ -18,5 +18,10 @@
           "description" : "<ul><li>Tweak - Improved displaying of error message in checkout if wrong API keys are entered in settings.</li><li>Fix - Remove current Ecster session and create a new if it has expired. Avoids eternal Ecster spinner in checkout.</li><li>Fix - Change vatRate for fees to work with new API.</li><li>Fix - Rounding fix in fee amount and cart total amount.</li></ul>",
           "requires" : "4.7.0",
           "tested" : "5.4.1"
+     },
+     "2.0.2" : {
+          "description" : "<ul><li>Tweak - Move Select another payment method button to above iframe. Render it via template hook instead of via JS.</li><li>Fix - Save company name correct in WooCommerce order for B2B purchases.</li></ul>",
+          "requires" : "4.7.0",
+          "tested" : "5.4.1"
      }
 }

@@ -31,6 +31,10 @@ More information on how to get started can be found in the [plugin documentation
 
 == CHANGELOG ==
 
+= 2020.06.10        - version 2.0.2 =
+* Tweak             - Move Select another payment method button to above iframe. Render it via template hook instead of via JS.
+* Fix               - Save company name correct in WooCommerce order for B2B purchases.
+
 = 2020.06.04        - version 2.0.1 =
 * Tweak             - Improved displaying of error message in checkout if wrong API keys are entered in settings.
 * Fix               - Remove current Ecster session and create a new if it has expired. Avoids eternal Ecster spinner in checkout.
