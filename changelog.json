@@ -23,5 +23,10 @@
           "description" : "<ul><li>Tweak - Move Select another payment method button to above iframe. Render it via template hook instead of via JS.</li><li>Fix - Save company name correct in WooCommerce order for B2B purchases.</li></ul>",
           "requires" : "4.7.0",
           "tested" : "5.4.1"
+     },
+     "2.0.3" : {
+          "description" : "<ul><li>Tweak - Check if Ecster reference already exist in order before processing/creating Woo order.</li><li>Tweak - Adds CSS class processing when submitting Woo form to avoid double posting.</li><li>Fix - Save Ecster reference as _transaction_id in backup order creation.</li></ul>",
+          "requires" : "4.7.0",
+          "tested" : "5.4.2"
      }
 }

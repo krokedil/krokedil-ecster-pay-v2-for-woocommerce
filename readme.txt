@@ -2,9 +2,9 @@
 Contributors: krokedil, niklashogefjord
 Tags: ecommerce, e-commerce, woocommerce, ecster
 Requires at least: 4.5
-Tested up to: 5.4.1
+Tested up to: 5.4.2
 WC requires at least: 3.7.0
-WC tested up to: 4.2.0
+WC tested up to: 4.2.2
 License: GPLv3
 License URI: http://www.gnu.org/licenses/gpl-3.0.html
 Stable tag: trunk
@@ -30,6 +30,11 @@ More information on how to get started can be found in the [plugin documentation
 
 
 == CHANGELOG ==
+
+= 2020.06.25        - version 2.0.3 =
+* Tweak             - Check if Ecster reference already exist in order before processing/creating Woo order.
+* Tweak             - Adds CSS class processing when submitting Woo form to avoid double posting.
+* Fix               - Save Ecster reference as _transaction_id in backup order creation.
 
 = 2020.06.10        - version 2.0.2 =
 * Tweak             - Move Select another payment method button to above iframe. Render it via template hook instead of via JS.
