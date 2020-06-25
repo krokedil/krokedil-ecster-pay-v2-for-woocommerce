@@ -289,6 +289,7 @@ class Ecster_Api_Callbacks {
 		}
 
 		update_post_meta( $order_id, '_wc_ecster_internal_reference', $internal_reference );
+		update_post_meta( $order_id, '_transaction_id', $internal_reference );
 		update_post_meta( $order_id, '_wc_ecster_external_reference', $external_reference );
 		update_post_meta( $order_id, '_wc_ecster_payment_method', $response_body->properties->method );
 

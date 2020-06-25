@@ -224,13 +224,46 @@ class WC_Ecster_Ajax {
 	 * Calculate cart totals.
 	 * Update order cart hash.
 	 */
-	function ajax_on_payment_success() {
+	public function ajax_on_payment_success() {
 		if ( ! wp_verify_nonce( $_REQUEST['nonce'], 'wc_ecster_nonce' ) ) { // Input var okay.
 			WC_Gateway_Ecster::log( 'Nonce can not be verified - on_payment_success.' );
 			exit( 'Nonce can not be verified.' );
 		}
 		$payment_data = $_POST['payment_data']; // Input var okay.
 		WC()->session->set( 'ecster_order_id', $payment_data['internalReference'] );
+
+		// Prevent duplicate orders if payment complete event is triggered twice or if order already exist in Woo (via API callback).
+		$query          = new WC_Order_Query(
+			array(
+				'limit'          => -1,
+				'orderby'        => 'date',
+				'order'          => 'DESC',
+				'return'         => 'ids',
+				'payment_method' => 'ecster',
+				'date_created'   => '>' . ( time() - DAY_IN_SECONDS ),
+			)
+		);
+		$orders         = $query->get_orders();
+		$order_id_match = null;
+		foreach ( $orders as $order_id ) {
+			$order_payment_id = get_post_meta( $order_id, '_wc_ecster_internal_reference', true );
+			if ( $order_payment_id === $payment_data['internalReference'] ) {
+				$order_id_match = $order_id;
+				break;
+			}
+		}
+
+		if ( $order_id_match ) {
+			$order = wc_get_order( $order_id_match );
+			if ( $order->has_status( array( 'on-hold', 'processing', 'completed' ) ) ) {
+				WC_Gateway_Ecster::log( 'Payment success event triggeres but _wc_ecster_internal_reference already exist in order ID: ' . $order_id_match );
+				$location = $order->get_checkout_order_received_url();
+				WC_Gateway_Ecster::log( '$location: ' . $location );
+				wp_send_json_error( array( 'redirect' => $location ) );
+				wp_die();
+			}
+		}
+
 		if ( isset( $payment_data['fees'] ) ) {
 			$this->helper_add_invoice_fees_to_session( $payment_data['fees'] );
 		}
