@@ -376,6 +376,7 @@
 						}
 						console.log( 'submit' );
 						$("form.woocommerce-checkout").trigger("submit");
+						$('form.woocommerce-checkout').addClass( 'processing' );
 					}
 					
 				},
