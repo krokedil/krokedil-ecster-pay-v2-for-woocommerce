@@ -63,7 +63,7 @@ class WC_Ecster_Request_Create_Cart extends WC_Ecster_Request {
 
 		WC_Gateway_Ecster::log( 'Ecster create cart request body: ' . json_encode( $formatted_request_body ) );
 
-		return stripslashes_deep( wp_json_encode( $formatted_request_body ) );
+		return stripslashes_deep( wp_json_encode( $formatted_request_body, JSON_HEX_QUOT ) );
 	}
 
 }

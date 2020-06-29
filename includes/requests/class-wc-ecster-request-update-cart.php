@@ -65,7 +65,7 @@ class WC_Ecster_Request_Update_Cart extends WC_Ecster_Request {
 			'platform'        => $this->platform(),
 			'notificationUrl' => $this->notification_url(),
 		);
-		return wp_json_encode( $formatted_request_body );
+		return wp_json_encode( $formatted_request_body, JSON_HEX_QUOT );
 	}
 
 }
