@@ -60,7 +60,7 @@ class Ecster_Api_Callbacks {
 			$this->update_woocommerce_order( $response_body, $order_id );
 
 		} else { // We can't find a coresponding Order ID.
-			if ( 'FAILED' !== $response_body->status ) {
+			if ( 'FULLY_DELIVERED' === $response_body->status || 'READY' === $response_body->status ) {
 
 				// Create the order in Woo.
 				$order = $this->create_woocommerce_order( $response_body, $internal_reference, $external_reference );
