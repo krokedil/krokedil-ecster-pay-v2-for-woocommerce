@@ -31,6 +31,10 @@ More information on how to get started can be found in the [plugin documentation
 
 == CHANGELOG ==
 
+= 2020.06.29        - version 2.0.4 =
+* Fix               - Escape " characters in cart/order data sent to Ecster. Caused Ecster checkout to fail.
+* Fix               - Only create WC order via fallback order creation sequence if Ecster order status is READY or FULLY_DELIVERED.
+
 = 2020.06.25        - version 2.0.3 =
 * Tweak             - Check if Ecster reference already exist in order before processing/creating Woo order.
 * Tweak             - Adds CSS class processing when submitting Woo form to avoid double posting.
