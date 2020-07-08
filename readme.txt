@@ -31,6 +31,10 @@ More information on how to get started can be found in the [plugin documentation
 
 == CHANGELOG ==
 
+= 2020.07.08        - version 2.0.5 =
+* Fix               - Don't trigger payment method change function during Woo form submission/order creation process. Could cause conflict with other plugins and prevent user from being redirected to thank uou page.
+* Fix               - Don't trigger wc_ecster_on_checkout_start_failure function during Woo form submission/order creation process.
+
 = 2020.06.29        - version 2.0.4 =
 * Fix               - Escape " characters in cart/order data sent to Ecster. Caused Ecster checkout to fail.
 * Fix               - Only create WC order via fallback order creation sequence if Ecster order status is READY or FULLY_DELIVERED.

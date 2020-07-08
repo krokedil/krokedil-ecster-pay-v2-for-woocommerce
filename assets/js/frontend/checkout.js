@@ -6,6 +6,7 @@
 	var wc_ecster_on_customer_authenticated_data = false;
 	var wc_ecster_on_changed_delivery_address_data = false;
 	var wc_ecster_cart_key = wc_ecster.ecster_checkout_cart_key;
+	var wc_ecster_order_processing = false;
 
 	var wc_ecster_body_class = function wc_ecster_body_class() {
 		if ("ecster" === $("input[name='payment_method']:checked").val()) {
@@ -156,6 +157,12 @@
 
 	// on Ecster checkout start failure. Triggered when Ecster cart session has expired.
     var wc_ecster_on_checkout_start_failure = function wc_ecster_on_checkout_start_failure(paymentData) {
+
+		// Don't trigger on checkout start failure if we are currently submitting/processing the Woo order.
+		if( true === wc_ecster_order_processing ) {
+			console.log( 'Aborting Ecster on_checkout_start_failure. Order processing active.' );
+			return;
+		}
 
         // Delete the current cart key and reload the page.
         $.ajax(
@@ -374,7 +381,8 @@
 						if ($("form.checkout #terms").length > 0) {
 							$("form.checkout #terms").prop("checked", true);
 						}
-						console.log( 'submit' );
+						console.log( 'submit Woo form' );
+						wc_ecster_order_processing = true;
 						$("form.woocommerce-checkout").trigger("submit");
 						$('form.woocommerce-checkout').addClass( 'processing' );
 					}
@@ -466,7 +474,14 @@
 	});
 
 	function changePaymentMethod( bool ) {
+		console.log( 'Ecster changePaymentMethod' );
 		console.log( bool );
+
+		// Don't change payment method if we are currently submitting/processing the Woo order.
+		if( true === wc_ecster_order_processing ) {
+			console.log( 'Aborting Ecster change payment method. Order processing active.' );
+			return;
+		}
 
 		$('form.checkout').block({
 			message: null,
