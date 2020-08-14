@@ -38,5 +38,10 @@
           "description" : "<ul><li>Fix - Don't trigger payment method change function during Woo form submission/order creation process. Could cause conflict with other plugins and prevent user from being redirected to thank uou page.</li><li>Fix - Don't trigger wc_ecster_on_checkout_start_failure function during Woo form submission/order creation process.</li></ul>",
           "requires" : "4.7.0",
           "tested" : "5.4.2"
+     },
+     "2.0.6" : {
+          "description" : "<ul><li>Tweak - Changed CSS to B2B/B2C selector. Could be displayed on two rows with certain themes.</li></ul>",
+          "requires" : "4.7.0",
+          "tested" : "5.5"
      }
 }
