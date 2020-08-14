@@ -2,9 +2,9 @@
 Contributors: krokedil, niklashogefjord
 Tags: ecommerce, e-commerce, woocommerce, ecster
 Requires at least: 4.5
-Tested up to: 5.4.2
+Tested up to: 5.5
 WC requires at least: 3.7.0
-WC tested up to: 4.2.2
+WC tested up to: 4.3.2
 License: GPLv3
 License URI: http://www.gnu.org/licenses/gpl-3.0.html
 Stable tag: trunk
@@ -30,6 +30,9 @@ More information on how to get started can be found in the [plugin documentation
 
 
 == CHANGELOG ==
+
+= 2020.08.14        - version 2.0.6 =
+* Tweak             - Changed CSS to B2B/B2C selector. Could be displayed on two rows with certain themes.
 
 = 2020.07.08        - version 2.0.5 =
 * Fix               - Don't trigger payment method change function during Woo form submission/order creation process. Could cause conflict with other plugins and prevent user from being redirected to thank uou page.

@@ -38,3 +38,9 @@
 .ecster-selected .row.pt-0 {
 	display: none;
 }
+
+/* B2B B2C switcher **/
+label[for=ecster-b2c],
+label[for=ecster-b2b] {
+	display: inline;
+}
