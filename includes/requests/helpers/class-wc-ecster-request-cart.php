@@ -157,14 +157,19 @@ class WC_Ecster_Request_Cart {
 	 * @return string|WP_Error
 	 */
 	private static function product_vat_code( $cart_item ) {
-		$tax_rate = round( $cart_item['line_subtotal_tax'] / $cart_item['line_subtotal'] * 100 );
-		if ( in_array( $tax_rate, array( 0, 6, 12, 25 ) ) ) {
-			return intval( $tax_rate * 100 );
-		} else {
-			WC_Gateway_Ecster::log( 'Invalid tax rate used in WC_Ecster_Request_Cart::product_vat_code() (can only be 0%, 6%, 12% or 25%), using 0% instead' );
+		if ( $cart_item['line_subtotal_tax'] > 0 ) {
+			$tax_rate = round( $cart_item['line_subtotal_tax'] / $cart_item['line_subtotal'] * 100 );
+			if ( in_array( $tax_rate, array( 0, 6, 12, 25 ) ) ) {
+				return intval( $tax_rate * 100 );
+			} else {
+				WC_Gateway_Ecster::log( 'Invalid tax rate used in WC_Ecster_Request_Cart::product_vat_code() (can only be 0%, 6%, 12% or 25%), using 0% instead' );
 
+				return 0;
+			}
+		} else {
 			return 0;
 		}
+
 	}
 
 	/**
