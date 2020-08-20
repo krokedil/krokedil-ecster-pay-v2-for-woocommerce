@@ -43,5 +43,10 @@
           "description" : "<ul><li>Tweak - Changed CSS to B2B/B2C selector. Could be displayed on two rows with certain themes.</li></ul>",
           "requires" : "4.7.0",
           "tested" : "5.5"
+     },
+     "2.0.7" : {
+          "description" : "<ul><li>Fix - Avoid division by zero PHP warning in calculating line item tax.</li></ul>",
+          "requires" : "4.7.0",
+          "tested" : "5.5"
      }
 }
