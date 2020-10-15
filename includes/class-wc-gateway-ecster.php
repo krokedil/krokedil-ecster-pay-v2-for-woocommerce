@@ -88,7 +88,21 @@ class WC_Gateway_Ecster extends WC_Payment_Gateway {
 		$order_id  = isset( $_GET['order_id'] ) ? $_GET['order_id'] : '';
 		self::log( 'OSN callback triggered. Ecster internal reference: ' . $decoded->orderId ); // Input var okay.
 		// wp_schedule_single_event( time() + 120, 'ecster_execute_osn_callback', array( $decoded, $order_id ) );
-		as_schedule_single_action( time() + 120, 'ecster_execute_osn_callback', array( $decoded, $order_id ) );
+
+		$scheduled_actions = as_get_scheduled_actions(
+			array(
+				'hook'   => 'ecster_execute_osn_callback',
+				'status' => ActionScheduler_Store::STATUS_PENDING,
+				'args'   => array( $decoded, $order_id ),
+			),
+			'ids'
+		);
+
+		if ( empty( $scheduled_actions ) ) {
+			as_schedule_single_action( time() + 120, 'ecster_execute_osn_callback', array( $decoded, $order_id ) );
+		} else {
+			self::log( 'OSN callback. Update already scheduled. ' . wp_json_encode( $scheduled_actions ) ); // Input var okay.
+		}
 
 		header( 'HTTP/1.0 200 OK' );
 	}
