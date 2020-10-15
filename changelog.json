@@ -48,5 +48,10 @@
           "description" : "<ul><li>Fix - Avoid division by zero PHP warning in calculating line item tax.</li></ul>",
           "requires" : "4.7.0",
           "tested" : "5.5"
+     },
+     "2.0.7" : {
+          "description" : "<ul><li>Tweak - Add shipping fee to WooCommerce order during backup order creation process.</li><li>Tweak - Use WooCommerce Action scheduler fow scheduling OSN callback jobs.</li></ul>",
+          "requires" : "4.7.0",
+          "tested" : "5.5.1"
      }
 }

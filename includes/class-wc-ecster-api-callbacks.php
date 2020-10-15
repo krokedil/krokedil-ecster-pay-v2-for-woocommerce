@@ -42,14 +42,14 @@ class Ecster_Api_Callbacks {
 	}
 
 	public function execute_osn_callback( $decoded, $order_id = '' ) {
-		$internal_reference = $decoded->orderId;
-		$external_reference = $decoded->orderReference;
+		$internal_reference = $decoded['orderId'];
+		$external_reference = $decoded['orderReference'];
 		$request            = new WC_Ecster_Request_Get_Order( $this->api_key, $this->merchant_key, $this->testmode );
 		$response           = $request->response( $internal_reference );
 		$response_body      = json_decode( $response['body'] );
 
-		WC_Gateway_Ecster::log( 'OSN callback. Order ID:' . $order_id ); // Input var okay.
-		WC_Gateway_Ecster::log( 'OSN callback. Response body:' . json_encode( $response_body ) );
+		WC_Gateway_Ecster::log( 'OSN callback executed. Order ID:' . $order_id ); // Input var okay.
+		WC_Gateway_Ecster::log( 'OSN callback executed. Response body:' . wp_json_encode( $response_body ) );
 
 		if ( empty( $order_id ) ) { // We're missing Order ID in callback. Try to get it via query by internal reference
 			$order_id = $this->get_order_id_from_internal_reference( $internal_reference );
@@ -274,6 +274,26 @@ class Ecster_Api_Callbacks {
 								throw new Exception( sprintf( __( 'Error %d: Unable to add product. Please try again.', 'woocommerce' ), 525 ) );
 							}
 						}
+					} elseif ( 'Shipping fee' === $order_row->name ) {
+
+						// Calculate price excluding tax since we are not able to send over shipping method id to Ecster.
+						if ( $order_row->vatRate > 0 ) {
+							$shipping_price = ( $order_row->unitAmount / ( 1 + ( $order_row->vatRate / 10000 ) ) ) / 100;
+						} else {
+							$shipping_price = $order_row->unitAmount / 100;
+						}
+						$item = new WC_Order_Item_Shipping();
+						$item->set_props(
+							array(
+								'method_title' => $order_row->name,
+								'method_id'    => '',
+								'tax_class'    => null,
+								'total_tax'    => 0,
+								'tax_status'   => 'none',
+								'total'        => wc_format_decimal( $shipping_price ),
+							)
+						);
+						$order->add_item( $item );
 					}
 				}
 			}
