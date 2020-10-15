@@ -42,14 +42,14 @@ class Ecster_Api_Callbacks {
 	}
 
 	public function execute_osn_callback( $decoded, $order_id = '' ) {
-		$internal_reference = $decoded->orderId;
-		$external_reference = $decoded->orderReference;
+		$internal_reference = $decoded['orderId'];
+		$external_reference = $decoded['orderReference'];
 		$request            = new WC_Ecster_Request_Get_Order( $this->api_key, $this->merchant_key, $this->testmode );
 		$response           = $request->response( $internal_reference );
 		$response_body      = json_decode( $response['body'] );
 
-		WC_Gateway_Ecster::log( 'OSN callback. Order ID:' . $order_id ); // Input var okay.
-		WC_Gateway_Ecster::log( 'OSN callback. Response body:' . json_encode( $response_body ) );
+		WC_Gateway_Ecster::log( 'OSN callback executed. Order ID:' . $order_id ); // Input var okay.
+		WC_Gateway_Ecster::log( 'OSN callback executed. Response body:' . wp_json_encode( $response_body ) );
 
 		if ( empty( $order_id ) ) { // We're missing Order ID in callback. Try to get it via query by internal reference
 			$order_id = $this->get_order_id_from_internal_reference( $internal_reference );
