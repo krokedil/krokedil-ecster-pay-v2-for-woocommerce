@@ -3,6 +3,7 @@ Contributors: krokedil, niklashogefjord
 Tags: ecommerce, e-commerce, woocommerce, ecster
 Requires at least: 4.5
 Tested up to: 5.5.1
+Requires PHP: 5.6
 WC requires at least: 3.7.0
 WC tested up to: 4.6.0
 License: GPLv3
