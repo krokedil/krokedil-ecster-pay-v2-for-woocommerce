@@ -120,10 +120,21 @@
 					nonce: wc_ecster.wc_ecster_nonce
 				},
 				success: function (response) {
+
+					if(response.success && response.data.refreshZeroAmount){
+						window.location.reload();
+					}
+
 					if (response.success && response.data.wc_ecster_cart_key) {
+
+
+
 						updated_cart_callback(response.data.wc_ecster_cart_key);
 						wc_ecster_cart_key = response.data.wc_ecster_cart_key;
 					} else {
+
+
+
 						//wc_ecster_add_container();
 						$("#ecster-pay-ctr").html('<div class="woocommerce-error" id="wc-ecster-api-error">' + response.data.error_message + '</div>');
 					}
