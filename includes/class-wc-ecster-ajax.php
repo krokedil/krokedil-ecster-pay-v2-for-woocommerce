@@ -638,7 +638,7 @@ class WC_Ecster_Ajax {
 	 * @param  object $order Local WC order.
 	 *
 	 * @throws Exception PHP Exception.
-	 * @internal param object $klarna_order Klarna order.
+	 * @internal param object $order_id Ecster order.
 	 */
 	public function helper_add_order_shipping( $order ) {
 		if ( ! defined( 'WOOCOMMERCE_CART' ) ) {
