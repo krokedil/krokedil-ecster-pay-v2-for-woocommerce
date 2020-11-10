@@ -163,6 +163,7 @@
 	// Triggered when page is first loaded, if Ecster is selected or when payment method is
 	// changed to Ecster for the first time
 	var wc_ecster_init = function wc_ecster_init() {
+		moveExtraCheckoutFields();
 		wc_ecster_create_cart();
 	};
 
@@ -284,6 +285,14 @@
             }
         );
     };
+
+	/**
+	 * Moves Add Order Notes Field to before the Ecster Checkout details field.
+	 */
+	function moveExtraCheckoutFields() {
+		// Move order comments.
+		$('#order_comments').appendTo('#ecster-extra-checkout-fields');
+	}
 
     // on Ecster payment success
     var wc_ecster_on_payment_success = function wc_ecster_on_payment_success(paymentData) {
