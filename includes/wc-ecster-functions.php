@@ -138,7 +138,7 @@ function wc_ecster_show_another_gateway_button() {
 
 		?>
 		<p class="ecster-pay-choose-other">
-			<a class="checkout-button button" href="#" id="klarna-checkout-select-other">
+			<a class="checkout-button button" href="#" id="ecster-checkout-select-other">
 				<?php echo esc_html( $select_another_method_text ); ?>
 			</a>
 		</p>
