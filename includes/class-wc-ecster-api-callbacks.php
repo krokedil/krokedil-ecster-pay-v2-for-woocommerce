@@ -274,7 +274,7 @@ class Ecster_Api_Callbacks {
 								throw new Exception( sprintf( __( 'Error %d: Unable to add product. Please try again.', 'woocommerce' ), 525 ) );
 							}
 						}
-					} elseif ( 'Shipping fee' === $order_row->name ) {
+					} elseif ( 'Shipping fee' === $order_row->name || 'Fraktavgift' === $order_row->name ) {
 
 						// Calculate price excluding tax since we are not able to send over shipping method id to Ecster.
 						if ( $order_row->vatRate > 0 ) {
