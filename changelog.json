@@ -49,8 +49,13 @@
           "requires" : "4.7.0",
           "tested" : "5.5"
      },
-     "2.0.7" : {
+     "2.1.0" : {
           "description" : "<ul><li>Tweak - Add shipping fee to WooCommerce order during backup order creation process.</li><li>Tweak - Use WooCommerce Action scheduler fow scheduling OSN callback jobs.</li></ul>",
+          "requires" : "4.7.0",
+          "tested" : "5.5.1"
+     },
+     "2.2.0" : {
+          "description" : "<ul><li>Tweak - Display order comment field in Ecster Pay checkout template.</li><li>Fix - Refresh checkout page when adding a coupon that result in 0 order value to swithch from Ecster checkout template to standrard Woo template.</li><li>Fix - Add shipping fee to WooCommerce order during backup order creation process - even when the shipping is named in Swedish.</li></ul>",
           "requires" : "4.7.0",
           "tested" : "5.5.1"
      }

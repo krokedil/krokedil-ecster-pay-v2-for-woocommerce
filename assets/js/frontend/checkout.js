@@ -120,10 +120,21 @@
 					nonce: wc_ecster.wc_ecster_nonce
 				},
 				success: function (response) {
+
+					if(response.success && response.data.refreshZeroAmount){
+						window.location.reload();
+					}
+
 					if (response.success && response.data.wc_ecster_cart_key) {
+
+
+
 						updated_cart_callback(response.data.wc_ecster_cart_key);
 						wc_ecster_cart_key = response.data.wc_ecster_cart_key;
 					} else {
+
+
+
 						//wc_ecster_add_container();
 						$("#ecster-pay-ctr").html('<div class="woocommerce-error" id="wc-ecster-api-error">' + response.data.error_message + '</div>');
 					}
@@ -152,6 +163,7 @@
 	// Triggered when page is first loaded, if Ecster is selected or when payment method is
 	// changed to Ecster for the first time
 	var wc_ecster_init = function wc_ecster_init() {
+		moveExtraCheckoutFields();
 		wc_ecster_create_cart();
 	};
 
@@ -273,6 +285,14 @@
             }
         );
     };
+
+	/**
+	 * Moves Add Order Notes Field to before the Ecster Checkout details field.
+	 */
+	function moveExtraCheckoutFields() {
+		// Move order comments.
+		$('#order_comments').appendTo('#ecster-extra-checkout-fields');
+	}
 
     // on Ecster payment success
     var wc_ecster_on_payment_success = function wc_ecster_on_payment_success(paymentData) {

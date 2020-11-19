@@ -185,14 +185,14 @@ class Ecster_Api_Callbacks {
 	/**
 	 * Processes WooCommerce order on backup order creation.
 	 *
-	 * @param Klarna_Checkout_Order $collector_order Klarna order.
+	 * @param object $response_body Response body.
 	 *
 	 * @throws Exception WC_Data_Exception.
 	 */
 	private function create_woocommerce_order( $response_body, $internal_reference, $external_reference ) {
 		WC_Gateway_Ecster::log( 'Order ID is missing in OSN callback and we could not find Internal reference ' . $internal_reference . ' in an existing order. Starting backup order creation...' );
 
-		// Create local order
+		// Create local order.
 		$order = wc_create_order( array( 'status' => 'pending' ) );
 
 		if ( is_wp_error( $order ) ) {
@@ -274,7 +274,7 @@ class Ecster_Api_Callbacks {
 								throw new Exception( sprintf( __( 'Error %d: Unable to add product. Please try again.', 'woocommerce' ), 525 ) );
 							}
 						}
-					} elseif ( 'Shipping fee' === $order_row->name ) {
+					} elseif ( 'Shipping fee' === $order_row->name || 'Fraktavgift' === $order_row->name ) {
 
 						// Calculate price excluding tax since we are not able to send over shipping method id to Ecster.
 						if ( $order_row->vatRate > 0 ) {

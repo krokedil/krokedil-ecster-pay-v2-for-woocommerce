@@ -2,10 +2,10 @@
 Contributors: krokedil, niklashogefjord
 Tags: ecommerce, e-commerce, woocommerce, ecster
 Requires at least: 4.5
-Tested up to: 5.5.1
+Tested up to: 5.5.3
 Requires PHP: 5.6
 WC requires at least: 3.7.0
-WC tested up to: 4.6.0
+WC tested up to: 4.7.0
 License: GPLv3
 License URI: http://www.gnu.org/licenses/gpl-3.0.html
 Stable tag: trunk
@@ -31,6 +31,11 @@ More information on how to get started can be found in the [plugin documentation
 
 
 == CHANGELOG ==
+
+= 2020.10.15        - version 2.2.0 =
+* Tweak             - Display order comment field in Ecster Pay checkout template.
+* Fix               - Refresh checkout page when adding a coupon that result in 0 order value to swithch from Ecster checkout template to standrard Woo template.
+* Fix               - Add shipping fee to WooCommerce order during backup order creation process - even when the shipping is named in Swedish.
 
 = 2020.10.15        - version 2.1.0 =
 * Tweak             - Add shipping fee to WooCommerce order during backup order creation process.
