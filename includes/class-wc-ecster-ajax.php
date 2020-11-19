@@ -98,12 +98,23 @@ class WC_Ecster_Ajax {
 			WC_Gateway_Ecster::log( 'Nonce can not be verified - update_cart.' );
 			exit( 'Nonce can not be verified.' );
 		}
+
+		if ( ! WC()->cart->needs_payment() ) {
+			wp_send_json_success(
+				array(
+					'refreshZeroAmount' => 'refreshZeroAmount',
+				)
+			);
+			wp_die();
+		}
+
 		$customer_type = ! empty( $_POST['customer_type'] ) ? $_POST['customer_type'] : null;
 		$cart_key      = $_POST['cart_key'];
 		$data          = array();
 		$request       = new WC_Ecster_Request_Update_Cart( $this->api_key, $this->merchant_key, $this->testmode );
 		$response      = $request->response( $cart_key, $customer_type );
 		$response_body = json_decode( $response['body'] );
+
 		WC()->session->set( 'ecster_checkout_cart_key', $response_body->checkoutCart->key );
 
 		if ( ! is_wp_error( $response ) && 200 == $response['response']['code'] ) {
@@ -379,11 +390,9 @@ class WC_Ecster_Ajax {
 		wp_die();
 	}
 
-
 	/**
 	 * Helpers.
 	 */
-
 
 	/**
 	 * Check if an order already exist with the current Ecster internal reference.
@@ -417,7 +426,6 @@ class WC_Ecster_Ajax {
 		}
 		return false;
 	}
-
 
 	/**
 	 * Adds order items to ongoing order.
@@ -589,7 +597,6 @@ class WC_Ecster_Ajax {
 		}
 	}
 
-
 	/**
 	 * Adds Ecster invoice fee to local order if session exist.
 	 *
@@ -631,7 +638,7 @@ class WC_Ecster_Ajax {
 	 * @param  object $order Local WC order.
 	 *
 	 * @throws Exception PHP Exception.
-	 * @internal param object $klarna_order Klarna order.
+	 * @internal param object $order_id Ecster order.
 	 */
 	public function helper_add_order_shipping( $order ) {
 		if ( ! defined( 'WOOCOMMERCE_CART' ) ) {

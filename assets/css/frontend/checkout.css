@@ -30,6 +30,10 @@
 	display: none;
 }
 
+#ecster-checkout-select-other{
+	margin-top:20px;
+}
+
 .ecster-selected #ecster-pay-ctr {
 	display: block;
 }
