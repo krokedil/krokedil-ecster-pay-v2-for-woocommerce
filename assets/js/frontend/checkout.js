@@ -92,7 +92,15 @@
 					},
 					onPaymentDenied: function (deniedData) {
 						wc_ecster_fail_local_order('denied');
-					}
+					},
+					
+					onBeforeSubmit: function (data) {
+						console.log('onBeforeSubmit');
+						// callback( true );
+						//console.log(paymentData);
+						//wc_ecster_process_wc_order(paymentData);
+					},
+					
 				});
 			} else {
 				console.log('wc_ecster_cart_key');
@@ -101,6 +109,93 @@
 				
 			}
 		}
+	};
+
+	// on Ecster payment success
+    var wc_ecster_process_wc_order = function wc_ecster_process_wc_order(paymentData) {
+        // Block the iframe until page reloads
+        $("#ecster-pay-ctr").block({
+            message: null,
+            overlayCSS: {
+                background: "#fff",
+                opacity: 0.6
+            }
+        });
+
+        // Also block the order review
+        $("#order_review").block({
+            message: null,
+            overlayCSS: {
+                background: "#fff",
+                opacity: 0.6
+            }
+		});
+		console.log('wc_ecster_process_wc_order');
+
+        // Update ongoing order cart hash
+		// Add invoice fee, if needed
+		/*
+        $.ajax(
+            wc_ecster.ajaxurl,
+            {
+                type: "POST",
+                dataType: "json",
+                async: true,
+                data: {
+                    action:       "wc_ecster_on_payment_success",
+                    payment_data: paymentData,
+                    nonce:        wc_ecster.wc_ecster_nonce
+                },
+           success: function() {
+					console.log( 'success' );
+                    // Clear WooCommerce checkout form.
+                    $('#ship-to-different-address-checkbox').prop('checked', true);
+					// Populate the form and submit it.
+                    var customerCountry;
+                    var customerPhone;
+                    if (paymentData.consumer.address.country) {
+                        customerCountry = paymentData.consumer.address.country;
+                    } else {
+                        customerCountry = 'SE';
+                    }
+
+                    if (paymentData.consumer.contactInfo.cellular.number.indexOf("*") > -1) {
+                        customerPhone = '0';
+                    } else {
+                        customerPhone = paymentData.consumer.contactInfo.cellular.number;
+					}
+				
+					$("form.checkout #billing_first_name").val(paymentData.consumer.name.firstName);
+					$("form.checkout #billing_last_name").val(paymentData.consumer.name.lastName);
+					$("form.checkout #billing_email").val(paymentData.consumer.contactInfo.email);
+					$("form.checkout #billing_country").val(customerCountry);
+					$("form.checkout #billing_address_1").val(paymentData.consumer.address.line1);
+					$("form.checkout #billing_city").val(paymentData.consumer.address.city);
+					$("form.checkout #billing_postcode").val(paymentData.consumer.address.zip);
+					$("form.checkout #billing_phone").val(customerPhone);
+
+                    // Check if there's separate shipping address
+                   if (paymentData.recipient) {
+                        $("form.checkout #shipping_first_name").val(paymentData.recipient.name.firstName);
+                        $("form.checkout #shipping_last_name").val(paymentData.recipient.name.lastName);
+                        $("form.checkout #shipping_country").val(paymentData.recipient.address.country);
+                        $("form.checkout #shipping_address_1").val(paymentData.recipient.address.line1);
+                        $("form.checkout #shipping_city").val(paymentData.recipient.address.city);
+                        $("form.checkout #shipping_postcode").val(paymentData.recipient.address.zip);
+                    } else {
+                        $("form.checkout #ship-to-different-address-checkbox").prop("checked", false);
+                    }
+
+                    // Check Terms checkbox, if it exists
+                    if ($("form.checkout #terms").length > 0) {
+                        $("form.checkout #terms").prop("checked", true);
+                    }
+					console.log( 'submit' );
+                    $("form.woocommerce-checkout").trigger("submit");
+                }
+            }
+		);
+		*/
 	};
 
 	var wc_ecster_update_cart = function wc_ecster_update_cart() {
