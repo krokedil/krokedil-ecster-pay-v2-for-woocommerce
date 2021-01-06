@@ -59,6 +59,8 @@ function ecster_maybe_create_order() {
  * @return string
  */
 function ecster_create_order() {
+	// Set temp order ID. Used for callbacks uhntil we have a WC order.
+	WC()->session->set( 'ecster_temp_order_id', 'tmp' . md5( uniqid( wp_rand(), true ) ) );
 	$ecster_settings = get_option( 'woocommerce_ecster_settings' );
 	$testmode        = 'yes' === $ecster_settings['testmode'];
 	$api_key         = $ecster_settings['api_key'];
@@ -123,6 +125,9 @@ function wc_ecster_unset_sessions() {
 		if ( WC()->session->get( 'ecster_order_id' ) ) {
 			WC()->session->__unset( 'ecster_order_id' );
 		}
+		if ( WC()->session->get( 'ecster_temp_order_id' ) ) {
+			WC()->session->__unset( 'ecster_temp_order_id' );
+		}
 	}
 }
 
@@ -146,3 +151,33 @@ function wc_ecster_show_another_gateway_button() {
 	}
 }
 
+/**
+ * Finds an Order ID based on a temp order id set in Ecsters create request.
+ *
+ * @param string $ecster_temp_order_id A temporary order id set in create request sent to Ecster.
+ * @return int The ID of an order, or 0 if the order could not be found.
+ */
+function wc_ecster_get_order_id_by_temp_order_id( $ecster_temp_order_id ) {
+	$query_args = array(
+		'fields'      => 'ids',
+		'post_type'   => wc_get_order_types(),
+		'post_status' => array_keys( wc_get_order_statuses() ),
+		'meta_key'    => '_wc_ecster_temp_order_id', // phpcs:ignore WordPress.DB.SlowDBQuery -- Slow DB Query is ok here, we need to limit to our meta key.
+		'meta_value'  => sanitize_text_field( wp_unslash( $ecster_temp_order_id ) ), // phpcs:ignore WordPress.DB.SlowDBQuery -- Slow DB Query is ok here, we need to limit to our meta key.
+		'date_query'  => array(
+			array(
+				'after' => '30 day ago',
+			),
+		),
+	);
+
+	$orders = get_posts( $query_args );
+
+	if ( $orders ) {
+		$order_id = $orders[0];
+	} else {
+		$order_id = 0;
+	}
+
+	return $order_id;
+}

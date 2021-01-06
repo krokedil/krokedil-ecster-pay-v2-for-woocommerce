@@ -62,6 +62,8 @@ class WC_Gateway_Ecster extends WC_Payment_Gateway {
 		add_action( 'wp_enqueue_scripts', array( $this, 'checkout_scripts' ) );
 		add_action( 'woocommerce_api_wc_gateway_ecster', array( $this, 'osn_listener' ) );
 		add_action( 'woocommerce_thankyou', array( $this, 'ecster_thankyou' ) );
+		add_action( 'woocommerce_checkout_order_processed', array( $this, 'save_ecster_temp_order_id_to_order' ), 10, 3 );
+
 	}
 
 	/**
@@ -83,9 +85,9 @@ class WC_Gateway_Ecster extends WC_Payment_Gateway {
 	 * Listens for ping by Ecster, containing full order details.
 	 */
 	function osn_listener() {
-		$post_body = file_get_contents( 'php://input' );
-		$decoded   = json_decode( $post_body );
-		$order_id  = isset( $_GET['order_id'] ) ? $_GET['order_id'] : '';
+		$post_body            = file_get_contents( 'php://input' );
+		$decoded              = json_decode( $post_body );
+		$ecster_temp_order_id = isset( $_GET['etoid'] ) ? $_GET['etoid'] : '';
 		self::log( 'OSN callback triggered. Ecster internal reference: ' . $decoded->orderId ); // Input var okay.
 		// wp_schedule_single_event( time() + 120, 'ecster_execute_osn_callback', array( $decoded, $order_id ) );
 
@@ -93,13 +95,13 @@ class WC_Gateway_Ecster extends WC_Payment_Gateway {
 			array(
 				'hook'   => 'ecster_execute_osn_callback',
 				'status' => ActionScheduler_Store::STATUS_PENDING,
-				'args'   => array( $decoded, $order_id ),
+				'args'   => array( $decoded, $ecster_temp_order_id ),
 			),
 			'ids'
 		);
 
 		if ( empty( $scheduled_actions ) ) {
-			as_schedule_single_action( time() + 120, 'ecster_execute_osn_callback', array( $decoded, $order_id ) );
+			as_schedule_single_action( time() + 120, 'ecster_execute_osn_callback', array( $decoded, $ecster_temp_order_id ) );
 		} else {
 			self::log( 'OSN callback. Update already scheduled. ' . wp_json_encode( $scheduled_actions ) ); // Input var okay.
 		}
@@ -199,6 +201,21 @@ class WC_Gateway_Ecster extends WC_Payment_Gateway {
 	 */
 	public function payment_fields() {
 		echo $this->description;
+	}
+
+	/**
+	 * Saves Ecster specific data stored in WC()->session to Woo order when created.
+	 *
+	 * @param string $order_id The WooCommerce order ID.
+	 * @param array  $posted_data The WooCommerce checkout form posted data.
+	 * @param object $order WooCommerce order.
+	 *
+	 * @return void
+	 */
+	public function save_ecster_temp_order_id_to_order( $order_id, $posted_data, $order ) {
+		if ( 'ecster' === $order->get_payment_method() ) {
+			update_post_meta( $order_id, '_wc_ecster_temp_order_id', WC()->session->get( 'ecster_temp_order_id' ) );
+		}
 	}
 
 	/**
