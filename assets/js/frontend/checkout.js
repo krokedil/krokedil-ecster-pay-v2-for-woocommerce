@@ -476,37 +476,6 @@
 		changePaymentMethod( false );
 	});
 	
-	
-	// When WooCommerce checkout submission fails
-	$(document.body).on("checkout_error", function () {
-		if ("ecster" === $("input[name='payment_method']:checked").val()) {
-			var error_message = $( ".woocommerce-NoticeGroup-checkout" ).text();
-			$.ajax(
-	            wc_ecster.ajaxurl,
-	            {
-	                type: "POST",
-	                dataType: "json",
-	                async: true,
-	                data: {
-						cart_key: 	wc_ecster_cart_key,
-						error_message: error_message,
-						action:		"wc_ecster_on_checkout_error",
-	                    nonce:		wc_ecster.wc_ecster_nonce
-	                },
-	                success: function (data) {
-					},
-					error: function (data) {
-					},
-					complete: function (data) {
-						console.log('ecster checkout error');
-						console.log(data.responseJSON);
-						window.location.href = data.responseJSON.data.redirect;
-					}
-	            }
-	        );
-			
-		}
-	});
 	$(document.body).on('change', 'input[name="payment_method"]', function() {
 		if ( 'ecster' === $(this).val() ) { 
 			changePaymentMethod( true );
