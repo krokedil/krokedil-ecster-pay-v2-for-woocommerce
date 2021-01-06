@@ -93,7 +93,24 @@
 					},
 					onPaymentDenied: function (deniedData) {
 						wc_ecster_fail_local_order('denied');
-					}
+					},
+					onBeforeSubmit: function (data, callback) {
+						console.log('onBeforeSubmit');
+						console.log( data);
+						console.log( callback);
+						
+						console.log('hej');
+
+						// Empty current hash.
+						window.location.hash = '';
+						// Check for any errors.
+						wc_ecster.timeout = setTimeout( function() { failOrder(  'timeout', callback ); }, wc_ecster.timeout_time * 1000 );
+						$( document.body ).on( 'checkout_error', function() { failOrder( 'checkout_error', callback ); } );
+						// Run interval until we find a hashtag or timer runs out.
+						wc_ecster.interval = setInterval( function() { checkUrl( callback ); }, 500 );
+						
+						processWooCheckout(data);
+					},
 				});
 			} else {
 				console.log('wc_ecster_cart_key');
@@ -312,108 +329,111 @@
                 background: "#fff",
                 opacity: 0.6
             }
+		});
+		var redirectUrl = sessionStorage.getItem( 'ecsterRedirectUrl' );
+		console.log('wc_ecster_on_payment_success');
+		console.log(redirectUrl);
+		if( redirectUrl ) {
+			window.location.href = redirectUrl;
+		}
+	};
+	
+	// Fill form and submit it to create the order.
+    function processWooCheckout(paymentData) {
+        // Block the iframe until page reloads
+        $("#ecster-pay-ctr").block({
+            message: null,
+            overlayCSS: {
+                background: "#fff",
+                opacity: 0.6
+            }
         });
 
-        // Update ongoing order cart hash
-        // Add invoice fee, if needed
-        $.ajax(
-            wc_ecster.ajaxurl,
-            {
-                type: "POST",
-                dataType: "json",
-                async: true,
-                data: {
-                    action:       "wc_ecster_on_payment_success",
-                    payment_data: paymentData,
-                    nonce:        wc_ecster.wc_ecster_nonce
-                },
-        		success: function( data ) {
-					console.log( 'wc_ecster_on_payment_success success' );
-					if( false === data.success ) {
-						console.log( 'already exist in order' );
-                        console.log( data );
-						if( data.data.redirect ) {
-							window.location.href = data.data.redirect;
-						}
-					} else {
-						var customerCountry;
-						var customerPhone;
-						var customerType;
-
-						// Separate billing and shipping address checkbox checked.
-						$('#ship-to-different-address-checkbox').prop('checked', true);
-						
-						// Set customerType if it exist.
-						if( $("input[name='ecster-customer-type']").length > 0 ){
-							customerType = $("input[name='ecster-customer-type']:checked").val();
-						}
-						
-						// Set country.
-						if (paymentData.consumer.address.country) {
-							customerCountry = paymentData.consumer.address.country;
-						} else {
-							customerCountry = 'SE';
-						}
-
-						// Set phone.
-						if (paymentData.consumer.contactInfo.cellular.number.indexOf("*") > -1) {
-							customerPhone = '0';
-						} else {
-							customerPhone = paymentData.consumer.contactInfo.cellular.number;
-						}
-						// Populate the form and submit it.
-						$("form.checkout #billing_first_name").val(paymentData.consumer.name.firstName);
-						$("form.checkout #billing_last_name").val(paymentData.consumer.name.lastName);
-						$("form.checkout #billing_email").val(paymentData.consumer.contactInfo.email);
-						$("form.checkout #billing_country").val(customerCountry);
-						$("form.checkout #billing_address_1").val(paymentData.consumer.address.line1);
-						$("form.checkout #billing_city").val(paymentData.consumer.address.city);
-						$("form.checkout #billing_postcode").val(paymentData.consumer.address.zip);
-						$("form.checkout #billing_phone").val(customerPhone);
-
-						if( 'b2b' === customerType ) {
-							$("form.checkout #billing_company").val(paymentData.consumer.address.line2);
-						} else {
-							$("form.checkout #billing_company").val('');
-							$("form.checkout #billing_address_2").val(paymentData.consumer.address.line2);
-						}
-
-						// Check if there's separate shipping address
-						if (paymentData.recipient) {
-							$("form.checkout #shipping_first_name").val(paymentData.recipient.name.firstName);
-							$("form.checkout #shipping_last_name").val(paymentData.recipient.name.lastName);
-							$("form.checkout #shipping_country").val(paymentData.recipient.address.country);
-							$("form.checkout #shipping_address_1").val(paymentData.recipient.address.line1);
-							$("form.checkout #shipping_city").val(paymentData.recipient.address.city);
-							$("form.checkout #shipping_postcode").val(paymentData.recipient.address.zip);
-							
-							if( 'b2b' === customerType ) {
-								$("form.checkout #shipping_company").val(paymentData.recipient.address.line2);
-							} else {
-								$("form.checkout #shipping_company").val('');
-								$("form.checkout #shipping_address_2").val(paymentData.recipient.address.line2);
-							}
-						} else {
-							$("form.checkout #ship-to-different-address-checkbox").prop("checked", false);
-						}
-
-						// Check Terms checkbox, if it exists
-						if ($("form.checkout #terms").length > 0) {
-							$("form.checkout #terms").prop("checked", true);
-						}
-						console.log( 'submit Woo form' );
-						wc_ecster_order_processing = true;
-						$("form.woocommerce-checkout").trigger("submit");
-						$('form.woocommerce-checkout').addClass( 'processing' );
-					}
-					
-				},
-				error: function (data) {
-					console.log( 'wc_ecster_on_payment_success error' );
-				},
+        // Also block the order review
+        $("#order_review").block({
+            message: null,
+            overlayCSS: {
+                background: "#fff",
+                opacity: 0.6
             }
-        );
-    };
+        });
+
+		console.log('wc_ecster_on_customer_authenticated_data');
+		console.log(wc_ecster_on_customer_authenticated_data);
+		fillForm();
+		// Submit wc order.
+		submitForm();
+	};
+	
+	function fillForm() {
+		console.log('fillForm');
+		var customer = wc_ecster_on_customer_authenticated_data;
+		var firstName = ( ( 'firstName' in customer ) ? customer.firstName : '' );
+		var lastName = ( ( 'lastName' in customer ) ? customer.lastName : '' );
+		var city = ( ( 'city' in customer ) ? customer.city : '' );
+		var countryCode = ( ( 'countryCode' in customer ) ? customer.countryCode : '' );
+		var email = ( ( 'email' in customer ) ? customer.email : '' );
+		var phone = ( ( 'cellular' in customer ) ? customer.cellular : '' );
+		var postalCode = ( ( 'zip' in customer ) ? customer.zip : '' );
+		var street = ( ( 'address' in customer ) ? customer.address : '' );
+		console.log('fillForm2');
+		// Set customerType if it exist.
+		if( $("input[name='ecster-customer-type']").length > 0 ){
+			customerType = $("input[name='ecster-customer-type']:checked").val();
+		}
+		console.log('fillForm22');
+		/*
+		if( 'b2b' === customerType ) {
+			$("form.checkout #billing_company").val(customer.address.line2);
+		} else {
+			$("form.checkout #billing_company").val('');
+			$("form.checkout #billing_address_2").val(customer.address.line2);
+		}
+		*/
+		console.log('fillForm23');
+		// billing first name
+		$( '#billing_first_name' ).val( firstName );
+		// shipping first name
+		$( '#shipping_first_name' ).val( firstName );
+		console.log('fillForm24');
+		// billing last name
+		$( '#billing_last_name' ).val(lastName);
+		// shipping last name.
+		$( '#shipping_last_name' ).val(lastName);
+		console.log('fillForm3');
+		if( countryCode ) {
+			// billing country
+			$('#billing_country').val(countryCode);
+			// shipping country
+			$('#shipping_country').val(countryCode);
+		}
+		
+		// billing street
+		$('#billing_address_1').val(street);
+		// shipping street
+		$('#shipping_address_1').val(street);
+		// billing city
+		$('#billing_city').val(city);
+		// shipping city
+		$('#shipping_city').val(city);
+		// billing postal code
+		$('#billing_postcode').val(postalCode);
+		// shipping postal code
+		$('#shipping_postcode').val(postalCode);
+		// billing phone
+		$( '#billing_phone' ).val(phone);
+		// billing email
+		$('#billing_email').val(email);
+		console.log('fillForm4');
+	}
+
+	function submitForm() {
+		console.log('submitForm');
+		if ( 0 < $( 'form.checkout #terms' ).length ) {
+			$( 'form.checkout #terms' ).prop( 'checked', true );
+		}
+		$( 'form.checkout' ).submit();
+	}
 
     // Set body class when DOM is ready
 	$(document).ready(function () {
@@ -535,4 +555,41 @@
 			}
 		);
 	};
+
+	function failOrder( event, callback ) {
+		console.log('failOrder');
+		console.log(event);
+		$("#order_review").unblock();
+		$('form.checkout').unblock();
+		$('form.checkout').removeClass( 'processing' );
+		$('#ecster-wrapper').unblock();
+		callback( false );
+	};
+	function checkUrl( callback ) {
+		if ( window.location.hash ) {
+			var currentHash = window.location.hash;
+			if ( -1 < currentHash.indexOf( '#ecster-success' ) ) {
+				var splittedHash = currentHash.split("=");
+				console.log('splittedHash');
+				console.log(splittedHash[0]);
+				console.log(splittedHash[1]);
+				var response = JSON.parse( atob( splittedHash[1] ) );
+				window.dibsRedirectUrl = response.redirect_url;
+                console.log('response.return_url');
+                console.log(response.return_url);
+                sessionStorage.setItem( 'ecsterRedirectUrl', response.return_url );
+				callback( true );
+				// Clear the interval.
+				clearInterval(wc_ecster.interval);
+				// Remove the timeout.
+				clearTimeout( wc_ecster.timeout );
+				// Remove the processing class from the form.
+				// pco_wc.checkoutFormSelector.removeClass( 'processing' );
+				$( '.woocommerce-checkout-review-order-table' ).unblock();
+				// $( pco_wc.checkoutFormSelector ).unblock();
+				console.log('checkUrl end - callback true triggered');
+			}
+		}
+	}
+
 }(jQuery));
