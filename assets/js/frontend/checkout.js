@@ -16,20 +16,8 @@
 		}
 	};
 
-	/*var wc_ecster_add_container = function wc_ecster_add_container() {
-		if (!$("#ecster-pay-ctr").length) {
-			// Add the element
-			$('form.woocommerce-checkout').after('<div id="ecster-pay-ctr"></div>');
-		}
-	};*/
-
 	var wc_ecster_create_cart = function wc_ecster_create_cart() {
 		console.log( 'create' );
-		//wc_ecster_add_container();
-
-		/*$('#billing_first_name, #billing_last_name, #billing_company, #billing_email, #billing_phone, #billing_country, #billing_address_1, #billing_address_2, #billing_postcode, #billing_city').val('');
-		$('#shipping_first_name, #shipping_last_name, #shipping_company, #shipping_country, #shipping_address_1, #shipping_address_2, #shipping_postcode, #shipping_city').val('');
-		*/
 
 		// Check if Ecster is selected, Ecster library loaded and Ecster container exists
 		if ("ecster" === $("input[name='payment_method']:checked").val() && typeof window.EcsterPay === "object" && $("#ecster-pay-ctr").length) {
@@ -149,10 +137,6 @@
 						updated_cart_callback(response.data.wc_ecster_cart_key);
 						wc_ecster_cart_key = response.data.wc_ecster_cart_key;
 					} else {
-
-
-
-						//wc_ecster_add_container();
 						$("#ecster-pay-ctr").html('<div class="woocommerce-error" id="wc-ecster-api-error">' + response.data.error_message + '</div>');
 					}
 				}
@@ -560,5 +544,5 @@
 			}
 		}
 	}
-
+	
 }(jQuery));
