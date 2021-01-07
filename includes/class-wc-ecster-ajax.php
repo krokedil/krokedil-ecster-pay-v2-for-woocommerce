@@ -183,14 +183,6 @@ class WC_Ecster_Ajax {
 
 		$customer_data = $_POST['customer_data']; // Input var okay.
 
-		// If customer exist, is not logged and guest checkout isn't enabled - tell the customer to login.
-		if ( ! is_user_logged_in() && 'no' === get_option( 'woocommerce_enable_guest_checkout' ) ) {
-			if ( email_exists( $customer_data['email'] ) ) {
-				// Email exist in a user account, customer must login.
-				$must_login = 'yes';
-			}
-		}
-
 		wp_send_json_success(
 			array(
 				'mustLogin'        => $must_login,

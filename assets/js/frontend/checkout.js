@@ -232,17 +232,7 @@
 					console.log('Customer authenticated sucess');
 					console.log(response);
 					
-					if( 'yes' == response.data.mustLogin ) {
-						// Customer might need to login.
-						var $form = $( 'form.checkout' );
-						$form.prepend( '<div class="woocommerce-NoticeGroup woocommerce-NoticeGroup-updateOrderReview"><ul class="woocommerce-error" role="alert"><li>' + response.data.mustLoginMessage + '</li></ul></div>' );
-						var etop = $('form.checkout').offset().top;
-						$('html, body').animate({
-							scrollTop: etop
-						  }, 1000);
-					} else {
-						$("body").trigger("update_checkout");
-					}
+					$("body").trigger("update_checkout");
                 }
             }
         );
@@ -318,6 +308,8 @@
 		console.log('wc_ecster_on_payment_success');
 		console.log(redirectUrl);
 		if( redirectUrl ) {
+			redirectUrl = redirectUrl + '&ecster_order_id=' +paymentData.internalReference;
+			console.log(redirectUrl);
 			window.location.href = redirectUrl;
 		}
 	};
@@ -544,5 +536,5 @@
 			}
 		}
 	}
-	
+
 }(jQuery));

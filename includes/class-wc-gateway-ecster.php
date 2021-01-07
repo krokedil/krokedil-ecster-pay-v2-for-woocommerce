@@ -227,7 +227,7 @@ class WC_Gateway_Ecster extends WC_Payment_Gateway {
 	 * @return array
 	 */
 	public function process_payment( $order_id, $retry = false ) {
-
+		$order    = wc_get_order( $order_id );
 		$response = array(
 			'return_url' => add_query_arg( 'ecster_confirm', 'yes', $this->get_return_url( $order ) ),
 			'time'       => time(),

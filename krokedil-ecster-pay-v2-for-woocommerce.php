@@ -257,6 +257,7 @@ if ( ! class_exists( 'WC_Ecster' ) ) {
 			include_once WC_ECSTER_PLUGIN_PATH . '/includes/krokedil-wc-compatability.php';
 			include_once WC_ECSTER_PLUGIN_PATH . '/includes/wc-ecster-functions.php';
 			include_once WC_ECSTER_PLUGIN_PATH . '/includes/class-wc-ecster-api-callbacks.php';
+			include_once WC_ECSTER_PLUGIN_PATH . '/includes/class-wc-ecster-confirmation.php';
 			include_once WC_ECSTER_PLUGIN_PATH . '/includes/class-wc-ecster-order-management.php';
 
 			include_once WC_ECSTER_PLUGIN_PATH . '/includes/class-wc-ecster-templates.php';
