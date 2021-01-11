@@ -67,7 +67,7 @@ class WC_Ecster_Ajax {
 		if ( ! is_wp_error( $response ) && 201 == $response['response']['code'] ) {
 			$decoded = json_decode( $response['body'] );
 			if ( is_string( $decoded->checkoutCart->key ) ) {
-				$data['wc_ecster_cart_key'] = $decoded->checkoutCart->key;
+				$data['ecster_cart_key'] = $decoded->checkoutCart->key;
 				wp_send_json_success( $data );
 			}
 		} else {
@@ -117,7 +117,7 @@ class WC_Ecster_Ajax {
 		if ( ! is_wp_error( $response ) && 200 == $response['response']['code'] ) {
 			$decoded = json_decode( $response['body'] );
 			if ( is_string( $decoded->checkoutCart->key ) ) {
-				$data['wc_ecster_cart_key'] = $decoded->checkoutCart->key;
+				$data['ecster_cart_key'] = $decoded->checkoutCart->key;
 				wp_send_json_success( $data );
 			}
 		} else {

@@ -131,7 +131,7 @@ class WC_Gateway_Ecster extends WC_Payment_Gateway {
 
 			wp_localize_script(
 				'ecster_checkout',
-				'wc_ecster',
+				'ecster_wc_params',
 				array(
 					'ajaxurl'                     => admin_url( 'admin-ajax.php' ),
 					'terms'                       => wc_get_page_permalink( 'terms' ),
