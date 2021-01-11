@@ -298,21 +298,3 @@ if ( ! class_exists( 'WC_Ecster' ) ) {
 	register_activation_hook( __FILE__, array( 'WC_Ecster', 'activation_check' ) );
 
 }
-
-/**
- * Removes mandatory from checkout fields if Ecster is the selected payment method.
- */
-function wc_ecster_v2_remove_required_from_checkout_fields() {
-	if ( 'ecster' === WC()->session->get( 'chosen_payment_method' ) ) {
-		$checkout_fields = WC()->checkout->checkout_fields;
-
-		foreach ( $checkout_fields as $fieldset_key => $fieldset ) {
-			foreach ( $fieldset as $field_key => $field ) {
-				$checkout_fields[ $fieldset_key ][ $field_key ]['required'] = false;
-			}
-		}
-	}
-
-	WC()->checkout->checkout_fields = $checkout_fields;
-}
-add_action( 'woocommerce_checkout_process', 'wc_ecster_v2_remove_required_from_checkout_fields' );
