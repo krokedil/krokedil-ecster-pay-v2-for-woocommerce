@@ -129,18 +129,19 @@ class WC_Gateway_Ecster extends WC_Payment_Gateway {
 				true
 			);
 
+			$standard_woo_checkout_fields = array( 'billing_first_name', 'billing_last_name', 'billing_address_1', 'billing_address_2', 'billing_postcode', 'billing_city', 'billing_phone', 'billing_email', 'billing_state', 'billing_country', 'billing_company', 'shipping_first_name', 'shipping_last_name', 'shipping_address_1', 'shipping_address_2', 'shipping_postcode', 'shipping_city', 'shipping_state', 'shipping_country', 'shipping_company', 'terms', 'terms-field', '_wp_http_referer' );
+
 			wp_localize_script(
 				'ecster_checkout',
 				'ecster_wc_params',
 				array(
-					'ajaxurl'                     => admin_url( 'admin-ajax.php' ),
-					'terms'                       => wc_get_page_permalink( 'terms' ),
-					'wc_ecster_nonce'             => wp_create_nonce( 'wc_ecster_nonce' ),
-					'wc_change_to_ecster_nonce'   => wp_create_nonce( 'wc_change_to_ecster_nonce' ),
-					'move_checkout_fields'        => apply_filters( 'wc_ecster_move_checkout_fields', array( '' ) ),
-					'move_checkout_fields_origin' => apply_filters( 'wc_ecster_move_checkout_fields_origin', '.woocommerce-shipping-fields' ),
-					'ecster_checkout_cart_key'    => $checkout_cart_key,
-					'timeout_time'                => 9,
+					'ajaxurl'                      => admin_url( 'admin-ajax.php' ),
+					'terms'                        => wc_get_page_permalink( 'terms' ),
+					'wc_ecster_nonce'              => wp_create_nonce( 'wc_ecster_nonce' ),
+					'wc_change_to_ecster_nonce'    => wp_create_nonce( 'wc_change_to_ecster_nonce' ),
+					'standard_woo_checkout_fields' => $standard_woo_checkout_fields,
+					'ecster_checkout_cart_key'     => $checkout_cart_key,
+					'timeout_time'                 => 9,
 				)
 			);
 			wp_enqueue_script( 'ecster_checkout' );
