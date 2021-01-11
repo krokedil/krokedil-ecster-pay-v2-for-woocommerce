@@ -49,6 +49,9 @@ class WC_Ecster_Ajax {
 
 		add_action( 'wp_ajax_wc_ecster_on_checkout_start_failure', array( $this, 'ajax_on_checkout_start_failure' ) );
 		add_action( 'wp_ajax_nopriv_wc_ecster_on_checkout_start_failure', array( $this, 'ajax_on_checkout_start_failure' ) );
+
+		add_action( 'wp_ajax_wc_ecster_log_js_to_file', array( $this, 'log_js_to_file' ) );
+		add_action( 'wp_ajax_nopriv_wc_ecster_log_js_to_file', array( $this, 'log_js_to_file' ) );
 	}
 
 	/**
@@ -331,6 +334,25 @@ class WC_Ecster_Ajax {
 			'redirect' => $redirect,
 		);
 		wp_send_json_success( $data );
+		wp_die();
+	}
+
+	/**
+	 * Logs messages from the JavaScript to the server log.
+	 *
+	 * @return void
+	 */
+	public function log_js_to_file() {
+		$nonce = isset( $_POST['nonce'] ) ? sanitize_key( $_POST['nonce'] ) : '';
+		if ( ! wp_verify_nonce( $_REQUEST['nonce'], 'wc_ecster_nonce' ) ) {
+			WC_Gateway_Ecster::log( 'Nonce can not be verified - log_js_to_file.' );
+			exit( 'Nonce can not be verified.' );
+		}
+		$posted_message  = isset( $_POST['message'] ) ? sanitize_text_field( wp_unslash( $_POST['message'] ) ) : '';
+		$ecster_order_id = WC()->session->get( 'ecster_checkout_cart_key' );
+		$message         = "Frontend JS $ecster_order_id: $posted_message";
+		WC_Gateway_Ecster::log( $message );
+		wp_send_json_success();
 		wp_die();
 	}
 }

@@ -165,7 +165,7 @@ jQuery(function($) {
 							// Empty current hash.
 							window.location.hash = '';
 							// Check for any errors.
-							ecster_wc.timeout = setTimeout( function() { ecster_wc.failOrder(  'timeout', callback ); }, ecster_wc_params.timeout_time * 1000 );
+							ecster_wc.timeout = setTimeout( function() { ecster_wc.failOrder( 'timeout', callback ); }, ecster_wc_params.timeout_time * 1000 );
 							$( document.body ).on( 'checkout_error', function() { ecster_wc.failOrder( 'checkout_error', callback ); } );
 							// Run interval until we find a hashtag or timer runs out.
 							ecster_wc.interval = setInterval( function() { ecster_wc.checkUrl( callback ); }, 500 );
@@ -523,10 +523,32 @@ jQuery(function($) {
 		failOrder: function( event, callback ) {
 			console.log('failOrder');
 			console.log(event);
+
+			// Clear the interval.
+			clearInterval(ecster_wc.interval);
+			// Remove the timeout.
+			clearTimeout( ecster_wc.timeout );
+
+			// Re-enable the form.
+			$( 'body' ).trigger( 'updated_checkout' );
+
 			$("#order_review").unblock();
 			$('form.checkout').unblock();
 			$('form.checkout').removeClass( 'processing' );
 			$('#ecster-wrapper').unblock();
+
+			if ( 'timeout' === event ) {
+				ecster_wc.logToFile( 'Timeout for validation_callback triggered.' );
+				$('#ecster-timeout').remove();
+				$('form.checkout').prepend(
+					'<div id="ecster-timeout" class="woocommerce-NoticeGroup woocommerce-NoticeGroup-updateOrderReview"><ul class="woocommerce-error" role="alert"><li>'
+					+  ecster_wc_params.timeout_message
+					+ '</li></ul></div>'
+				);
+			} else {
+				var error_message = $( ".woocommerce-NoticeGroup-checkout" ).text();
+				ecster_wc.logToFile( 'Checkout error - ' + error_message );
+			}
 			callback( false );
 		},
 
@@ -534,12 +556,13 @@ jQuery(function($) {
 			if ( window.location.hash ) {
 				var currentHash = window.location.hash;
 				if ( -1 < currentHash.indexOf( '#ecster-success' ) ) {
+					ecster_wc.logToFile( 'ecster-success hashtag detected in URL.' );
 					var splittedHash = currentHash.split("=");
 					console.log('splittedHash');
 					console.log(splittedHash[0]);
 					console.log(splittedHash[1]);
 					var response = JSON.parse( atob( splittedHash[1] ) );
-					window.dibsRedirectUrl = response.redirect_url;
+
 					console.log('response.return_url');
 					console.log(response.return_url);
 					sessionStorage.setItem( 'ecsterRedirectUrl', response.return_url );
@@ -555,6 +578,25 @@ jQuery(function($) {
 					console.log('checkUrl end - callback true triggered');
 				}
 			}
+		},
+
+		/**
+		 * Logs the message to the klarna checkout log in WooCommerce.
+		 * @param {string} message 
+		 */
+		logToFile: function( message ) {
+			$.ajax(
+				{
+					url: ecster_wc_params.ajaxurl,
+					type: 'POST',
+					dataType: 'json',
+					data: {
+						action:	"wc_ecster_log_js_to_file",
+						message: message,
+						nonce: ecster_wc_params.wc_ecster_nonce
+					}
+				}
+			);
 		},
 	
 	}

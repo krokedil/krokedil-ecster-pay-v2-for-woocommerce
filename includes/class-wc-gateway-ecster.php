@@ -142,6 +142,8 @@ class WC_Gateway_Ecster extends WC_Payment_Gateway {
 					'standard_woo_checkout_fields' => $standard_woo_checkout_fields,
 					'ecster_checkout_cart_key'     => $checkout_cart_key,
 					'timeout_time'                 => 9,
+					'timeout_message'              => __( 'Please try again, something went wrong with processing your order.', 'krokedil-ecster-pay-for-woocommerce' ),
+
 				)
 			);
 			wp_enqueue_script( 'ecster_checkout' );
