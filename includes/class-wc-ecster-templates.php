@@ -16,8 +16,6 @@ class Ecster_For_WooCommerce_Templates {
 		add_action( 'ecster_wc_after_wrapper', array( $this, 'add_wc_form' ), 10 );
 		add_action( 'ecster_wc_after_order_review', array( $this, 'add_extra_checkout_fields' ), 10 );
 		add_action( 'ecster_wc_after_order_review', 'wc_ecster_show_another_gateway_button', 30 );
-		add_action( 'ecster_wc_before_checkout_form', 'woocommerce_checkout_login_form', 10 );
-		add_action( 'ecster_wc_before_checkout_form', 'woocommerce_checkout_coupon_form', 20 );
 		add_action( 'ecster_wc_before_snippet', array( $this, 'add_customer_type_switch' ), 10 );
 	}
 	/**
