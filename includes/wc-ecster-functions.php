@@ -181,3 +181,14 @@ function wc_ecster_get_order_id_by_temp_order_id( $ecster_temp_order_id ) {
 
 	return $order_id;
 }
+
+/**
+ * Returns the default customer type selected in Ecster settings.
+ *
+ * @return string $customer_type The default customer type.s
+ */
+function wc_ecster_get_default_customer_type() {
+	$settings      = get_option( 'woocommerce_ecster_settings' );
+	$customer_type = isset( $settings['customer_types'] ) ? $settings['customer_types'] : 'b2c';
+	return substr( $customer_type, 0, 3 );
+}
