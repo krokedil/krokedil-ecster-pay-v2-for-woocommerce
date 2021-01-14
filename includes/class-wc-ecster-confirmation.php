@@ -97,6 +97,14 @@ class WC_Ecster_Confirmation {
 
 		WC_Gateway_Ecster::log( 'Confirm order ID ' . $order_id . ' from the confirmation page. Ecster internal reference ' . $internal_reference . '. Response body - ' . json_encode( $response_body ) );
 
+		// Add email to order.
+		// In some cases we don't receive email on address update event and it is therefore not available in front end form submission.
+		$order->set_billing_email( sanitize_email( $response_body->consumer->contactInfo->email ) );
+
+		// Add phone to order.
+		// In some cases we don't receive phone on address update event and it is therefore not available in front end form submission.
+		$order->set_billing_phone( sanitize_text_field( $response_body->consumer->contactInfo->cellular->number ) );
+
 		// Payment method title.
 		$payment_method_title = wc_ecster_get_payment_method_name( $response_body->properties->method );
 		update_post_meta( $order_id, '_wc_ecster_payment_method', $response_body->properties->method );
