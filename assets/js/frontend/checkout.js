@@ -23,7 +23,7 @@ jQuery(function($) {
 			if( ecster_wc.checkIfSelected() ) {
 				$(document).ready( ecster_wc.documentReady() );
 
-				// Update avarda payment.
+				// Update Ecster payment.
 				ecster_wc.bodyEl.on('updated_checkout', ecster_wc.wc_ecster_update_cart);
 			}
 
@@ -31,6 +31,9 @@ jQuery(function($) {
 			ecster_wc.bodyEl.on( 'click', ecster_wc.selectAnotherSelector, function() {
 				ecster_wc.changePaymentMethod( false ) }
 			);
+			
+			// Update Ecster cart when changing between B2B/B2C
+			ecster_wc.bodyEl.on('change', 'input[name="ecster-customer-type"]', ecster_wc.wc_ecster_update_cart);
 		},
 
 		/*
@@ -340,7 +343,7 @@ jQuery(function($) {
 							$("form.checkout #billing_country").val(customerDeliveryCountry);
 							$("form.checkout #billing_postcode").val(delivery_address.zip);
 						}
-	
+						console.log('Customer changed delivery address sucess');
 						$("body").trigger("update_checkout");
 					}
 				}
@@ -405,40 +408,49 @@ jQuery(function($) {
 		
 		fillForm: function() {
 			console.log('fillForm');
-			var customer = ecster_wc.wc_ecster_on_customer_authenticated_data;
+			
+			if( ecster_wc.wc_ecster_on_changed_delivery_address_data ) {
+				var customer = ecster_wc.wc_ecster_on_changed_delivery_address_data;
+			} else {
+				var customer = ecster_wc.wc_ecster_on_customer_authenticated_data;
+			}
+
+			console.log('customer');
+			console.log(customer);
+
 			var firstName = ( ( 'firstName' in customer ) ? customer.firstName : '' );
 			var lastName = ( ( 'lastName' in customer ) ? customer.lastName : '' );
 			var city = ( ( 'city' in customer ) ? customer.city : '' );
 			var countryCode = ( ( 'countryCode' in customer ) ? customer.countryCode : '' );
-			var email = ( ( 'email' in customer ) ? customer.email : '' );
-			var phone = ( ( 'cellular' in customer ) ? customer.cellular : '' );
 			var postalCode = ( ( 'zip' in customer ) ? customer.zip : '' );
 			var street = ( ( 'address' in customer ) ? customer.address : '' );
-			console.log('fillForm2');
+			var email = ( ( 'email' in customer ) ? customer.email : 'ecster.temp@domain.com' );
+			var phone = ( ( 'cellular' in customer ) ? customer.cellular : '.' );
+
 			// Set customerType if it exist.
 			if( $("input[name='ecster-customer-type']").length > 0 ){
 				customerType = $("input[name='ecster-customer-type']:checked").val();
+			} else {
+				customerType = ecster_wc_params.default_customer_type;
 			}
-			console.log('fillForm22');
-			/*
+
+			
 			if( 'b2b' === customerType ) {
-				$("form.checkout #billing_company").val(customer.address.line2);
+				$("form.checkout #billing_company").val(customer.address2);
 			} else {
 				$("form.checkout #billing_company").val('');
-				$("form.checkout #billing_address_2").val(customer.address.line2);
+				$("form.checkout #billing_address_2").val(customer.address2);
 			}
-			*/
-			console.log('fillForm23');
+			
 			// billing first name
 			$( '#billing_first_name' ).val( firstName );
 			// shipping first name
 			$( '#shipping_first_name' ).val( firstName );
-			console.log('fillForm24');
 			// billing last name
 			$( '#billing_last_name' ).val(lastName);
 			// shipping last name.
 			$( '#shipping_last_name' ).val(lastName);
-			console.log('fillForm3');
+
 			if( countryCode ) {
 				// billing country
 				$('#billing_country').val(countryCode);
@@ -462,7 +474,6 @@ jQuery(function($) {
 			$( '#billing_phone' ).val(phone);
 			// billing email
 			$('#billing_email').val(email);
-			console.log('fillForm4');
 		},
 	
 		submitForm: function() {
@@ -572,9 +583,7 @@ jQuery(function($) {
 					// Remove the timeout.
 					clearTimeout( ecster_wc.timeout );
 					// Remove the processing class from the form.
-					// pco_wc.checkoutFormSelector.removeClass( 'processing' );
 					$( '.woocommerce-checkout-review-order-table' ).unblock();
-					// $( pco_wc.checkoutFormSelector ).unblock();
 					console.log('checkUrl end - callback true triggered');
 				}
 			}
