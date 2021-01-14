@@ -36,6 +36,12 @@ class WC_Ecster_Order_Management {
 	 */
 	public function cancel_ecster_order( $order_id ) {
 		$order = wc_get_order( $order_id );
+
+		// Check if the order has been paid.
+		if ( empty( $order->get_date_paid() ) ) {
+			return;
+		}
+
 		if ( 'ecster' === $order->get_payment_method() && 'yes' == $this->manage_orders && ! empty( $this->api_key ) && ! empty( $this->merchant_key ) ) {
 			$payment_method_title = get_post_meta( $order_id, '_payment_method_title', true );
 			$swish_order          = ( false !== stripos( $payment_method_title, 'swish' ) ) ? true : false;
