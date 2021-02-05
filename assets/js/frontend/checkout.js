@@ -164,16 +164,8 @@ jQuery(function($) {
 							console.log('onBeforeSubmit');
 							console.log( data);
 							console.log( callback);
-	
-							// Empty current hash.
-							window.location.hash = '';
-							// Check for any errors.
-							ecster_wc.timeout = setTimeout( function() { ecster_wc.failOrder( 'timeout', callback ); }, ecster_wc_params.timeout_time * 1000 );
-							$( document.body ).on( 'checkout_error', function() { ecster_wc.failOrder( 'checkout_error', callback ); } );
-							// Run interval until we find a hashtag or timer runs out.
-							ecster_wc.interval = setInterval( function() { ecster_wc.checkUrl( callback ); }, 500 );
 							
-							ecster_wc.processWooCheckout(data);
+							ecster_wc.processWooCheckout(data, callback );
 						},
 					});
 				} else {
@@ -380,7 +372,7 @@ jQuery(function($) {
 		},
 		
 		// Fill form and submit it to create the order.
-		processWooCheckout: function(paymentData) {
+		processWooCheckout: function(paymentData, callback) {
 			// Block the iframe until page reloads
 			$("#ecster-pay-ctr").block({
 				message: null,
@@ -403,7 +395,7 @@ jQuery(function($) {
 			console.log(ecster_wc.wc_ecster_on_customer_authenticated_data);
 			ecster_wc.fillForm();
 			// Submit wc order.
-			ecster_wc.submitForm();
+			ecster_wc.submitForm(callback);
 		},
 		
 		fillForm: function() {
@@ -476,12 +468,61 @@ jQuery(function($) {
 			$('#billing_email').val(email);
 		},
 	
-		submitForm: function() {
+		submitForm: function(callback) {
 			console.log('submitForm');
 			if ( 0 < $( 'form.checkout #terms' ).length ) {
 				$( 'form.checkout #terms' ).prop( 'checked', true );
 			}
-			$( 'form.checkout' ).submit();
+			$( '.woocommerce-checkout-review-order-table' ).block({
+				message: null,
+				overlayCSS: {
+					background: '#fff',
+					opacity: 0.6
+				}
+			});
+			$.ajax({
+				type: 'POST',
+				url: ecster_wc_params.submit_order,
+				timeout:  ecster_wc_params.timeout_time * 1000,
+				data: $('form.checkout').serialize(),
+				dataType: 'json',
+				success: function( data ) {
+					try {
+						if ( 'success' === data.result ) {
+							ecster_wc.logToFile( 'Successfully placed order. Sending "beforeSubmitContinue" true to Avarda' );
+
+							$( 'body' ).trigger( 'aco_order_validation', true );
+							console.log('data.redirect_url');
+							console.log(data.redirect_url);
+							sessionStorage.setItem( 'ecsterRedirectUrl', data.redirect_url );
+							$('form.checkout').removeClass( 'processing' ).unblock();
+
+							callback( true );
+							// Clear the interval.
+							clearInterval(ecster_wc.interval);
+							// Remove the timeout.
+							clearTimeout( ecster_wc.timeout );
+							// Remove the processing class from the form.
+							$( '.woocommerce-checkout-review-order-table' ).unblock();
+							console.log('submitForm end - callback true triggered');
+						} else {
+							throw 'Result failed';
+						}
+					} catch ( err ) {
+						if ( data.messages )  {
+							ecster_wc.logToFile( 'Checkout error | ' + data.messages );
+							ecster_wc.failOrder( 'submission', data.messages, callback );
+						} else {
+							ecster_wc.logToFile( 'Checkout error | No message' );
+							ecster_wc.failOrder( 'submission', '<div class="woocommerce-error">' + 'Checkout error' + '</div>', callback );
+						}
+					}
+				},
+				error: function( data , textStatus ) {
+					ecster_wc.logToFile( 'AJAX error | ' + data );
+					ecster_wc.failOrder( 'ajax-error', data, callback );
+				}
+			});
 		},
 		maybeChangeToEcster: function() {
 			if ( 'ecster' === $(this).val() ) {
@@ -531,7 +572,7 @@ jQuery(function($) {
 			);
 		},
 
-		failOrder: function( event, callback ) {
+		failOrder: function( event, error_message, callback ) {
 			console.log('failOrder');
 			console.log(event);
 
@@ -540,27 +581,25 @@ jQuery(function($) {
 			// Remove the timeout.
 			clearTimeout( ecster_wc.timeout );
 
+			callback( false );
+
+			// Send false and cancel
+			$( 'body' ).trigger( 'aco_order_validation', false );
+		
 			// Re-enable the form.
 			$( 'body' ).trigger( 'updated_checkout' );
+			$( ecster_wc.checkoutFormSelector ).unblock();
+			$( '.woocommerce-checkout-review-order-table' ).unblock();
 
-			$("#order_review").unblock();
-			$('form.checkout').unblock();
-			$('form.checkout').removeClass( 'processing' );
-			$('#ecster-wrapper').unblock();
-
-			if ( 'timeout' === event ) {
-				ecster_wc.logToFile( 'Timeout for validation_callback triggered.' );
-				$('#ecster-timeout').remove();
-				$('form.checkout').prepend(
-					'<div id="ecster-timeout" class="woocommerce-NoticeGroup woocommerce-NoticeGroup-updateOrderReview"><ul class="woocommerce-error" role="alert"><li>'
-					+  ecster_wc_params.timeout_message
-					+ '</li></ul></div>'
-				);
-			} else {
-				var error_message = $( ".woocommerce-NoticeGroup-checkout" ).text();
-				ecster_wc.logToFile( 'Checkout error - ' + error_message );
-			}
-			callback( false );
+			// Print error messages, and trigger checkout_error, and scroll to notices.
+			$( '.woocommerce-NoticeGroup-checkout, .woocommerce-error, .woocommerce-message' ).remove();
+			$( 'form.checkout' ).prepend( '<div class="woocommerce-NoticeGroup woocommerce-NoticeGroup-checkout">' + error_message + '</div>' ); // eslint-disable-line max-len
+			$( 'form.checkout' ).removeClass( 'processing' ).unblock();
+			$( 'form.checkout' ).find( '.input-text, select, input:checkbox' ).trigger( 'validate' ).blur();
+			$( document.body ).trigger( 'checkout_error' , [ error_message ] );
+			$( 'html, body' ).animate( {
+				scrollTop: ( $( 'form.checkout' ).offset().top - 100 )
+			}, 1000 );
 		},
 
 		checkUrl: function( callback ) {

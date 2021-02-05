@@ -144,7 +144,7 @@ class WC_Gateway_Ecster extends WC_Payment_Gateway {
 					'timeout_time'                 => 9,
 					'timeout_message'              => __( 'Please try again, something went wrong with processing your order.', 'krokedil-ecster-pay-for-woocommerce' ),
 					'default_customer_type'        => wc_ecster_get_default_customer_type(),
-
+					'submit_order'                 => WC_AJAX::get_endpoint( 'checkout' ),
 				)
 			);
 			wp_enqueue_script( 'ecster_checkout' );
@@ -231,15 +231,47 @@ class WC_Gateway_Ecster extends WC_Payment_Gateway {
 	 * @return array
 	 */
 	public function process_payment( $order_id, $retry = false ) {
-		$order    = wc_get_order( $order_id );
-		$response = array(
-			'return_url' => add_query_arg( 'ecster_confirm', 'yes', $this->get_return_url( $order ) ),
-			'time'       => time(),
-		);
-		return array(
-			'result'   => 'success',
-			'redirect' => '#ecster-success=' . base64_encode( wp_json_encode( $response ) ), //phpcs:ignore WordPress.PHP.DiscouragedPHPFunctions -- Base64 used to give a unique nondescript string.
-		);
+		$order = wc_get_order( $order_id );
+		// 1. Process the payment.
+		// 2. Redirect to confirmation page.
+		if ( $this->process_payment_handler( $order_id ) ) {
+			$confirmation_url = add_query_arg(
+				array(
+					'ecster_confirm' => 'yes',
+					'wc_order_id'    => $order_id,
+				),
+				$this->get_return_url( $order )
+			);
+			return array(
+				'result'       => 'success',
+				'redirect_url' => $confirmation_url,
+			);
+		} else {
+			return array(
+				'result' => 'error',
+			);
+		}
+	}
+
+	/**
+	 * Process the payment with information from Avarda and return the result.
+	 *
+	 * @param  int $order_id WooCommerce order ID.
+	 *
+	 * @return mixed
+	 */
+	public function process_payment_handler( $order_id ) {
+		// Get the order object.
+		$order = wc_get_order( $order_id );
+
+		if ( $order_id ) {
+
+			// Let other plugins hook into this sequence.
+			do_action( 'ecster_wc_process_payment', $order_id );
+			return true;
+		}
+		// Return false if we get here. Something went wrong.
+		return false;
 	}
 
 
