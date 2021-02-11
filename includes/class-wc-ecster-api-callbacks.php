@@ -75,7 +75,7 @@ class Ecster_Api_Callbacks {
 	 */
 	public function get_order_id_from_internal_reference( $internal_reference ) {
 
-		// Let's check so the internal reference doesn't already exist in an existing order
+		// Let's check so the internal reference doesn't already exist in an existing order.
 		$query          = new WC_Order_Query(
 			array(
 				'limit'          => -1,
@@ -83,7 +83,7 @@ class Ecster_Api_Callbacks {
 				'order'          => 'DESC',
 				'return'         => 'ids',
 				'payment_method' => 'ecster',
-				'date_created'   => '>' . ( time() - MONTH_IN_SECONDS ),
+				'date_created'   => '>' . ( time() - ( 120 * DAY_IN_SECONDS ) ),
 			)
 		);
 		$orders         = $query->get_orders();
