@@ -70,7 +70,7 @@ class WC_Ecster_Confirmation {
 			return;
 		}
 
-		// wc_ecster_confirm_order( $order_id, $internal_reference );
+		wc_ecster_confirm_order( $order_id, $internal_reference );
 	}
 
 
