@@ -62,6 +62,8 @@ class WC_Gateway_Ecster extends WC_Payment_Gateway {
 		add_action( 'wp_enqueue_scripts', array( $this, 'checkout_scripts' ) );
 		add_action( 'woocommerce_api_wc_gateway_ecster', array( $this, 'osn_listener' ) );
 		add_action( 'woocommerce_thankyou', array( $this, 'ecster_thankyou' ) );
+		add_action( 'woocommerce_checkout_order_processed', array( $this, 'save_ecster_temp_order_id_to_order' ), 10, 3 );
+
 	}
 
 	/**
@@ -83,9 +85,9 @@ class WC_Gateway_Ecster extends WC_Payment_Gateway {
 	 * Listens for ping by Ecster, containing full order details.
 	 */
 	function osn_listener() {
-		$post_body = file_get_contents( 'php://input' );
-		$decoded   = json_decode( $post_body );
-		$order_id  = isset( $_GET['order_id'] ) ? $_GET['order_id'] : '';
+		$post_body            = file_get_contents( 'php://input' );
+		$decoded              = json_decode( $post_body );
+		$ecster_temp_order_id = isset( $_GET['etoid'] ) ? $_GET['etoid'] : '';
 		self::log( 'OSN callback triggered. Ecster internal reference: ' . $decoded->orderId ); // Input var okay.
 		// wp_schedule_single_event( time() + 120, 'ecster_execute_osn_callback', array( $decoded, $order_id ) );
 
@@ -93,13 +95,13 @@ class WC_Gateway_Ecster extends WC_Payment_Gateway {
 			array(
 				'hook'   => 'ecster_execute_osn_callback',
 				'status' => ActionScheduler_Store::STATUS_PENDING,
-				'args'   => array( $decoded, $order_id ),
+				'args'   => array( $decoded, $ecster_temp_order_id ),
 			),
 			'ids'
 		);
 
 		if ( empty( $scheduled_actions ) ) {
-			as_schedule_single_action( time() + 120, 'ecster_execute_osn_callback', array( $decoded, $order_id ) );
+			as_schedule_single_action( time() + 120, 'ecster_execute_osn_callback', array( $decoded, $ecster_temp_order_id ) );
 		} else {
 			self::log( 'OSN callback. Update already scheduled. ' . wp_json_encode( $scheduled_actions ) ); // Input var okay.
 		}
@@ -127,17 +129,22 @@ class WC_Gateway_Ecster extends WC_Payment_Gateway {
 				true
 			);
 
+			$standard_woo_checkout_fields = array( 'billing_first_name', 'billing_last_name', 'billing_address_1', 'billing_address_2', 'billing_postcode', 'billing_city', 'billing_phone', 'billing_email', 'billing_state', 'billing_country', 'billing_company', 'shipping_first_name', 'shipping_last_name', 'shipping_address_1', 'shipping_address_2', 'shipping_postcode', 'shipping_city', 'shipping_state', 'shipping_country', 'shipping_company', 'terms', 'terms-field', '_wp_http_referer' );
+
 			wp_localize_script(
 				'ecster_checkout',
-				'wc_ecster',
+				'ecster_wc_params',
 				array(
-					'ajaxurl'                     => admin_url( 'admin-ajax.php' ),
-					'terms'                       => wc_get_page_permalink( 'terms' ),
-					'wc_ecster_nonce'             => wp_create_nonce( 'wc_ecster_nonce' ),
-					'wc_change_to_ecster_nonce'   => wp_create_nonce( 'wc_change_to_ecster_nonce' ),
-					'move_checkout_fields'        => apply_filters( 'wc_ecster_move_checkout_fields', array( '' ) ),
-					'move_checkout_fields_origin' => apply_filters( 'wc_ecster_move_checkout_fields_origin', '.woocommerce-shipping-fields' ),
-					'ecster_checkout_cart_key'    => $checkout_cart_key,
+					'ajaxurl'                      => admin_url( 'admin-ajax.php' ),
+					'terms'                        => wc_get_page_permalink( 'terms' ),
+					'wc_ecster_nonce'              => wp_create_nonce( 'wc_ecster_nonce' ),
+					'wc_change_to_ecster_nonce'    => wp_create_nonce( 'wc_change_to_ecster_nonce' ),
+					'standard_woo_checkout_fields' => $standard_woo_checkout_fields,
+					'ecster_checkout_cart_key'     => $checkout_cart_key,
+					'timeout_time'                 => 9,
+					'timeout_message'              => __( 'Please try again, something went wrong with processing your order.', 'krokedil-ecster-pay-for-woocommerce' ),
+					'default_customer_type'        => wc_ecster_get_default_customer_type(),
+					'submit_order'                 => WC_AJAX::get_endpoint( 'checkout' ),
 				)
 			);
 			wp_enqueue_script( 'ecster_checkout' );
@@ -201,6 +208,21 @@ class WC_Gateway_Ecster extends WC_Payment_Gateway {
 	}
 
 	/**
+	 * Saves Ecster specific data stored in WC()->session to Woo order when created.
+	 *
+	 * @param string $order_id The WooCommerce order ID.
+	 * @param array  $posted_data The WooCommerce checkout form posted data.
+	 * @param object $order WooCommerce order.
+	 *
+	 * @return void
+	 */
+	public function save_ecster_temp_order_id_to_order( $order_id, $posted_data, $order ) {
+		if ( 'ecster' === $order->get_payment_method() ) {
+			update_post_meta( $order_id, '_wc_ecster_temp_order_id', WC()->session->get( 'ecster_temp_order_id' ) );
+		}
+	}
+
+	/**
 	 * Process the payment
 	 *
 	 * @param int     $order_id Reference.
@@ -209,82 +231,47 @@ class WC_Gateway_Ecster extends WC_Payment_Gateway {
 	 * @return array
 	 */
 	public function process_payment( $order_id, $retry = false ) {
-		$order              = wc_get_order( $order_id );
-		$internal_reference = WC()->session->get( 'ecster_order_id' );
-		update_post_meta( $order_id, '_wc_ecster_internal_reference', $internal_reference );
-		$ecster_status = '';
-		if ( $internal_reference ) {
-			// Update reference
-			$request  = new WC_Ecster_Request_Update_Reference( $this->api_key, $this->merchant_key, $this->testmode );
-			$response = $request->response( $internal_reference, $order->get_order_number() );
-
-			// Get purchase data from Ecster
-			$request       = new WC_Ecster_Request_Get_Order( $this->api_key, $this->merchant_key, $this->testmode );
-			$response      = $request->response( $internal_reference );
-			$response_body = json_decode( $response['body'] );
-
-			// Check if we have an invoice fee.
-			if ( isset( $response_body->properties->invoiceFee ) ) {
-				$ecster_fee = new WC_Order_Item_Fee();
-				$ecster_fee->set_name( __( 'Invoice Fee', 'krokedil-ecster-pay-for-woocommerce' ) );
-				$ecster_fee->set_total( $response_body->properties->invoiceFee / 100 );
-				$ecster_fee->set_tax_status( 'none' );
-				$ecster_fee->save();
-				$order->add_item( $ecster_fee );
-				$order->calculate_totals();
-			}
-
-			$ecster_status = $response_body->status;
-		}
-
-		self::log( 'Process payment for order ID ' . $order_id . '. Ecster internal reference ' . $internal_reference . '. Response body - ' . json_encode( $response_body ) );
-
-		// Double check that we have an email saved to the order. Otherwise save it.
-		// In some cases we have had issues where email isn't stored correct in front end form submission.
-		if ( empty( $order->get_billing_email() ) ) {
-			$order->set_billing_email( sanitize_email( $response_body->consumer->contactInfo->email ) );
-		}
-
-		// Double check that we have a phone number saved to the order. Otherwise save it.
-		if ( empty( $order->get_billing_phone() ) && isset( $response_body->consumer->contactInfo->cellular->number ) ) {
-			$order->set_billing_phone( sanitize_text_field( $response_body->consumer->contactInfo->cellular->number ) );
-		}
-
-		// Payment method title.
-		$payment_method_title = wc_ecster_get_payment_method_name( $response_body->properties->method );
-		update_post_meta( $order_id, '_wc_ecster_payment_method', $response_body->properties->method );
-		$order->add_order_note( sprintf( __( 'Payment via Ecster Pay %s.', 'krokedil-ecster-pay-for-woocommerce' ), $payment_method_title ) );
-		$order->set_payment_method_title( apply_filters( 'wc_ecster_payment_method_title', sprintf( __( '%s via Ecster Pay', 'krokedil-ecster-pay-for-woocommerce' ), $payment_method_title ), $payment_method_title ) );
-		$order->save();
-
-		if ( $ecster_status ) {
-
-			// Check Ecster order status
-			switch ( $ecster_status ) {
-				case 'PENDING_SIGNATURE': // Part payment with no contract signed yet
-					$order->update_status( 'on-hold', __( 'Ecster payment approved but Ecster awaits signed customer contract. Order can NOT be delivered yet.', 'krokedil-ecster-pay-for-woocommerce' ) );
-					break;
-				case 'READY': // Card payment/invoice
-				case 'FULLY_DELIVERED': // Card payment
-					if ( ! $order->has_status( array( 'processing', 'completed' ) ) ) {
-						$order->payment_complete( $internal_reference );
-					}
-					break;
-				default:
-						$order->add_order_note( __( 'Process payment sequenze in Woo triggered but purchase in Ecster is not finalized. Ecster status: ' . $ecster_status, 'krokedil-ecster-pay-for-woocommerce' ) );
-					break;
-			}
+		$order = wc_get_order( $order_id );
+		// 1. Process the payment.
+		// 2. Redirect to confirmation page.
+		if ( $this->process_payment_handler( $order_id ) ) {
+			$confirmation_url = add_query_arg(
+				array(
+					'ecster_confirm' => 'yes',
+					'wc_order_id'    => $order_id,
+				),
+				$this->get_return_url( $order )
+			);
+			return array(
+				'result'       => 'success',
+				'redirect_url' => $confirmation_url,
+			);
 		} else {
-			// No Ecster order status detected
-			$order->add_order_note( __( 'No Ecster order status was decected in Woo process_payment sequenze.', 'krokedil-ecster-pay-for-woocommerce' ) );
+			return array(
+				'result' => 'error',
+			);
 		}
+	}
 
-		wc_ecster_unset_sessions();
+	/**
+	 * Process the payment with information from Avarda and return the result.
+	 *
+	 * @param  int $order_id WooCommerce order ID.
+	 *
+	 * @return mixed
+	 */
+	public function process_payment_handler( $order_id ) {
+		// Get the order object.
+		$order = wc_get_order( $order_id );
 
-		return array(
-			'result'   => 'success',
-			'redirect' => $this->get_return_url( $order ),
-		);
+		if ( $order_id ) {
+
+			// Let other plugins hook into this sequence.
+			do_action( 'ecster_wc_process_payment', $order_id );
+			return true;
+		}
+		// Return false if we get here. Something went wrong.
+		return false;
 	}
 
 

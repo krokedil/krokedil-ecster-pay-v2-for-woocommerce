@@ -5,14 +5,14 @@
  * Description: Take payments in your store using Ecster Pay.
  * Author: Krokedil
  * Author URI: https://krokedil.se/
- * Version: 2.2.0
+ * Version: 3.0.0
  * Text Domain: krokedil-ecster-pay-for-woocommerce
  * Domain Path: /languages
  *
  * WC requires at least: 3.7.0
- * WC tested up to: 4.7.0
+ * WC tested up to: 4.9.0
  *
- * Copyright (c) 2020 Krokedil
+ * Copyright (c) 2021 Krokedil
  *
  * This program is free software: you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -35,9 +35,9 @@ if ( ! defined( 'ABSPATH' ) ) {
 /**
  * Required minimums and constants
  */
-define( 'WC_ECSTER_VERSION', '2.2.0' );
-define( 'WC_ECSTER_MIN_PHP_VER', '5.3.0' );
-define( 'WC_ECSTER_MIN_WC_VER', '3.5.0' );
+define( 'WC_ECSTER_VERSION', '3.0.0' );
+define( 'WC_ECSTER_MIN_PHP_VER', '5.6.0' );
+define( 'WC_ECSTER_MIN_WC_VER', '4.0.0' );
 define( 'WC_ECSTER_MAIN_FILE', __FILE__ );
 define( 'WC_ECSTER_PLUGIN_URL', untrailingslashit( plugins_url( basename( plugin_dir_path( __FILE__ ) ), basename( __FILE__ ) ) ) );
 define( 'WC_ECSTER_PLUGIN_PATH', untrailingslashit( plugin_dir_path( __FILE__ ) ) );
@@ -256,8 +256,8 @@ if ( ! class_exists( 'WC_Ecster' ) ) {
 
 			include_once WC_ECSTER_PLUGIN_PATH . '/includes/krokedil-wc-compatability.php';
 			include_once WC_ECSTER_PLUGIN_PATH . '/includes/wc-ecster-functions.php';
-			include_once WC_ECSTER_PLUGIN_PATH . '/includes/class-wc-ecster-order-submission-failure.php';
 			include_once WC_ECSTER_PLUGIN_PATH . '/includes/class-wc-ecster-api-callbacks.php';
+			include_once WC_ECSTER_PLUGIN_PATH . '/includes/class-wc-ecster-confirmation.php';
 			include_once WC_ECSTER_PLUGIN_PATH . '/includes/class-wc-ecster-order-management.php';
 
 			include_once WC_ECSTER_PLUGIN_PATH . '/includes/class-wc-ecster-templates.php';
@@ -298,21 +298,3 @@ if ( ! class_exists( 'WC_Ecster' ) ) {
 	register_activation_hook( __FILE__, array( 'WC_Ecster', 'activation_check' ) );
 
 }
-
-/**
- * Removes mandatory from checkout fields if Ecster is the selected payment method.
- */
-function wc_ecster_v2_remove_required_from_checkout_fields() {
-	if ( 'ecster' === WC()->session->get( 'chosen_payment_method' ) ) {
-		$checkout_fields = WC()->checkout->checkout_fields;
-
-		foreach ( $checkout_fields as $fieldset_key => $fieldset ) {
-			foreach ( $fieldset as $field_key => $field ) {
-				$checkout_fields[ $fieldset_key ][ $field_key ]['required'] = false;
-			}
-		}
-	}
-
-	WC()->checkout->checkout_fields = $checkout_fields;
-}
-add_action( 'woocommerce_checkout_process', 'wc_ecster_v2_remove_required_from_checkout_fields' );

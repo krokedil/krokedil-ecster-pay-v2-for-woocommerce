@@ -133,8 +133,8 @@ class WC_Ecster_Request {
 	 */
 	protected function notification_url() {
 		$ecster_notification_url = get_home_url() . '/wc-api/WC_Gateway_Ecster/';
-		if ( WC()->session->get( 'order_awaiting_payment' ) > 0 ) {
-			$ecster_notification_url = add_query_arg( 'order_id', WC()->session->get( 'order_awaiting_payment' ), $ecster_notification_url );
+		if ( WC()->session->get( 'ecster_temp_order_id' ) ) {
+			$ecster_notification_url = add_query_arg( 'etoid', WC()->session->get( 'ecster_temp_order_id' ), $ecster_notification_url );
 		}
 		return $ecster_notification_url;
 	}
