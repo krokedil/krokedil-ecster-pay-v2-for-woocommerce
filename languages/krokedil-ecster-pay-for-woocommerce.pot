@@ -19,128 +19,55 @@ msgstr ""
 "X-Poedit-SearchPath-0: .\n"
 "X-Poedit-SearchPathExcluded-0: *.js\n"
 "Plural-Forms: nplurals=INTEGER; plural=EXPRESSION;\n"
-"POT-Creation-Date: 2020-04-30 09:23+0000\n"
+"POT-Creation-Date: 2021-02-15 14:59+0000\n"
 "Language: \n"
 "X-Generator: Loco https://localise.biz/"
 
-#: krokedil-ecster-pay-v2-for-woocommerce.php:168
+#: includes/wc-ecster-functions.php:248
+#: includes/class-wc-ecster-api-callbacks.php:321
 #, php-format
-msgid ""
-"The plugin could not be activated. The minimum PHP version required for this "
-"plugin is %1$s. You are running %2$s."
+msgid "%s via Ecster Pay"
 msgstr ""
 
-#: krokedil-ecster-pay-v2-for-woocommerce.php:170
-#, php-format
-msgid ""
-"The WooCommerce Ecster plugin has been deactivated. The minimum PHP version "
-"required for this plugin is %1$s. You are running %2$s."
+#: includes/wc-ecster-functions.php:89 includes/class-wc-ecster-ajax.php:86
+#: includes/class-wc-ecster-ajax.php:136
+msgid ")."
 msgstr ""
 
-#: krokedil-ecster-pay-v2-for-woocommerce.php:177
-#, php-format
-msgid ""
-"The plugin could not be activated. The minimum WooCommerce version required "
-"for this plugin is %1$s. You are running %2$s."
-msgstr ""
-
-#: krokedil-ecster-pay-v2-for-woocommerce.php:179
-#, php-format
-msgid ""
-"The WooCommerce Ecster plugin has been deactivated. The minimum WooCommerce "
-"version required for this plugin is %1$s. You are running %2$s."
-msgstr ""
-
-#: krokedil-ecster-pay-v2-for-woocommerce.php:196
-msgid "Settings"
-msgstr ""
-
-#: krokedil-ecster-pay-v2-for-woocommerce.php:197
-msgid "Docs"
-msgstr ""
-
-#: krokedil-ecster-pay-v2-for-woocommerce.php:198
-msgid "Support"
-msgstr ""
-
-#: includes/settings-ecster.php:10
-msgid "Enable/Disable"
-msgstr ""
-
-#: includes/settings-ecster.php:11
-msgid "Enable Ecster Pay"
-msgstr ""
-
-#: includes/settings-ecster.php:17
-msgid "Title"
-msgstr ""
-
-#: includes/settings-ecster.php:19
-msgid "This controls the title which the user sees during checkout."
-msgstr ""
-
-#: includes/settings-ecster.php:20 includes/class-wc-gateway-ecster.php:35
-msgid "Ecster Pay"
-msgstr ""
-
-#: includes/settings-ecster.php:24
-msgid "Description"
-msgstr ""
-
-#: includes/settings-ecster.php:26
-msgid "This controls the description which the user sees during checkout."
-msgstr ""
-
-#: includes/settings-ecster.php:27
-msgid "Pay using Ecster Pay."
+#: includes/settings-ecster.php:74
+msgid "Allowed customer types"
 msgstr ""
 
 #: includes/settings-ecster.php:31
 msgid "API key"
 msgstr ""
 
-#: includes/settings-ecster.php:33
-msgid ""
-"Ecster Pay API key. Used for order management. Can be retrieved from your "
-"Ecster Dashboard."
+#: includes/settings-ecster.php:79
+msgid "B2B"
 msgstr ""
 
-#: includes/settings-ecster.php:38
-msgid "Merchant key"
+#: includes/settings-ecster.php:81
+msgid "B2B & B2C default is B2B"
 msgstr ""
 
-#: includes/settings-ecster.php:40
-msgid ""
-"Ecster Pay Merchant key. Used for order management. Can be retrieved from "
-"your Ecster Dashboard."
+#: includes/settings-ecster.php:78
+msgid "B2C"
 msgstr ""
 
-#: includes/settings-ecster.php:45
-msgid "Test mode"
+#: includes/settings-ecster.php:80
+msgid "B2C & B2B default is B2C"
 msgstr ""
 
-#: includes/settings-ecster.php:46
-msgid "Enable Test Mode"
+#: includes/class-wc-ecster-templates.php:116
+msgid "Business"
 msgstr ""
 
-#: includes/settings-ecster.php:48
-msgid "Place the payment gateway in test mode."
+#: includes/wc-ecster-functions.php:22
+msgid "Card payment"
 msgstr ""
 
-#: includes/settings-ecster.php:53
-msgid "Logging"
-msgstr ""
-
-#: includes/settings-ecster.php:54
-msgid "Log debug messages"
-msgstr ""
-
-#: includes/settings-ecster.php:56
-msgid "Save debug messages to the WooCommerce System Status log."
-msgstr ""
-
-#: includes/settings-ecster.php:61
-msgid "Other payment method button text"
+#: includes/class-wc-ecster-templates.php:114
+msgid "Consumer"
 msgstr ""
 
 #: includes/settings-ecster.php:63
@@ -150,8 +77,141 @@ msgid ""
 "blank to use the default (and translatable) text."
 msgstr ""
 
-#: includes/settings-ecster.php:68
-msgid "Manage orders"
+#: includes/settings-ecster.php:24
+msgid "Description"
+msgstr ""
+
+#: krokedil-ecster-pay-v2-for-woocommerce.php:197
+msgid "Docs"
+msgstr ""
+
+#: includes/class-wc-ecster-order-management.php:74
+#, php-format
+msgid "Ecster annul request failed. Error code: %1$s. Error message: %2$s"
+msgstr ""
+
+#: includes/class-wc-gateway-ecster.php:302
+#, php-format
+msgid "Ecster credit order failed. Code: %1$s. Type: %2$s. Message: %3$s"
+msgstr ""
+
+#: includes/class-wc-ecster-order-management.php:120
+#, php-format
+msgid "Ecster debit request failed. Error code: %1$s. Error message: %2$s"
+msgstr ""
+
+#: includes/class-wc-ecster-order-management.php:109
+#, php-format
+msgid "Ecster debit request problem. Ecster order status: %s"
+msgstr ""
+
+#: includes/class-wc-gateway-ecster.php:297
+#, php-format
+msgid ""
+"Ecster order credited with %1$s. Transaction reference %2$s. <a "
+"href=\"%3$s\" target=\"_blank\">Credit invoice</a>."
+msgstr ""
+
+#: includes/class-wc-gateway-ecster.php:35 includes/settings-ecster.php:20
+msgid "Ecster Pay"
+msgstr ""
+
+#: includes/settings-ecster.php:33
+msgid ""
+"Ecster Pay API key. Used for order management. Can be retrieved from your "
+"Ecster Dashboard."
+msgstr ""
+
+#: includes/settings-ecster.php:40
+msgid ""
+"Ecster Pay Merchant key. Used for order management. Can be retrieved from "
+"your Ecster Dashboard."
+msgstr ""
+
+#. Name of the plugin
+msgid "Ecster Pay v2 for WooCommerce"
+msgstr ""
+
+#: includes/wc-ecster-functions.php:256
+#: includes/class-wc-ecster-api-callbacks.php:329
+#: includes/class-wc-ecster-order-submission-failure.php:57
+msgid ""
+"Ecster payment approved but Ecster awaits signed customer contract. Order "
+"can NOT be delivered yet."
+msgstr ""
+
+#: includes/class-wc-ecster-order-management.php:104
+#, php-format
+msgid "Ecster payment debited (transaction id %s)."
+msgstr ""
+
+#: includes/class-wc-ecster-ajax.php:159
+msgid "Ecster payment denied"
+msgstr ""
+
+#: includes/class-wc-ecster-ajax.php:157
+msgid "Ecster payment failed"
+msgstr ""
+
+#: includes/class-wc-ecster-order-management.php:64
+#, php-format
+msgid "Ecster payment was successfully cancelled (transaction id %s)."
+msgstr ""
+
+#: includes/class-wc-ecster-api-callbacks.php:164
+msgid "Ecster reported order Aborted"
+msgstr ""
+
+#: includes/class-wc-ecster-api-callbacks.php:169
+msgid "Ecster reported order Annuled"
+msgstr ""
+
+#: includes/class-wc-ecster-api-callbacks.php:154
+msgid "Ecster reported order Denied"
+msgstr ""
+
+#: includes/class-wc-ecster-api-callbacks.php:174
+msgid "Ecster reported order Expired"
+msgstr ""
+
+#: includes/class-wc-ecster-api-callbacks.php:159
+msgid "Ecster reported order Failed"
+msgstr ""
+
+#: includes/class-wc-ecster-api-callbacks.php:142
+msgid "Ecster reported order fully delivered."
+msgstr ""
+
+#: includes/class-wc-ecster-api-callbacks.php:150
+msgid "Ecster reported order partially delivered."
+msgstr ""
+
+#: includes/class-wc-ecster-api-callbacks.php:146
+msgid "Ecster reported order status fully delivered."
+msgstr ""
+
+#: includes/class-wc-ecster-api-callbacks.php:137
+msgid "Ecster reported order status ready."
+msgstr ""
+
+#: includes/class-wc-ecster-api-callbacks.php:179
+msgid "Ecster reported order Stopped"
+msgstr ""
+
+#: includes/class-wc-ecster-order-management.php:53
+msgid "Ecster reservation is already cancelled."
+msgstr ""
+
+#: includes/class-wc-ecster-order-management.php:93
+msgid "Ecster reservation is already captured."
+msgstr ""
+
+#: includes/settings-ecster.php:11
+msgid "Enable Ecster Pay"
+msgstr ""
+
+#: includes/settings-ecster.php:46
+msgid "Enable Test Mode"
 msgstr ""
 
 #: includes/settings-ecster.php:70
@@ -162,45 +222,116 @@ msgid ""
 "href=\"%s\" target=\"_blank\">documentation</a>."
 msgstr ""
 
-#: includes/settings-ecster.php:74
-msgid "Allowed customer types"
+#: includes/settings-ecster.php:10
+msgid "Enable/Disable"
 msgstr ""
 
-#: includes/settings-ecster.php:76
-msgid "Sets the allowed customer types for Ecster Pay"
+#. URI of the plugin
+msgid "hhttps://krokedil.se/ecster/"
 msgstr ""
 
-#: includes/settings-ecster.php:78
-msgid "B2C"
-msgstr ""
-
-#: includes/settings-ecster.php:79
-msgid "B2B"
-msgstr ""
-
-#: includes/settings-ecster.php:80
-msgid "B2C & B2B default is B2C"
-msgstr ""
-
-#: includes/settings-ecster.php:81
-msgid "B2B & B2C default is B2B"
+#. Author URI of the plugin
+msgid "https://krokedil.se/"
 msgstr ""
 
 #: includes/wc-ecster-functions.php:16
 msgid "Invoice"
 msgstr ""
 
+#: includes/wc-ecster-functions.php:224
+msgid "Invoice Fee"
+msgstr ""
+
+#. Author of the plugin
+msgid "Krokedil"
+msgstr ""
+
+#: includes/settings-ecster.php:54
+msgid "Log debug messages"
+msgstr ""
+
+#: includes/settings-ecster.php:53
+msgid "Logging"
+msgstr ""
+
+#: includes/settings-ecster.php:68
+msgid "Manage orders"
+msgstr ""
+
+#: includes/settings-ecster.php:38
+msgid "Merchant key"
+msgstr ""
+
+#: includes/class-wc-ecster-order-management.php:89
+msgid ""
+"No activation needed in Ecster's system since Swish payments is charged "
+"directly during purchase."
+msgstr ""
+
+#: includes/class-wc-ecster-order-management.php:49
+msgid ""
+"No cancellation performed in Ecster's system. Swish payments should be "
+"manually handled directly with Swish/your bank."
+msgstr ""
+
+#: includes/wc-ecster-functions.php:268
+msgid "No Ecster order status was decected in Woo process_payment sequenze."
+msgstr ""
+
+#: includes/class-wc-ecster-api-callbacks.php:341
+msgid ""
+"Order created via Ecster Pay API callback. Please verify the order in "
+"Ecsters system."
+msgstr ""
+
+#: includes/settings-ecster.php:61
+msgid "Other payment method button text"
+msgstr ""
+
 #: includes/wc-ecster-functions.php:19
 msgid "Part payment"
 msgstr ""
 
-#: includes/wc-ecster-functions.php:22
-msgid "Card payment"
+#: includes/settings-ecster.php:27
+msgid "Pay using Ecster Pay."
 msgstr ""
 
-#: includes/wc-ecster-functions.php:86 includes/class-wc-ecster-ajax.php:83
-#: includes/class-wc-ecster-ajax.php:122
-msgid ")."
+#: includes/wc-ecster-functions.php:247
+#: includes/class-wc-ecster-api-callbacks.php:320
+#, php-format
+msgid "Payment via Ecster Pay %s."
+msgstr ""
+
+#: includes/settings-ecster.php:48
+msgid "Place the payment gateway in test mode."
+msgstr ""
+
+#: includes/class-wc-gateway-ecster.php:145
+msgid "Please try again, something went wrong with processing your order."
+msgstr ""
+
+#: includes/settings-ecster.php:56
+msgid "Save debug messages to the WooCommerce System Status log."
+msgstr ""
+
+#: includes/wc-ecster-functions.php:142
+msgid "Select another payment method"
+msgstr ""
+
+#: includes/settings-ecster.php:76
+msgid "Sets the allowed customer types for Ecster Pay"
+msgstr ""
+
+#: krokedil-ecster-pay-v2-for-woocommerce.php:196
+msgid "Settings"
+msgstr ""
+
+#: krokedil-ecster-pay-v2-for-woocommerce.php:198
+msgid "Support"
+msgstr ""
+
+#. Description of the plugin
+msgid "Take payments in your store using Ecster Pay."
 msgstr ""
 
 #: includes/class-wc-gateway-ecster.php:36
@@ -210,191 +341,50 @@ msgid ""
 "target=\"_blank\">can be found here</a>."
 msgstr ""
 
-#: includes/class-wc-gateway-ecster.php:107
-msgid "Select another payment method"
+#: includes/settings-ecster.php:45
+msgid "Test mode"
 msgstr ""
 
-#: includes/class-wc-gateway-ecster.php:221
-msgid "Invoice Fee"
-msgstr ""
-
-#: includes/class-wc-gateway-ecster.php:238
-#: includes/class-wc-ecster-api-callbacks.php:316
-#, php-format
-msgid "Payment via Ecster Pay %s."
-msgstr ""
-
-#: includes/class-wc-gateway-ecster.php:239
-#, php-format
-msgid "%s via Ecster Pay"
-msgstr ""
-
-#: includes/class-wc-gateway-ecster.php:245
-#: includes/class-wc-ecster-order-submission-failure.php:57
-#: includes/class-wc-ecster-api-callbacks.php:301
-msgid ""
-"Ecster payment approved but Ecster awaits signed customer contract. Order "
-"can NOT be delivered yet."
-msgstr ""
-
-#: includes/class-wc-gateway-ecster.php:259
-msgid "Thank you page rendered but no Ecster order status was decected."
-msgstr ""
-
-#: includes/class-wc-gateway-ecster.php:290
+#: krokedil-ecster-pay-v2-for-woocommerce.php:168
 #, php-format
 msgid ""
-"Ecster order credited with %1$s. Transaction reference %2$s. <a "
-"href=\"%3$s\" target=\"_blank\">Credit invoice</a>."
+"The plugin could not be activated. The minimum PHP version required for this "
+"plugin is %1$s. You are running %2$s."
 msgstr ""
 
-#: includes/class-wc-gateway-ecster.php:295
-#, php-format
-msgid "Ecster credit order failed. Code: %1$s. Type: %2$s. Message: %3$s"
-msgstr ""
-
-#: includes/class-wc-ecster-templates.php:115
-msgid "Consumer"
-msgstr ""
-
-#: includes/class-wc-ecster-templates.php:117
-msgid "Business"
-msgstr ""
-
-#: includes/class-wc-ecster-ajax.php:143
-msgid "Ecster payment failed"
-msgstr ""
-
-#: includes/class-wc-ecster-ajax.php:145
-msgid "Ecster payment denied"
-msgstr ""
-
-#: includes/class-wc-ecster-ajax.php:303
+#: krokedil-ecster-pay-v2-for-woocommerce.php:177
 #, php-format
 msgid ""
-"This order was made as a fallback due to an error in the checkout (%s). "
-"Please verify the order with Ecster."
+"The plugin could not be activated. The minimum WooCommerce version required "
+"for this plugin is %1$s. You are running %2$s."
 msgstr ""
 
-#: includes/class-wc-ecster-ajax.php:550 includes/class-wc-ecster-ajax.php:551
-msgid "Ecster Invoice Fee"
+#: krokedil-ecster-pay-v2-for-woocommerce.php:170
+#, php-format
+msgid ""
+"The WooCommerce Ecster plugin has been deactivated. The minimum PHP version "
+"required for this plugin is %1$s. You are running %2$s."
 msgstr ""
 
-#: includes/class-wc-ecster-ajax.php:560
-msgid "Unable to add Ecster invoice fee to the order."
+#: krokedil-ecster-pay-v2-for-woocommerce.php:179
+#, php-format
+msgid ""
+"The WooCommerce Ecster plugin has been deactivated. The minimum WooCommerce "
+"version required for this plugin is %1$s. You are running %2$s."
+msgstr ""
+
+#: includes/settings-ecster.php:26
+msgid "This controls the description which the user sees during checkout."
+msgstr ""
+
+#: includes/settings-ecster.php:19
+msgid "This controls the title which the user sees during checkout."
+msgstr ""
+
+#: includes/settings-ecster.php:17
+msgid "Title"
 msgstr ""
 
 #: includes/class-wc-ecster-order-submission-failure.php:68
 msgid "WooCommerce order finalized via submission backup."
-msgstr ""
-
-#: includes/class-wc-ecster-api-callbacks.php:130
-msgid "Ecster reported order status ready."
-msgstr ""
-
-#: includes/class-wc-ecster-api-callbacks.php:135
-msgid "Ecster reported order fully delivered."
-msgstr ""
-
-#: includes/class-wc-ecster-api-callbacks.php:139
-msgid "Ecster reported order status fully delivered."
-msgstr ""
-
-#: includes/class-wc-ecster-api-callbacks.php:143
-msgid "Ecster reported order partially delivered."
-msgstr ""
-
-#: includes/class-wc-ecster-api-callbacks.php:147
-msgid "Ecster reported order Denied"
-msgstr ""
-
-#: includes/class-wc-ecster-api-callbacks.php:152
-msgid "Ecster reported order Failed"
-msgstr ""
-
-#: includes/class-wc-ecster-api-callbacks.php:157
-msgid "Ecster reported order Aborted"
-msgstr ""
-
-#: includes/class-wc-ecster-api-callbacks.php:162
-msgid "Ecster reported order Annuled"
-msgstr ""
-
-#: includes/class-wc-ecster-api-callbacks.php:167
-msgid "Ecster reported order Expired"
-msgstr ""
-
-#: includes/class-wc-ecster-api-callbacks.php:172
-msgid "Ecster reported order Stopped"
-msgstr ""
-
-#: includes/class-wc-ecster-api-callbacks.php:313
-msgid ""
-"Order created via Ecster Pay API callback. Please verify the order in "
-"Ecsters system."
-msgstr ""
-
-#: includes/class-wc-ecster-order-management.php:43
-msgid ""
-"No cancellation performed in Ecster's system. Swish payments should be "
-"manually handled directly with Swish/your bank."
-msgstr ""
-
-#: includes/class-wc-ecster-order-management.php:47
-msgid "Ecster reservation is already cancelled."
-msgstr ""
-
-#: includes/class-wc-ecster-order-management.php:58
-#, php-format
-msgid "Ecster payment was successfully cancelled (transaction id %s)."
-msgstr ""
-
-#: includes/class-wc-ecster-order-management.php:68
-#, php-format
-msgid "Ecster annul request failed. Error code: %1$s. Error message: %2$s"
-msgstr ""
-
-#: includes/class-wc-ecster-order-management.php:83
-msgid ""
-"No activation needed in Ecster's system since Swish payments is charged "
-"directly during purchase."
-msgstr ""
-
-#: includes/class-wc-ecster-order-management.php:87
-msgid "Ecster reservation is already captured."
-msgstr ""
-
-#: includes/class-wc-ecster-order-management.php:98
-#, php-format
-msgid "Ecster payment debited (transaction id %s)."
-msgstr ""
-
-#: includes/class-wc-ecster-order-management.php:103
-#, php-format
-msgid "Ecster debit request problem. Ecster order status: %s"
-msgstr ""
-
-#: includes/class-wc-ecster-order-management.php:114
-#, php-format
-msgid "Ecster debit request failed. Error code: %1$s. Error message: %2$s"
-msgstr ""
-
-#. Name of the plugin
-msgid "Ecster Pay v2 for WooCommerce"
-msgstr ""
-
-#. Description of the plugin
-msgid "Take payments in your store using Ecster Pay."
-msgstr ""
-
-#. URI of the plugin
-msgid "hhttps://krokedil.se/ecster/"
-msgstr ""
-
-#. Author of the plugin
-msgid "Krokedil"
-msgstr ""
-
-#. Author URI of the plugin
-msgid "https://krokedil.se/"
 msgstr ""

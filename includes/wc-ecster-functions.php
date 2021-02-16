@@ -59,6 +59,8 @@ function ecster_maybe_create_order() {
  * @return string
  */
 function ecster_create_order() {
+	// Set temp order ID. Used for callbacks uhntil we have a WC order.
+	WC()->session->set( 'ecster_temp_order_id', 'tmp' . md5( uniqid( wp_rand(), true ) ) );
 	$ecster_settings = get_option( 'woocommerce_ecster_settings' );
 	$testmode        = 'yes' === $ecster_settings['testmode'];
 	$api_key         = $ecster_settings['api_key'];
@@ -123,6 +125,9 @@ function wc_ecster_unset_sessions() {
 		if ( WC()->session->get( 'ecster_order_id' ) ) {
 			WC()->session->__unset( 'ecster_order_id' );
 		}
+		if ( WC()->session->get( 'ecster_temp_order_id' ) ) {
+			WC()->session->__unset( 'ecster_temp_order_id' );
+		}
 	}
 }
 
@@ -146,3 +151,120 @@ function wc_ecster_show_another_gateway_button() {
 	}
 }
 
+/**
+ * Finds an Order ID based on a temp order id set in Ecsters create request.
+ *
+ * @param string $ecster_temp_order_id A temporary order id set in create request sent to Ecster.
+ * @return int The ID of an order, or 0 if the order could not be found.
+ */
+function wc_ecster_get_order_id_by_temp_order_id( $ecster_temp_order_id ) {
+	$query_args = array(
+		'fields'      => 'ids',
+		'post_type'   => wc_get_order_types(),
+		'post_status' => array_keys( wc_get_order_statuses() ),
+		'meta_key'    => '_wc_ecster_temp_order_id', // phpcs:ignore WordPress.DB.SlowDBQuery -- Slow DB Query is ok here, we need to limit to our meta key.
+		'meta_value'  => sanitize_text_field( wp_unslash( $ecster_temp_order_id ) ), // phpcs:ignore WordPress.DB.SlowDBQuery -- Slow DB Query is ok here, we need to limit to our meta key.
+		'date_query'  => array(
+			array(
+				'after' => '30 day ago',
+			),
+		),
+	);
+
+	$orders = get_posts( $query_args );
+
+	if ( $orders ) {
+		$order_id = $orders[0];
+	} else {
+		$order_id = 0;
+	}
+
+	return $order_id;
+}
+
+/**
+ * Returns the default customer type selected in Ecster settings.
+ *
+ * @return string $customer_type The default customer type.s
+ */
+function wc_ecster_get_default_customer_type() {
+	$settings      = get_option( 'woocommerce_ecster_settings' );
+	$customer_type = isset( $settings['customer_types'] ) ? $settings['customer_types'] : 'b2c';
+	return substr( $customer_type, 0, 3 );
+}
+
+/**
+ * Confirm order
+ */
+function wc_ecster_confirm_order( $order_id, $internal_reference, $response_body = false ) {
+	$ecster_settings = get_option( 'woocommerce_ecster_settings' );
+	$testmode        = 'yes' === $ecster_settings['testmode'];
+	$api_key         = $ecster_settings['api_key'];
+	$merchant_key    = $ecster_settings['merchant_key'];
+
+	$order = wc_get_order( $order_id );
+
+	// Save internal reference to WC order.
+	update_post_meta( $order_id, '_wc_ecster_internal_reference', $internal_reference );
+
+	// Update reference.
+	$request  = new WC_Ecster_Request_Update_Reference( $api_key, $merchant_key, $testmode );
+	$response = $request->response( $internal_reference, $order->get_order_number() );
+
+	// Get purchase data from Ecster if bnot already passed into the function.
+	if ( empty( $response_body ) ) {
+		$request       = new WC_Ecster_Request_Get_Order( $api_key, $merchant_key, $testmode );
+		$response      = $request->response( $internal_reference );
+		$response_body = json_decode( $response['body'] );
+	}
+
+	// Check if we have an invoice fee.
+	if ( isset( $response_body->properties->invoiceFee ) ) {
+		$ecster_fee = new WC_Order_Item_Fee();
+		$ecster_fee->set_name( __( 'Invoice Fee', 'krokedil-ecster-pay-for-woocommerce' ) );
+		$ecster_fee->set_total( $response_body->properties->invoiceFee / 100 );
+		$ecster_fee->set_tax_status( 'none' );
+		$ecster_fee->save();
+		$order->add_item( $ecster_fee );
+		$order->calculate_totals();
+	}
+
+	$ecster_status = $response_body->status;
+
+	WC_Gateway_Ecster::log( 'Confirm order ID ' . $order_id . '. Ecster internal reference ' . $internal_reference . '. Response body - ' . json_encode( $response_body ) );
+
+	// Add email to order.
+	// In some cases we don't receive email on address update event and it is therefore not available in front end form submission.
+	$order->set_billing_email( sanitize_email( $response_body->consumer->contactInfo->email ) );
+
+	// Add phone to order.
+	// In some cases we don't receive phone on address update event and it is therefore not available in front end form submission.
+	$order->set_billing_phone( sanitize_text_field( $response_body->consumer->contactInfo->cellular->number ) );
+
+	// Payment method title.
+	$payment_method_title = wc_ecster_get_payment_method_name( $response_body->properties->method );
+	update_post_meta( $order_id, '_wc_ecster_payment_method', $response_body->properties->method );
+	$order->add_order_note( sprintf( __( 'Payment via Ecster Pay %s.', 'krokedil-ecster-pay-for-woocommerce' ), $payment_method_title ) );
+	$order->set_payment_method_title( apply_filters( 'wc_ecster_payment_method_title', sprintf( __( '%s via Ecster Pay', 'krokedil-ecster-pay-for-woocommerce' ), $payment_method_title ), $payment_method_title ) );
+	$order->save();
+
+	if ( $ecster_status ) {
+
+		// Check Ecster order status.
+		switch ( $ecster_status ) {
+			case 'PENDING_SIGNATURE': // Part payment with no contract signed yet
+				$order->update_status( 'on-hold', __( 'Ecster payment approved but Ecster awaits signed customer contract. Order can NOT be delivered yet.', 'krokedil-ecster-pay-for-woocommerce' ) );
+				break;
+			case 'READY': // Card payment/invoice
+			case 'FULLY_DELIVERED': // Card payment
+					$order->payment_complete( $internal_reference );
+				break;
+			default:
+					$order->add_order_note( __( 'Confirmation payment sequenze in Woo triggered but purchase in Ecster is not finalized. Ecster status: ' . $ecster_status, 'krokedil-ecster-pay-for-woocommerce' ) );
+				break;
+		}
+	} else {
+		// No Ecster order status detected.
+		$order->add_order_note( __( 'No Ecster order status was decected in Woo process_payment sequenze.', 'krokedil-ecster-pay-for-woocommerce' ) );
+	}
+}

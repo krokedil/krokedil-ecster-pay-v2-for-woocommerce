@@ -5,7 +5,7 @@ Requires at least: 4.5
 Tested up to: 5.5.3
 Requires PHP: 5.6
 WC requires at least: 3.7.0
-WC tested up to: 4.7.0
+WC tested up to: 4.9.0
 License: GPLv3
 License URI: http://www.gnu.org/licenses/gpl-3.0.html
 Stable tag: trunk

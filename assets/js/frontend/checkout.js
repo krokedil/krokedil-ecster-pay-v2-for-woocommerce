@@ -1,538 +1,654 @@
-/* global jQuery, wc_ecster, EcsterPay, console */
-(function ($) {
-	'use strict';
-	var wc_ecster_initialized = false;
-	var wc_ecster_cart_key = null;
-	var wc_ecster_on_customer_authenticated_data = false;
-	var wc_ecster_on_changed_delivery_address_data = false;
-	var wc_ecster_cart_key = wc_ecster.ecster_checkout_cart_key;
-	var wc_ecster_order_processing = false;
+jQuery(function($) {
 
-	var wc_ecster_body_class = function wc_ecster_body_class() {
-		if ("ecster" === $("input[name='payment_method']:checked").val()) {
-			$("body").addClass("ecster-selected").removeClass("ecster-deselected");
-		} else {
-			$("body").removeClass("ecster-selected").addClass("ecster-deselected");
-		}
-	};
+	const ecster_wc = {
 
-	/*var wc_ecster_add_container = function wc_ecster_add_container() {
-		if (!$("#ecster-pay-ctr").length) {
-			// Add the element
-			$('form.woocommerce-checkout').after('<div id="ecster-pay-ctr"></div>');
-		}
-	};*/
+		wc_ecster_initialized: false,
+		ecster_cart_key: null,
+		wc_ecster_on_customer_authenticated_data: false,
+		wc_ecster_on_changed_delivery_address_data: false,
+		ecster_cart_key: ecster_wc_params.ecster_checkout_cart_key,
+		wc_ecster_order_processing: false,
 
-	var wc_ecster_create_cart = function wc_ecster_create_cart() {
-		console.log( 'create' );
-		//wc_ecster_add_container();
+		// Payment method.
+		paymentMethodEl: $('input[name="payment_method"]'),
+		selectAnotherSelector: '#ecster-checkout-select-other',
+		// Body element.
+		bodyEl: $('body'),
 
-		/*$('#billing_first_name, #billing_last_name, #billing_company, #billing_email, #billing_phone, #billing_country, #billing_address_1, #billing_address_2, #billing_postcode, #billing_city').val('');
-		$('#shipping_first_name, #shipping_last_name, #shipping_company, #shipping_country, #shipping_address_1, #shipping_address_2, #shipping_postcode, #shipping_city').val('');
-		*/
+		/*
+		 * Initiates the script and sets the triggers for the functions.
+		 */
+		init: function() {
+			// Check if Ecster is the selected payment method before we do anything.
+			if( ecster_wc.checkIfSelected() ) {
+				$(document).ready( ecster_wc.documentReady() );
 
-		// Check if Ecster is selected, Ecster library loaded and Ecster container exists
-		if ("ecster" === $("input[name='payment_method']:checked").val() && typeof window.EcsterPay === "object" && $("#ecster-pay-ctr").length) {
-			if (null !== wc_ecster_cart_key && true !== wc_ecster_cart_key.includes( 'Error' ) ) {
-				EcsterPay.start({
-					cartKey: wc_ecster_cart_key, // from create cart REST call
-					shopTermsUrl: wc_ecster.terms,
-					showCart: false,
-					showPaymentResult: false,
-					onCheckoutStartInit: function () {
-						$("#order_review").block({
-							message: null,
-							overlayCSS: {
-								background: "#fff",
-								opacity: 0.6
-							}
-						});
-					},
-					onCheckoutStartSuccess: function () {
-						$("#order_review").unblock();
-						wc_ecster_initialized = true; // Mark Ecster as initialized on success
-						$("body").trigger("update_checkout");
-					},
-					onCheckoutStartFailure: function (failureData) {
-						$("#order_review").unblock();
-						console.log('onCheckoutStartFailure');
-						console.log(failureData);
-						wc_ecster_on_checkout_start_failure(failureData);
-					},
-					onCheckoutUpdateInit: function () {
-						$("#order_review").block({
-							message: null,
-							overlayCSS: {
-								background: "#fff",
-								opacity: 0.6
-							}
-						});
-					},
-					onCheckoutUpdateSuccess: function () {
-						$("#order_review").unblock();
-						$('#ecster-pay-ctr').unblock();
-					},
-					onCheckoutUpdateFailure: function () {
-						$("#order_review").unblock();
-					},
-					onCustomerAuthenticated: function (authenticatedData) {
-						wc_ecster_on_customer_authenticated_data = authenticatedData.customer;
-						wc_ecster_on_customer_authenticated(authenticatedData.customer);
-					},
-					onChangedDeliveryMethod: function (newDeliveryMethod) {
-					},
-					onChangedDeliveryAddress: function (newDeliveryAddress) {
-						wc_ecster_on_changed_delivery_address_data = newDeliveryAddress;
-						wc_ecster_on_changed_delivery_address(newDeliveryAddress);
-					},
-					onPaymentSuccess: function (paymentData) {
-						wc_ecster_on_payment_success(paymentData);
-					},
-					onPaymentFailure: function () {
-						wc_ecster_fail_local_order('failed');
-					},
-					onPaymentDenied: function (deniedData) {
-						wc_ecster_fail_local_order('denied');
-					}
-				});
+				// Update Ecster payment.
+				ecster_wc.bodyEl.on('updated_checkout', ecster_wc.wc_ecster_update_cart);
+			}
+
+			ecster_wc.bodyEl.on('change', 'input[name="payment_method"]', ecster_wc.maybeChangeToEcster);
+			ecster_wc.bodyEl.on( 'click', ecster_wc.selectAnotherSelector, function() {
+				ecster_wc.changePaymentMethod( false ) }
+			);
+			
+			// Update Ecster cart when changing between B2B/B2C
+			ecster_wc.bodyEl.on('change', 'input[name="ecster-customer-type"]', ecster_wc.wc_ecster_update_cart);
+		},
+
+		/*
+		 * Document ready function. 
+		 * Runs on the $(document).ready event.
+		 */
+		documentReady: function() {
+			ecster_wc.wc_ecster_body_class();
+			ecster_wc.moveExtraCheckoutFields();
+			ecster_wc.wc_ecster_create_cart();
+			
+		},
+		/*
+		 * Check if our gateway is the selected gateway.
+		 */
+		checkIfSelected: function() {
+			if (ecster_wc.paymentMethodEl.length > 0) {
+				ecster_wc.paymentMethod = ecster_wc.paymentMethodEl.filter(':checked').val();
+				if( 'ecster' === ecster_wc.paymentMethod ) {
+					return true;
+				}
+			} 
+			return false;
+		},
+
+		wc_ecster_body_class: function() {
+			if ("ecster" === $("input[name='payment_method']:checked").val()) {
+				$("body").addClass("ecster-selected").removeClass("ecster-deselected");
 			} else {
-				console.log('wc_ecster_cart_key');
-				console.log(wc_ecster_cart_key);
-				document.querySelector('#ecster-pay-ctr').innerHTML = '<div class="woocommerce-error">' + wc_ecster_cart_key + '</div>';
-				
+				$("body").removeClass("ecster-selected").addClass("ecster-deselected");
 			}
-		}
-	};
+		},
 
-	var wc_ecster_update_cart = function wc_ecster_update_cart() {
-		var updated_cart_callback = EcsterPay.updateCart(wc_ecster_cart_key);
-		var customer_type = ( $('input[name="ecster-customer-type"]:checked').val() ) ? $('input[name="ecster-customer-type"]:checked').val() : null;
-		$.ajax(
-			wc_ecster.ajaxurl,
-			{
-				type: "POST",
-				dataType: "json",
-				async: true,
-				data: {
-					action: "wc_ecster_update_cart",
-					cart_key: wc_ecster_cart_key,
-					customer_type: customer_type,
-					nonce: wc_ecster.wc_ecster_nonce
-				},
-				success: function (response) {
+		/**
+		 * Moves all non standard fields to the extra checkout fields.
+		 */
+		moveExtraCheckoutFields: function() {
 
-					if(response.success && response.data.refreshZeroAmount){
-						window.location.reload();
-					}
+			// Move order comments.
+			$( '.woocommerce-additional-fields' ).appendTo( '#ecster-extra-checkout-fields' );
+			var form = $( 'form[name="checkout"] input, form[name="checkout"] select, textarea' );
+			for ( i = 0; i < form.length; i++ ) {
+				var name = form[i].name;
+				// Check if field is inside the order review.
+				if( $( 'table.woocommerce-checkout-review-order-table' ).find( form[i] ).length ) {
+					continue;
+				}
 
-					if (response.success && response.data.wc_ecster_cart_key) {
-
-
-
-						updated_cart_callback(response.data.wc_ecster_cart_key);
-						wc_ecster_cart_key = response.data.wc_ecster_cart_key;
+				// Check if this is a standard field.
+				if ( -1 === $.inArray( name, ecster_wc_params.standard_woo_checkout_fields ) ) {					
+					// This is not a standard Woo field, move to our div.
+					if ( 0 < $( 'p#' + name + '_field' ).length ) {
+						$( 'p#' + name + '_field' ).appendTo( '#ecster-extra-checkout-fields' );
 					} else {
-
-
-
-						//wc_ecster_add_container();
-						$("#ecster-pay-ctr").html('<div class="woocommerce-error" id="wc-ecster-api-error">' + response.data.error_message + '</div>');
+						$( 'input[name="' + name + '"]' ).closest( 'p' ).appendTo( '#ecster-extra-checkout-fields' );
 					}
 				}
 			}
-		);
-	};
+		},
 
-	var wc_ecster_fail_local_order = function wc_ecster_fail_local_order(reason) {
-		$.ajax(
-			wc_ecster.ajaxurl,
-			{
-				type: "POST",
-				dataType: "json",
-				async: true,
-				data: {
-					action: "wc_ecster_fail_local_order",
-					reason: reason,
-					nonce: wc_ecster.wc_ecster_nonce
-				}
-			}
-		);
-	};
-
-	// Initializes Ecster in checkout page
-	// Triggered when page is first loaded, if Ecster is selected or when payment method is
-	// changed to Ecster for the first time
-	var wc_ecster_init = function wc_ecster_init() {
-		moveExtraCheckoutFields();
-		wc_ecster_create_cart();
-	};
-
-	// on Ecster checkout start failure. Triggered when Ecster cart session has expired.
-    var wc_ecster_on_checkout_start_failure = function wc_ecster_on_checkout_start_failure(paymentData) {
-
-		// Don't trigger on checkout start failure if we are currently submitting/processing the Woo order.
-		if( true === wc_ecster_order_processing ) {
-			console.log( 'Aborting Ecster on_checkout_start_failure. Order processing active.' );
-			return;
-		}
-
-        // Delete the current cart key and reload the page.
-        $.ajax(
-            wc_ecster.ajaxurl,
-            {
-                type: "POST",
-                dataType: "json",
-                async: true,
-                data: {
-                    action:       "wc_ecster_on_checkout_start_failure",
-                    payment_data: paymentData,
-                    nonce:        wc_ecster.wc_ecster_nonce
-                },
-           	success: function() {
-				window.location.reload(true);
-            }
-            }
-        );
-    };
-
-    // on customer authentication
-    var wc_ecster_on_customer_authenticated = function wc_ecster_on_customer_authenticated(customer_data) {
-        $('#ecster-pay-ctr').block({
-            message: null,
-            overlayCSS: {
-                background: '#fff',
-                opacity: 0.6
-            }
-        });
-        $.ajax(
-            wc_ecster.ajaxurl,
-            {
-                type:     "POST",
-                dataType: "json",
-                async:    true,
-                data: {
-                    action:        "wc_ecster_on_customer_authenticated",
-                    customer_data: customer_data,
-                    nonce:         wc_ecster.wc_ecster_nonce
-                },
-                success: function(response) {
-                    var customerAuthCountry;
-
-                    if (customer_data.countryCode) {
-                        customerAuthCountry = customer_data.countryCode;
-                    } else {
-                        customerAuthCountry = 'SE';
-                    }
-
-                    // Update country and ZIP, so shipping can be calculated on update_checkout
-                    $("form.checkout #ship-to-different-address-checkbox").prop("checked", false);
-                    $("form.checkout #billing_country").val(customerAuthCountry);
-                    $("form.checkout #billing_postcode").val(customer_data.zip);
-					console.log('Customer authenticated sucess');
-					console.log(response);
-					
-					if( 'yes' == response.data.mustLogin ) {
-						// Customer might need to login.
-						var $form = $( 'form.checkout' );
-						$form.prepend( '<div class="woocommerce-NoticeGroup woocommerce-NoticeGroup-updateOrderReview"><ul class="woocommerce-error" role="alert"><li>' + response.data.mustLoginMessage + '</li></ul></div>' );
-						var etop = $('form.checkout').offset().top;
-						$('html, body').animate({
-							scrollTop: etop
-						  }, 1000);
-					} else {
-						$("body").trigger("update_checkout");
-					}
-                }
-            }
-        );
-    };
-
-    // on changed delivery address
-    var wc_ecster_on_changed_delivery_address = function wc_ecster_on_changed_delivery_address(delivery_address) {
-        $.ajax(
-            wc_ecster.ajaxurl,
-            {
-                type:     "POST",
-                dataType: "json",
-                async:    true,
-                data: {
-                    action:           "wc_ecster_on_changed_delivery_address",
-                    delivery_address: delivery_address,
-                    nonce:            wc_ecster.wc_ecster_nonce
-                },
-                success: function() {
-                    var customerDeliveryCountry;
-                    if (delivery_address.countryCode) {
-                        customerDeliveryCountry = delivery_address.countryCode;
-                    } else {
-                        customerDeliveryCountry = 'SE';
-                    }
-                    
-                    if (wc_ecster_on_customer_authenticated_data) { // If authentication is done
-						// Update country and ZIP, so shipping can be calculated on update_checkout
-                        $("form.checkout #ship-to-different-address-checkbox").prop("checked", true);
-                        $("form.checkout #shipping_country").val(customerDeliveryCountry);
-                        $("form.checkout #shipping_postcode").val(delivery_address.zip);
-                    } else {
-                        // Update country and ZIP, so shipping can be calculated on update_checkout
-                        $("form.checkout #ship-to-different-address-checkbox").prop("checked", false);
-                        $("form.checkout #billing_country").val(customerDeliveryCountry);
-                        $("form.checkout #billing_postcode").val(delivery_address.zip);
-                    }
-
-                    $("body").trigger("update_checkout");
-                }
-            }
-        );
-    };
-
-	/**
-	 * Moves Add Order Notes Field to before the Ecster Checkout details field.
-	 */
-	function moveExtraCheckoutFields() {
-		// Move order comments.
-		$('#order_comments').appendTo('#ecster-extra-checkout-fields');
-	}
-
-    // on Ecster payment success
-    var wc_ecster_on_payment_success = function wc_ecster_on_payment_success(paymentData) {
-        // Block the iframe until page reloads
-        $("#ecster-pay-ctr").block({
-            message: null,
-            overlayCSS: {
-                background: "#fff",
-                opacity: 0.6
-            }
-        });
-
-        // Also block the order review
-        $("#order_review").block({
-            message: null,
-            overlayCSS: {
-                background: "#fff",
-                opacity: 0.6
-            }
-        });
-
-        // Update ongoing order cart hash
-        // Add invoice fee, if needed
-        $.ajax(
-            wc_ecster.ajaxurl,
-            {
-                type: "POST",
-                dataType: "json",
-                async: true,
-                data: {
-                    action:       "wc_ecster_on_payment_success",
-                    payment_data: paymentData,
-                    nonce:        wc_ecster.wc_ecster_nonce
-                },
-        		success: function( data ) {
-					console.log( 'wc_ecster_on_payment_success success' );
-					if( false === data.success ) {
-						console.log( 'already exist in order' );
-                        console.log( data );
-						if( data.data.redirect ) {
-							window.location.href = data.data.redirect;
-						}
-					} else {
-						var customerCountry;
-						var customerPhone;
-						var customerType;
-
-						// Separate billing and shipping address checkbox checked.
-						$('#ship-to-different-address-checkbox').prop('checked', true);
-						
-						// Set customerType if it exist.
-						if( $("input[name='ecster-customer-type']").length > 0 ){
-							customerType = $("input[name='ecster-customer-type']:checked").val();
-						}
-						
-						// Set country.
-						if (paymentData.consumer.address.country) {
-							customerCountry = paymentData.consumer.address.country;
-						} else {
-							customerCountry = 'SE';
-						}
-
-						// Set phone.
-						if (paymentData.consumer.contactInfo.cellular.number.indexOf("*") > -1) {
-							customerPhone = '0';
-						} else {
-							customerPhone = paymentData.consumer.contactInfo.cellular.number;
-						}
-						// Populate the form and submit it.
-						$("form.checkout #billing_first_name").val(paymentData.consumer.name.firstName);
-						$("form.checkout #billing_last_name").val(paymentData.consumer.name.lastName);
-						$("form.checkout #billing_email").val(paymentData.consumer.contactInfo.email);
-						$("form.checkout #billing_country").val(customerCountry);
-						$("form.checkout #billing_address_1").val(paymentData.consumer.address.line1);
-						$("form.checkout #billing_city").val(paymentData.consumer.address.city);
-						$("form.checkout #billing_postcode").val(paymentData.consumer.address.zip);
-						$("form.checkout #billing_phone").val(customerPhone);
-
-						if( 'b2b' === customerType ) {
-							$("form.checkout #billing_company").val(paymentData.consumer.address.line2);
-						} else {
-							$("form.checkout #billing_company").val('');
-							$("form.checkout #billing_address_2").val(paymentData.consumer.address.line2);
-						}
-
-						// Check if there's separate shipping address
-						if (paymentData.recipient) {
-							$("form.checkout #shipping_first_name").val(paymentData.recipient.name.firstName);
-							$("form.checkout #shipping_last_name").val(paymentData.recipient.name.lastName);
-							$("form.checkout #shipping_country").val(paymentData.recipient.address.country);
-							$("form.checkout #shipping_address_1").val(paymentData.recipient.address.line1);
-							$("form.checkout #shipping_city").val(paymentData.recipient.address.city);
-							$("form.checkout #shipping_postcode").val(paymentData.recipient.address.zip);
+		wc_ecster_create_cart: function() {
+			console.log( 'create' );
+	
+			// Check if Ecster is selected, Ecster library loaded and Ecster container exists
+			if ("ecster" === $("input[name='payment_method']:checked").val() && typeof window.EcsterPay === "object" && $("#ecster-pay-ctr").length) {
+				if (null !== ecster_wc.ecster_cart_key && true !== ecster_wc.ecster_cart_key.includes( 'Error' ) ) {
+					EcsterPay.start({
+						cartKey: ecster_wc.ecster_cart_key, // from create cart REST call
+						shopTermsUrl: ecster_wc_params.terms,
+						showCart: false,
+						showPaymentResult: false,
+						onCheckoutStartInit: function () {
+							$("#order_review").block({
+								message: null,
+								overlayCSS: {
+									background: "#fff",
+									opacity: 0.6
+								}
+							});
+						},
+						onCheckoutStartSuccess: function () {
+							$("#order_review").unblock();
+							ecster_wc.wc_ecster_initialized = true; // Mark Ecster as initialized on success
+							$("body").trigger("update_checkout");
+						},
+						onCheckoutStartFailure: function (failureData) {
+							$("#order_review").unblock();
+							console.log('onCheckoutStartFailure');
+							console.log(failureData);
+							ecster_wc.wc_ecster_on_checkout_start_failure(failureData);
+						},
+						onCheckoutUpdateInit: function () {
+							$("#order_review").block({
+								message: null,
+								overlayCSS: {
+									background: "#fff",
+									opacity: 0.6
+								}
+							});
+						},
+						onCheckoutUpdateSuccess: function () {
+							$("#order_review").unblock();
+							$('#ecster-pay-ctr').unblock();
+						},
+						onCheckoutUpdateFailure: function () {
+							$("#order_review").unblock();
+						},
+						onCustomerAuthenticated: function (authenticatedData) {
+							ecster_wc.wc_ecster_on_customer_authenticated_data = authenticatedData.customer;
+							ecster_wc.wc_ecster_on_customer_authenticated(authenticatedData.customer);
+						},
+						onChangedDeliveryMethod: function (newDeliveryMethod) {
+						},
+						onChangedDeliveryAddress: function (newDeliveryAddress) {
+							ecster_wc.wc_ecster_on_changed_delivery_address_data = newDeliveryAddress;
+							ecster_wc.wc_ecster_on_changed_delivery_address(newDeliveryAddress);
+						},
+						onPaymentSuccess: function (paymentData) {
+							ecster_wc.wc_ecster_on_payment_success(paymentData);
+						},
+						onPaymentFailure: function () {
+							ecster_wc.wc_ecster_fail_local_order('failed');
+						},
+						onPaymentDenied: function (deniedData) {
+							ecster_wc.wc_ecster_fail_local_order('denied');
+						},
+						onBeforeSubmit: function (data, callback) {
+							console.log('onBeforeSubmit');
+							console.log( data);
+							console.log( callback);
 							
-							if( 'b2b' === customerType ) {
-								$("form.checkout #shipping_company").val(paymentData.recipient.address.line2);
-							} else {
-								$("form.checkout #shipping_company").val('');
-								$("form.checkout #shipping_address_2").val(paymentData.recipient.address.line2);
-							}
-						} else {
-							$("form.checkout #ship-to-different-address-checkbox").prop("checked", false);
-						}
-
-						// Check Terms checkbox, if it exists
-						if ($("form.checkout #terms").length > 0) {
-							$("form.checkout #terms").prop("checked", true);
-						}
-						console.log( 'submit Woo form' );
-						wc_ecster_order_processing = true;
-						$("form.woocommerce-checkout").trigger("submit");
-						$('form.woocommerce-checkout').addClass( 'processing' );
-					}
+							ecster_wc.processWooCheckout(data, callback );
+						},
+					});
+				} else {
+					console.log('ecster_wc.ecster_cart_key');
+					console.log(ecster_wc.ecster_cart_key);
+					document.querySelector('#ecster-pay-ctr').innerHTML = '<div class="woocommerce-error">' + ecster_wc.ecster_cart_key + '</div>';
 					
-				},
-				error: function (data) {
-					console.log( 'wc_ecster_on_payment_success error' );
-				},
-            }
-        );
-    };
-
-    // Set body class when DOM is ready
-	$(document).ready(function () {
-		wc_ecster_body_class();
-		wc_ecster_init();
-	});
-
-	// When payment method is changed:
-	//
-	// - Change body class (CSS uses body class to hide and show elements)
-	// - If changing to Ecster trigger update_checkout
-	$(document.body).on("change", "input[name='payment_method']", function (event) {
-		wc_ecster_body_class();
-
-		// If switching to Ecster, update checkout
-		if ("ecster" === event.target.value) {
-			$("body").trigger("update_checkout");
-		}
-	});
-
-	$(document.body).on("change", "input[name='ecster-customer-type']", function (event) {
-		wc_ecster_update_cart();
-	});
-
-	// When checkout gets updated
-	//
-	// If Ecster is the selected method and Ecster has not been initialized, initialize it
-	// If Ecster is the selected method and Ecster has been initialized, update cart
-	$(document.body).on("updated_checkout", function () {
-		if ("ecster" === $("input[name='payment_method']:checked").val()) {
-			if (!wc_ecster_initialized) {
-				wc_ecster_init();
-			} else {
-				wc_ecster_update_cart();
+				}
 			}
-		}
-	});
+		},
 
-	$(document.body).on('click', '.ecster-pay-choose-other a', function (e) {
-		changePaymentMethod( false );
-	});
-	
-	
-	// When WooCommerce checkout submission fails
-	$(document.body).on("checkout_error", function () {
-		if ("ecster" === $("input[name='payment_method']:checked").val()) {
-			var error_message = $( ".woocommerce-NoticeGroup-checkout" ).text();
+		wc_ecster_update_cart: function() {
+
+			if( false === ecster_wc.wc_ecster_initialized ) {
+				return;
+			}
+
+			var updated_cart_callback = EcsterPay.updateCart(ecster_wc.ecster_cart_key);
+			var customer_type = ( $('input[name="ecster-customer-type"]:checked').val() ) ? $('input[name="ecster-customer-type"]:checked').val() : null;
 			$.ajax(
-	            wc_ecster.ajaxurl,
-	            {
-	                type: "POST",
-	                dataType: "json",
-	                async: true,
-	                data: {
-						cart_key: 	wc_ecster_cart_key,
-						error_message: error_message,
-						action:		"wc_ecster_on_checkout_error",
-	                    nonce:		wc_ecster.wc_ecster_nonce
-	                },
-	                success: function (data) {
+				ecster_wc_params.ajaxurl,
+				{
+					type: "POST",
+					dataType: "json",
+					async: true,
+					data: {
+						action: "wc_ecster_update_cart",
+						cart_key: ecster_wc.ecster_cart_key,
+						customer_type: customer_type,
+						nonce: ecster_wc_params.wc_ecster_nonce
+					},
+					success: function (response) {
+	
+						if(response.success && response.data.refreshZeroAmount){
+							window.location.reload();
+						}
+	
+						if (response.success && response.data.ecster_cart_key) {
+	
+	
+	
+							updated_cart_callback(response.data.ecster_cart_key);
+							ecster_wc.ecster_cart_key = response.data.ecster_cart_key;
+						} else {
+							$("#ecster-pay-ctr").html('<div class="woocommerce-error" id="wc-ecster-api-error">' + response.data.error_message + '</div>');
+						}
+					}
+				}
+			);
+		},
+	
+		wc_ecster_fail_local_order: function(reason) {
+			$.ajax(
+				ecster_wc_params.ajaxurl,
+				{
+					type: "POST",
+					dataType: "json",
+					async: true,
+					data: {
+						action: "wc_ecster_fail_local_order",
+						reason: reason,
+						nonce: ecster_wc_params.wc_ecster_nonce
+					}
+				}
+			);
+		},
+
+		// on Ecster checkout start failure. Triggered when Ecster cart session has expired.
+		wc_ecster_on_checkout_start_failure: function(paymentData) {
+
+			// Don't trigger on checkout start failure if we are currently submitting/processing the Woo order.
+			if( true === ecster_wc.wc_ecster_order_processing ) {
+				console.log( 'Aborting Ecster on_checkout_start_failure. Order processing active.' );
+				return;
+			}
+	
+			// Delete the current cart key and reload the page.
+			$.ajax(
+				ecster_wc_params.ajaxurl,
+				{
+					type: "POST",
+					dataType: "json",
+					async: true,
+					data: {
+						action:       "wc_ecster_on_checkout_start_failure",
+						payment_data: paymentData,
+						nonce:        ecster_wc_params.wc_ecster_nonce
+					},
+				   success: function() {
+					window.location.reload(true);
+				}
+				}
+			);
+		},
+	
+		// on customer authentication
+		wc_ecster_on_customer_authenticated: function(customer_data) {
+			$('#ecster-pay-ctr').block({
+				message: null,
+				overlayCSS: {
+					background: '#fff',
+					opacity: 0.6
+				}
+			});
+			$.ajax(
+				ecster_wc_params.ajaxurl,
+				{
+					type:     "POST",
+					dataType: "json",
+					async:    true,
+					data: {
+						action:        "wc_ecster_on_customer_authenticated",
+						customer_data: customer_data,
+						nonce:         ecster_wc_params.wc_ecster_nonce
+					},
+					success: function(response) {
+						var customerAuthCountry;
+	
+						if (customer_data.countryCode) {
+							customerAuthCountry = customer_data.countryCode;
+						} else {
+							customerAuthCountry = 'SE';
+						}
+	
+						// Update country and ZIP, so shipping can be calculated on update_checkout
+						$("form.checkout #ship-to-different-address-checkbox").prop("checked", false);
+						$("form.checkout #billing_country").val(customerAuthCountry);
+						$("form.checkout #billing_postcode").val(customer_data.zip);
+						console.log('Customer authenticated sucess');
+						console.log(response);
+						
+						$("body").trigger("update_checkout");
+					}
+				}
+			);
+		},
+	
+		// on changed delivery address
+		wc_ecster_on_changed_delivery_address: function(delivery_address) {
+			$.ajax(
+				ecster_wc_params.ajaxurl,
+				{
+					type:     "POST",
+					dataType: "json",
+					async:    true,
+					data: {
+						action:           "wc_ecster_on_changed_delivery_address",
+						delivery_address: delivery_address,
+						nonce:            ecster_wc_params.wc_ecster_nonce
+					},
+					success: function() {
+						var customerDeliveryCountry;
+						if (delivery_address.countryCode) {
+							customerDeliveryCountry = delivery_address.countryCode;
+						} else {
+							customerDeliveryCountry = 'SE';
+						}
+						
+						if (ecster_wc.wc_ecster_on_customer_authenticated_data) { // If authentication is done
+							// Update country and ZIP, so shipping can be calculated on update_checkout
+							$("form.checkout #ship-to-different-address-checkbox").prop("checked", true);
+							$("form.checkout #shipping_country").val(customerDeliveryCountry);
+							$("form.checkout #shipping_postcode").val(delivery_address.zip);
+						} else {
+							// Update country and ZIP, so shipping can be calculated on update_checkout
+							$("form.checkout #ship-to-different-address-checkbox").prop("checked", false);
+							$("form.checkout #billing_country").val(customerDeliveryCountry);
+							$("form.checkout #billing_postcode").val(delivery_address.zip);
+						}
+						console.log('Customer changed delivery address sucess');
+						$("body").trigger("update_checkout");
+					}
+				}
+			);
+		},
+
+		// on Ecster payment success
+		wc_ecster_on_payment_success: function(paymentData) {
+			// Block the iframe until page reloads
+			$("#ecster-pay-ctr").block({
+				message: null,
+				overlayCSS: {
+					background: "#fff",
+					opacity: 0.6
+				}
+			});
+	
+			// Also block the order review
+			$("#order_review").block({
+				message: null,
+				overlayCSS: {
+					background: "#fff",
+					opacity: 0.6
+				}
+			});
+			var redirectUrl = sessionStorage.getItem( 'ecsterRedirectUrl' );
+			console.log('wc_ecster_on_payment_success');
+			console.log(redirectUrl);
+			if( redirectUrl ) {
+				redirectUrl = redirectUrl + '&ecster_order_id=' +paymentData.internalReference;
+				console.log(redirectUrl);
+				window.location.href = redirectUrl;
+			}
+		},
+		
+		// Fill form and submit it to create the order.
+		processWooCheckout: function(paymentData, callback) {
+			// Block the iframe until page reloads
+			$("#ecster-pay-ctr").block({
+				message: null,
+				overlayCSS: {
+					background: "#fff",
+					opacity: 0.6
+				}
+			});
+	
+			// Also block the order review
+			$("#order_review").block({
+				message: null,
+				overlayCSS: {
+					background: "#fff",
+					opacity: 0.6
+				}
+			});
+	
+			console.log('processWooCheckout');
+			console.log(ecster_wc.wc_ecster_on_customer_authenticated_data);
+			ecster_wc.fillForm();
+			// Submit wc order.
+			ecster_wc.submitForm(callback);
+		},
+		
+		fillForm: function() {
+			console.log('fillForm');
+			
+			if( ecster_wc.wc_ecster_on_changed_delivery_address_data ) {
+				var customer = ecster_wc.wc_ecster_on_changed_delivery_address_data;
+			} else {
+				var customer = ecster_wc.wc_ecster_on_customer_authenticated_data;
+			}
+
+			console.log('customer');
+			console.log(customer);
+
+			var firstName = ( ( 'firstName' in customer ) ? customer.firstName : '' );
+			var lastName = ( ( 'lastName' in customer ) ? customer.lastName : '' );
+			var city = ( ( 'city' in customer ) ? customer.city : '' );
+			var countryCode = ( ( 'countryCode' in customer ) ? customer.countryCode : '' );
+			var postalCode = ( ( 'zip' in customer ) ? customer.zip : '' );
+			var street = ( ( 'address' in customer ) ? customer.address : '' );
+			var email = ( ( 'email' in customer ) ? customer.email : 'ecster.temp@domain.com' );
+			var phone = ( ( 'cellular' in customer ) ? customer.cellular : '.' );
+
+			// Set customerType if it exist.
+			if( $("input[name='ecster-customer-type']").length > 0 ){
+				customerType = $("input[name='ecster-customer-type']:checked").val();
+			} else {
+				customerType = ecster_wc_params.default_customer_type;
+			}
+
+			
+			if( 'b2b' === customerType ) {
+				$("form.checkout #billing_company").val(customer.address2);
+			} else {
+				$("form.checkout #billing_company").val('');
+				$("form.checkout #billing_address_2").val(customer.address2);
+			}
+			
+			// billing first name
+			$( '#billing_first_name' ).val( firstName );
+			// shipping first name
+			$( '#shipping_first_name' ).val( firstName );
+			// billing last name
+			$( '#billing_last_name' ).val(lastName);
+			// shipping last name.
+			$( '#shipping_last_name' ).val(lastName);
+
+			if( countryCode ) {
+				// billing country
+				$('#billing_country').val(countryCode);
+				// shipping country
+				$('#shipping_country').val(countryCode);
+			}
+			
+			// billing street
+			$('#billing_address_1').val(street);
+			// shipping street
+			$('#shipping_address_1').val(street);
+			// billing city
+			$('#billing_city').val(city);
+			// shipping city
+			$('#shipping_city').val(city);
+			// billing postal code
+			$('#billing_postcode').val(postalCode);
+			// shipping postal code
+			$('#shipping_postcode').val(postalCode);
+			// billing phone
+			$( '#billing_phone' ).val(phone);
+			// billing email
+			$('#billing_email').val(email);
+		},
+	
+		submitForm: function(callback) {
+			console.log('submitForm');
+			if ( 0 < $( 'form.checkout #terms' ).length ) {
+				$( 'form.checkout #terms' ).prop( 'checked', true );
+			}
+			$( '.woocommerce-checkout-review-order-table' ).block({
+				message: null,
+				overlayCSS: {
+					background: '#fff',
+					opacity: 0.6
+				}
+			});
+			$.ajax({
+				type: 'POST',
+				url: ecster_wc_params.submit_order,
+				timeout:  ecster_wc_params.timeout_time * 1000,
+				data: $('form.checkout').serialize(),
+				dataType: 'json',
+				success: function( data ) {
+					try {
+						if ( 'success' === data.result ) {
+							ecster_wc.logToFile( 'Successfully placed order. Sending "beforeSubmitContinue" true to Avarda' );
+
+							$( 'body' ).trigger( 'aco_order_validation', true );
+							console.log('data.redirect_url');
+							console.log(data.redirect_url);
+							sessionStorage.setItem( 'ecsterRedirectUrl', data.redirect_url );
+							$('form.checkout').removeClass( 'processing' ).unblock();
+
+							callback( true );
+							// Clear the interval.
+							clearInterval(ecster_wc.interval);
+							// Remove the timeout.
+							clearTimeout( ecster_wc.timeout );
+							// Remove the processing class from the form.
+							$( '.woocommerce-checkout-review-order-table' ).unblock();
+							console.log('submitForm end - callback true triggered');
+						} else {
+							throw 'Result failed';
+						}
+					} catch ( err ) {
+						if ( data.messages )  {
+							ecster_wc.logToFile( 'Checkout error | ' + data.messages );
+							ecster_wc.failOrder( 'submission', data.messages, callback );
+						} else {
+							ecster_wc.logToFile( 'Checkout error | No message' );
+							ecster_wc.failOrder( 'submission', '<div class="woocommerce-error">' + 'Checkout error' + '</div>', callback );
+						}
+					}
+				},
+				error: function( data , textStatus ) {
+					ecster_wc.logToFile( 'AJAX error | ' + data.statusText );
+					ecster_wc.failOrder( 'ajax-error', 'Ecster checkout error: ' + data.statusText, callback );
+				}
+			});
+		},
+		maybeChangeToEcster: function() {
+			if ( 'ecster' === $(this).val() ) {
+				ecster_wc.changePaymentMethod( true );
+			}
+		},
+		changePaymentMethod: function( bool ) {
+			console.log( 'Ecster changePaymentMethod' );
+			console.log( bool );
+	
+			// Don't change payment method if we are currently submitting/processing the Woo order.
+			if( true === ecster_wc.wc_ecster_order_processing ) {
+				console.log( 'Aborting Ecster change payment method. Order processing active.' );
+				return;
+			}
+	
+			$('form.checkout').block({
+				message: null,
+				overlayCSS: {
+					background: '#fff',
+					opacity: 0.6
+				}
+			});
+	
+			$('.woocommerce-info').remove();
+	
+			$.ajax(
+				ecster_wc_params.ajaxurl,
+				{
+					type: "POST",
+					dataType: "json",
+					async: true,
+					data: {
+						ecster: 	bool,
+						action:		"wc_change_to_ecster",
+						nonce:		ecster_wc_params.wc_change_to_ecster_nonce
+					},
+					success: function (data) {
 					},
 					error: function (data) {
 					},
 					complete: function (data) {
-						console.log('ecster checkout error');
-						console.log(data.responseJSON);
+						console.log( data );
 						window.location.href = data.responseJSON.data.redirect;
 					}
-	            }
-	        );
-			
-		}
-	});
-	$(document.body).on('change', 'input[name="payment_method"]', function() {
-		if ( 'ecster' === $(this).val() ) { 
-			changePaymentMethod( true );
-		}
-	});
+				}
+			);
+		},
 
-	function changePaymentMethod( bool ) {
-		console.log( 'Ecster changePaymentMethod' );
-		console.log( bool );
+		failOrder: function( event, error_message, callback ) {
+			console.log('failOrder');
+			console.log(event);
 
-		// Don't change payment method if we are currently submitting/processing the Woo order.
-		if( true === wc_ecster_order_processing ) {
-			console.log( 'Aborting Ecster change payment method. Order processing active.' );
-			return;
-		}
+			// Clear the interval.
+			clearInterval(ecster_wc.interval);
+			// Remove the timeout.
+			clearTimeout( ecster_wc.timeout );
 
-		$('form.checkout').block({
-			message: null,
-			overlayCSS: {
-				background: '#fff',
-				opacity: 0.6
-			}
-		});
+			callback( false );
 
-		$('.woocommerce-info').remove();
+			// Send false and cancel
+			$( 'body' ).trigger( 'aco_order_validation', false );
+		
+			// Re-enable the form.
+			$( 'body' ).trigger( 'updated_checkout' );
+			$( ecster_wc.checkoutFormSelector ).unblock();
+			$( '.woocommerce-checkout-review-order-table' ).unblock();
 
-		$.ajax(
-			wc_ecster.ajaxurl,
-			{
-				type: "POST",
-				dataType: "json",
-				async: true,
-				data: {
-					ecster: 	bool,
-					action:		"wc_change_to_ecster",
-					nonce:		wc_ecster.wc_change_to_ecster_nonce
-				},
-				success: function (data) {
-				},
-				error: function (data) {
-				},
-				complete: function (data) {
-					console.log( data );
-					window.location.href = data.responseJSON.data.redirect;
+			// Print error messages, and trigger checkout_error, and scroll to notices.
+			$( '.woocommerce-NoticeGroup-checkout, .woocommerce-error, .woocommerce-message' ).remove();
+			$( 'form.checkout' ).prepend( '<div class="woocommerce-NoticeGroup woocommerce-NoticeGroup-checkout"><ul class="woocommerce-error" role="alert"><li>' + error_message + '</li></ul></div>' ); // eslint-disable-line max-len
+			$( 'form.checkout' ).removeClass( 'processing' ).unblock();
+			$( 'form.checkout' ).find( '.input-text, select, input:checkbox' ).trigger( 'validate' ).blur();
+			$( document.body ).trigger( 'checkout_error' , [ error_message ] );
+			$( 'html, body' ).animate( {
+				scrollTop: ( $( 'form.checkout' ).offset().top - 100 )
+			}, 1000 );
+		},
+
+		checkUrl: function( callback ) {
+			if ( window.location.hash ) {
+				var currentHash = window.location.hash;
+				if ( -1 < currentHash.indexOf( '#ecster-success' ) ) {
+					ecster_wc.logToFile( 'ecster-success hashtag detected in URL.' );
+					var splittedHash = currentHash.split("=");
+					console.log('splittedHash');
+					console.log(splittedHash[0]);
+					console.log(splittedHash[1]);
+					var response = JSON.parse( atob( splittedHash[1] ) );
+
+					console.log('response.return_url');
+					console.log(response.return_url);
+					sessionStorage.setItem( 'ecsterRedirectUrl', response.return_url );
+					callback( true );
+					// Clear the interval.
+					clearInterval(ecster_wc.interval);
+					// Remove the timeout.
+					clearTimeout( ecster_wc.timeout );
+					// Remove the processing class from the form.
+					$( '.woocommerce-checkout-review-order-table' ).unblock();
+					console.log('checkUrl end - callback true triggered');
 				}
 			}
-		);
-	};
-}(jQuery));
+		},
+
+		/**
+		 * Logs the message to the klarna checkout log in WooCommerce.
+		 * @param {string} message 
+		 */
+		logToFile: function( message ) {
+			$.ajax(
+				{
+					url: ecster_wc_params.ajaxurl,
+					type: 'POST',
+					dataType: 'json',
+					data: {
+						action:	"wc_ecster_log_js_to_file",
+						message: message,
+						nonce: ecster_wc_params.wc_ecster_nonce
+					}
+				}
+			);
+		},
+	
+	}
+
+	ecster_wc.init();
+
+});
