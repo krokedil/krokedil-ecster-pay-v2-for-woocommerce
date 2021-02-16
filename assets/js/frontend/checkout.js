@@ -519,8 +519,8 @@ jQuery(function($) {
 					}
 				},
 				error: function( data , textStatus ) {
-					ecster_wc.logToFile( 'AJAX error | ' + data );
-					ecster_wc.failOrder( 'ajax-error', data, callback );
+					ecster_wc.logToFile( 'AJAX error | ' + data.statusText );
+					ecster_wc.failOrder( 'ajax-error', 'Ecster checkout error: ' + data.statusText, callback );
 				}
 			});
 		},
@@ -593,7 +593,7 @@ jQuery(function($) {
 
 			// Print error messages, and trigger checkout_error, and scroll to notices.
 			$( '.woocommerce-NoticeGroup-checkout, .woocommerce-error, .woocommerce-message' ).remove();
-			$( 'form.checkout' ).prepend( '<div class="woocommerce-NoticeGroup woocommerce-NoticeGroup-checkout">' + error_message + '</div>' ); // eslint-disable-line max-len
+			$( 'form.checkout' ).prepend( '<div class="woocommerce-NoticeGroup woocommerce-NoticeGroup-checkout"><ul class="woocommerce-error" role="alert"><li>' + error_message + '</li></ul></div>' ); // eslint-disable-line max-len
 			$( 'form.checkout' ).removeClass( 'processing' ).unblock();
 			$( 'form.checkout' ).find( '.input-text, select, input:checkbox' ).trigger( 'validate' ).blur();
 			$( document.body ).trigger( 'checkout_error' , [ error_message ] );
