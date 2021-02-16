@@ -2,10 +2,10 @@
 Contributors: krokedil, niklashogefjord
 Tags: ecommerce, e-commerce, woocommerce, ecster
 Requires at least: 4.5
-Tested up to: 5.5.3
+Tested up to: 5.6.1
 Requires PHP: 5.6
-WC requires at least: 3.7.0
-WC tested up to: 4.9.0
+WC requires at least: 4.0.0
+WC tested up to: 5.0.0
 License: GPLv3
 License URI: http://www.gnu.org/licenses/gpl-3.0.html
 Stable tag: trunk
@@ -31,6 +31,21 @@ More information on how to get started can be found in the [plugin documentation
 
 
 == CHANGELOG ==
+
+= 2021.02.16        - version 3.0.0 =
+* Feature           - Plugin rewrite. Plugin now supports Ecsters front end validation JS event. WooCommerce order is created (as a Pending order) when customer clicks purcahse button in Ecster.
+* Feature           - Add support for handling extra checkout fields in checkout.
+* Tweak             - Added temp order id to solve callbacks until order is created in both systems.
+* Tweak             - Added separate confirmation class.
+* Tweak             - Removed unused css.
+* Tweak             - JS checkout file refactoring.
+* Tweak             - Remove hooks ecster_wc_before_checkout_form & ecster_wc_after_checkout_form.
+* Tweak             - Add hooks woocommerce_before_checkout_form & woocommerce_after_checkout_form.
+* Tweak             - Add js front end logging via ajax.
+* Tweak             - Set customer email and phone in WC order during confirmation.
+* Tweak             - Swedish translation update.
+* Fix               - Don't try to cancel an order in Ecster if it hasn't been paid for.
+* Fix               - Change query to look for orders in Woo (during API callback) up to 120 days back. Could cause creation of orders in Woo.
 
 = 2020.10.15        - version 2.2.0 =
 * Tweak             - Display order comment field in Ecster Pay checkout template.
