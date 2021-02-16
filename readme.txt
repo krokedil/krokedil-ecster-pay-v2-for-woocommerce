@@ -33,7 +33,7 @@ More information on how to get started can be found in the [plugin documentation
 == CHANGELOG ==
 
 = 2021.02.16        - version 3.0.0 =
-* Feature           - Plugin rewrite. Plugin now supports Ecsters front end validation JS event. WooCommerce order is created (as a Pending order) when customer clicks purcahse button in Ecster.
+* Feature           - Plugin rewrite. Plugin now supports Ecsters front end validation JS event. WooCommerce order is created (as a Pending order) when customer clicks purchase button in Ecster.
 * Feature           - Add support for handling extra checkout fields in checkout.
 * Tweak             - Added temp order id to solve callbacks until order is created in both systems.
 * Tweak             - Added separate confirmation class.
