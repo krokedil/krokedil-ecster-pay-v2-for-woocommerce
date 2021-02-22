@@ -63,5 +63,10 @@
           "description" : "<ul><li>Feature - Plugin rewrite. Plugin now supports Ecsters front end validation JS event. WooCommerce order is created (as a Pending order) when customer clicks purchase button in Ecster.</li><li>Feature - Add support for handling extra checkout fields in checkout.</li><li>Tweak - Added temp order id to solve callbacks until order is created in both systems.</li><li>Tweak - Added separate confirmation class.</li><li>Tweak - Removed unused css.</li><li>Tweak - JS checkout file refactoring.</li><li>Tweak - Remove hooks ecster_wc_before_checkout_form & ecster_wc_after_checkout_form.</li><li>Tweak - Add hooks woocommerce_before_checkout_form & woocommerce_after_checkout_form.</li><li>Tweak - Add js front end logging via ajax.</li><li>Tweak - Set customer email and phone in WC order during confirmation.</li><li>Tweak - Swedish translation update.</li><li>Fix - Don't try to cancel an order in Ecster if it hasn't been paid for.</li><li>Fix - Change query to look for orders in Woo (during API callback) up to 120 days back. Could cause creation of orders in Woo.</li></ul>",
           "requires" : "4.7.0",
           "tested" : "5.6.1"
+     },
+     "3.0.1" : {
+          "description" : "<ul><li>* Fix - Remove block overlay from Ecster Pay iframe area when replied to onBeforeSubmit event. Could cause issue with 3DSecure signing.</li></ul>",
+          "requires" : "4.7.0",
+          "tested" : "5.6.1"
      }
 }

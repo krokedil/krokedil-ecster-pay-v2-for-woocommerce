@@ -32,6 +32,9 @@ More information on how to get started can be found in the [plugin documentation
 
 == CHANGELOG ==
 
+= 2021.02.16        - version 3.0.1 =
+* Fix               - Remove block overlay from Ecster Pay iframe area when replied to onBeforeSubmit event. Could cause issue with 3DSecure signing.
+
 = 2021.02.16        - version 3.0.0 =
 * Feature           - Plugin rewrite. Plugin now supports Ecsters front end validation JS event. WooCommerce order is created (as a Pending order) when customer clicks purchase button in Ecster.
 * Feature           - Add support for handling extra checkout fields in checkout.
