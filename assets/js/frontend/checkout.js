@@ -491,19 +491,20 @@ jQuery(function($) {
 						if ( 'success' === data.result ) {
 							ecster_wc.logToFile( 'Successfully placed order. Sending "beforeSubmitContinue" true to Avarda' );
 
-							$( 'body' ).trigger( 'aco_order_validation', true );
 							console.log('data.redirect_url');
 							console.log(data.redirect_url);
 							sessionStorage.setItem( 'ecsterRedirectUrl', data.redirect_url );
-							$('form.checkout').removeClass( 'processing' ).unblock();
 
 							callback( true );
 							// Clear the interval.
 							clearInterval(ecster_wc.interval);
 							// Remove the timeout.
 							clearTimeout( ecster_wc.timeout );
+
 							// Remove the processing class from the form.
+							$('form.checkout').removeClass( 'processing' ).unblock();
 							$( '.woocommerce-checkout-review-order-table' ).unblock();
+							$('#ecster-pay-ctr').unblock();
 							console.log('submitForm end - callback true triggered');
 						} else {
 							throw 'Result failed';
@@ -581,10 +582,8 @@ jQuery(function($) {
 			// Remove the timeout.
 			clearTimeout( ecster_wc.timeout );
 
+			// Send false and cancel.
 			callback( false );
-
-			// Send false and cancel
-			$( 'body' ).trigger( 'aco_order_validation', false );
 		
 			// Re-enable the form.
 			$( 'body' ).trigger( 'updated_checkout' );
