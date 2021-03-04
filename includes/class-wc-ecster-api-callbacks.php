@@ -51,10 +51,10 @@ class Ecster_Api_Callbacks {
 		WC_Gateway_Ecster::log( 'OSN callback executed. Tmp order ID:' . $ecster_temp_order_id ); // Input var okay.
 		WC_Gateway_Ecster::log( 'OSN callback executed. Response body:' . wp_json_encode( $response_body ) );
 
-		$order_id = wc_ecster_get_order_id_by_temp_order_id( $ecster_temp_order_id );
+		$order_id = $this->get_order_id_from_internal_reference( $internal_reference );
 
 		if ( empty( $order_id ) ) { // We're missing Order ID in callback. Try to get it via query by internal reference
-			$order_id = $this->get_order_id_from_internal_reference( $internal_reference );
+			$order_id = wc_ecster_get_order_id_by_temp_order_id( $ecster_temp_order_id );
 		}
 
 		if ( ! empty( $order_id ) ) { // Input var okay.
@@ -73,7 +73,11 @@ class Ecster_Api_Callbacks {
 	 *
 	 * @throws Exception WC_Data_Exception.
 	 */
-	public function get_order_id_from_internal_reference( $internal_reference ) {
+	public function get_order_id_from_internal_reference( $internal_reference = null ) {
+
+		if ( empty( $internal_reference ) ) {
+			return false;
+		}
 
 		// Let's check so the internal reference doesn't already exist in an existing order.
 		$query          = new WC_Order_Query(
@@ -94,7 +98,7 @@ class Ecster_Api_Callbacks {
 
 			if ( $order_internal_reference === $internal_reference ) {
 				$order_id_match = $order_id;
-				WC_Gateway_Ecster::log( 'Order ID is missing in OSN callback but Internal reference ' . $internal_reference . '. already exist in order ID ' . $order_id_match );
+				WC_Gateway_Ecster::log( 'Internal reference ' . $internal_reference . ' exist in order ID ' . $order_id_match );
 				break;
 			}
 		}
