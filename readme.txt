@@ -32,6 +32,11 @@ More information on how to get started can be found in the [plugin documentation
 
 == CHANGELOG ==
 
+= 2021.03.04        - version 3.0.2 =
+* Fix               - Start querying the WC order by Ecster internal reference in API callbacks (instead of temp order id).
+* Fix               - Don't try to query WC orders if internal reference or temp order number doesn't exist in callback from Ecster.
+* Fix               - Increase query date to 120 days back when querying orders by temp order number.
+
 = 2021.02.16        - version 3.0.1 =
 * Fix               - Remove block overlay from Ecster Pay iframe area when replied to onBeforeSubmit event. Could cause issue with 3DSecure signing.
 
