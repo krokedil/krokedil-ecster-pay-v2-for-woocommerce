@@ -157,7 +157,12 @@ function wc_ecster_show_another_gateway_button() {
  * @param string $ecster_temp_order_id A temporary order id set in create request sent to Ecster.
  * @return int The ID of an order, or 0 if the order could not be found.
  */
-function wc_ecster_get_order_id_by_temp_order_id( $ecster_temp_order_id ) {
+function wc_ecster_get_order_id_by_temp_order_id( $ecster_temp_order_id = null ) {
+
+	if ( empty( $ecster_temp_order_id ) ) {
+		return false;
+	}
+
 	$query_args = array(
 		'fields'      => 'ids',
 		'post_type'   => wc_get_order_types(),
@@ -166,7 +171,7 @@ function wc_ecster_get_order_id_by_temp_order_id( $ecster_temp_order_id ) {
 		'meta_value'  => sanitize_text_field( wp_unslash( $ecster_temp_order_id ) ), // phpcs:ignore WordPress.DB.SlowDBQuery -- Slow DB Query is ok here, we need to limit to our meta key.
 		'date_query'  => array(
 			array(
-				'after' => '30 day ago',
+				'after' => '120 day ago',
 			),
 		),
 	);
