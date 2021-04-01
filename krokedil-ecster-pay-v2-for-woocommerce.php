@@ -272,12 +272,11 @@ if ( ! class_exists( 'WC_Ecster' ) ) {
 		 * @return void
 		 */
 		public function check_version() {
-			require WC_ECSTER_PLUGIN_PATH . '/includes/plugin_update_check.php';
-			$KernlUpdater = new PluginUpdateChecker_2_0(
+			require WC_ECSTER_PLUGIN_PATH . '/kernl-update-checker/kernl-update-checker.php';
+			$update_checker = Puc_v4_Factory::buildUpdateChecker(
 				'https://kernl.us/api/v1/updates/5e5f798c61ed601988fa257a/',
 				__FILE__,
-				'krokedil-ecster-pay-v2-for-woocommerce',
-				1
+				'krokedil-ecster-pay-v2-for-woocommerce'
 			);
 		}
 
