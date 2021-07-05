@@ -78,5 +78,10 @@
           "description" : "<ul><li>* Tweak - New version of plugin update logic via kernl.us.</li></ul>",
           "requires" : "4.7.0",
           "tested" : "5.7"
+     },
+     "3.0.4" : {
+          "description" : "<ul><li>Tweak - Small Swedish translation change.</li></ul>",
+          "requires" : "4.7.0",
+          "tested" : "5.7.2"
      }
 }
