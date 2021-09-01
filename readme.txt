@@ -2,10 +2,10 @@
 Contributors: krokedil, niklashogefjord
 Tags: ecommerce, e-commerce, woocommerce, ecster
 Requires at least: 4.5
-Tested up to: 5.7.2
+Tested up to: 5.8
 Requires PHP: 5.6
 WC requires at least: 4.0.0
-WC tested up to: 5.4.1
+WC tested up to: 5.6.0
 License: GPLv3
 License URI: http://www.gnu.org/licenses/gpl-3.0.html
 Stable tag: trunk
@@ -31,6 +31,9 @@ More information on how to get started can be found in the [plugin documentation
 
 
 == CHANGELOG ==
+
+= 2021.09.01        - version 3.0.5 =
+* Fix               - Improved tax calculation for free items.
 
 = 2021.06.21        - version 3.0.4 =
 * Tweak             - Small Swedish translation change.

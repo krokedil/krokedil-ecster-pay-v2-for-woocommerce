@@ -83,5 +83,10 @@
           "description" : "<ul><li>Tweak - Small Swedish translation change.</li></ul>",
           "requires" : "4.7.0",
           "tested" : "5.7.2"
+     },
+     "3.0.5" : {
+          "description" : "<ul><li>Fix - Improved tax calculation for free items.",
+          "requires" : "4.7.0",
+          "tested" : "5.8"
      }
 }
