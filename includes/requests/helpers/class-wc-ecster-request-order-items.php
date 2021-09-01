@@ -150,7 +150,7 @@ class WC_Ecster_Get_Order_Items {
 	 * @return string|WP_Error
 	 */
 	private static function product_vat_rate( $item ) {
-		if ( 0 === $item['line_subtotal'] ) {
+		if ( 0 == $item['line_subtotal'] ) { // phpcs:ignore WordPress.PHP.StrictComparisons -- This is sometimes 0, sometimes "0", sometimes "0.00" etc
 			return 0; // No tax for items with no price.
 		}
 		$tax_rate = round( $item['line_subtotal_tax'] / $item['line_subtotal'] * 100 );
