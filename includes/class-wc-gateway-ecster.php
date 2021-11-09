@@ -33,7 +33,7 @@ class WC_Gateway_Ecster extends WC_Payment_Gateway {
 	public function __construct() {
 		$this->id                 = 'ecster';
 		$this->method_title       = __( 'Ecster Pay', 'krokedil-ecster-pay-for-woocommerce' );
-		$this->method_description = sprintf( __( 'Take payments via Ecster Pay v2. Documentation <a href="%s" target="_blank">can be found here</a>.', 'krokedil-ecster-pay-for-woocommerce' ), 'https://docs.krokedil.com/article/313-ecster-pay-v2-introduction' );
+		$this->method_description = sprintf( __( 'Take payments via Ecster Pay v2. Documentation <a href="%s" target="_blank">can be found here</a>.', 'krokedil-ecster-pay-for-woocommerce' ), 'https://docs.krokedil.com/ecster-pay-for-woocommerce/' );
 		$this->has_fields         = true;
 		$this->supports           = array( 'products', 'refunds' );
 		// Load the form fields.
