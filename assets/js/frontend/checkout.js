@@ -487,9 +487,11 @@ jQuery(function($) {
 				data: $('form.checkout').serialize(),
 				dataType: 'json',
 				success: function( data ) {
+
 					try {
 						if ( 'success' === data.result ) {
-							ecster_wc.logToFile( 'Successfully placed order. Sending "beforeSubmitContinue" true to Avarda' );
+
+							ecster_wc.logToFile( 'Successfully placed order. Sending "beforeSubmitContinue" true to Ecster Pay' );
 
 							console.log('data.redirect_url');
 							console.log(data.redirect_url);
@@ -507,9 +509,18 @@ jQuery(function($) {
 							$('#ecster-pay-ctr').unblock();
 							console.log('submitForm end - callback true triggered');
 						} else {
-							throw 'Result failed';
+
+							if ( data.messages )  {
+								ecster_wc.logToFile( 'Checkout error | ' + data.messages );
+								ecster_wc.failOrder( 'submission', data.messages, callback );
+							} else {
+								ecster_wc.logToFile( 'Checkout error | No message' );
+								ecster_wc.failOrder( 'submission', '<div class="woocommerce-error">' + 'Checkout error' + '</div>', callback );
+							}
+
 						}
 					} catch ( err ) {
+
 						if ( data.messages )  {
 							ecster_wc.logToFile( 'Checkout error | ' + data.messages );
 							ecster_wc.failOrder( 'submission', data.messages, callback );
