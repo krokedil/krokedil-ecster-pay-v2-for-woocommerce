@@ -53,7 +53,7 @@ class Ecster_Api_Callbacks {
 
 		$order_id = $this->get_order_id_from_internal_reference( $internal_reference );
 
-		if ( empty( $order_id ) ) { // We're missing Order ID in callback. Try to get it via query by internal reference
+		if ( empty( $order_id ) ) { // We're missing Order ID in callback. Try to get it via query by internal reference.
 			$order_id = wc_ecster_get_order_id_by_temp_order_id( $ecster_temp_order_id );
 		}
 
