@@ -288,28 +288,3 @@ function wc_ecster_confirm_order( $order_id, $internal_reference, $response_body
 		$order->add_order_note( __( 'No Ecster order status was decected in Woo process_payment sequenze.', 'krokedil-ecster-pay-for-woocommerce' ) );
 	}
 }
-
-// ---------
-
-// TODO - Implement Scheduled action.
-function Xaction_A() {
-	as_schedule_single_action( time() + 5, 'Xaction_B' );
-}
-
-// TODO - Use through action scheduler.
-function Xaction_B( $order_id, $api_key, $merchant_key, $testmode ) {
-
-	$order = wc_get_order( $order_id );
-	$order->update_status( 'pending' );
-	$ecster_poll_refund_retry = new WC_Ecster_Swish_Poll_Refund( $api_key, $merchant_key, $testmode );
-
-	// TODO - placeholder time to simulate action schedule.
-	sleep( 10 );
-
-	$swish_response_retry         = $ecster_poll_refund_retry->response( get_post_meta( $order_id, '_transaction_id', true ) );
-	$swish_response_retry_decoded = json_decode( $swish_response_retry['body'], true );
-
-	$order->add_order_note( sprintf( __( 'Ecster order Pending. ', 'krokedil-ecster-pay-for-woocommerce' ) ) );
-
-	return $swish_response_retry_decoded;
-}
