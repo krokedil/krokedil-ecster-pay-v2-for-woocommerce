@@ -309,8 +309,6 @@ class WC_Gateway_Ecster extends WC_Payment_Gateway {
 
 					if ( 'SUCCESS' === $retry_poll_result['status'] ) {
 
-						// TODO - Decide on response values.
-						$order->update_status( 'refunded' );
 						$order->add_order_note( sprintf( __( 'TEST refund success', 'krokedil-ecster-pay-for-woocommerce' ) ) );
 						update_post_meta( $order_id, '_ecster_refund_id_' . 'TRANSACTION REFERENCE', 'TRANSACTION ID' );
 						update_post_meta( $order_id, '_ecster_refund_id_' . 'TRANSACTION REFERENCE' . '_invoice', 'TRANSACTION ID' );
@@ -325,8 +323,6 @@ class WC_Gateway_Ecster extends WC_Payment_Gateway {
 					}
 				} elseif ( 'SUCCESS' === $swish_response_decoded['status'] ) {
 
-					// TODO - Decide on response values.
-					$order->update_status( 'refunded' );
 					$order->add_order_note( sprintf( __( 'TEST refund success', 'krokedil-ecster-pay-for-woocommerce' ) ) );
 					update_post_meta( $order_id, '_ecster_refund_id_' . 'TRANSACTION REFERENCE', 'TRANSACTION ID' );
 					update_post_meta( $order_id, '_ecster_refund_id_' . 'TRANSACTION REFERENCE' . '_invoice', 'TRANSACTION ID' );
