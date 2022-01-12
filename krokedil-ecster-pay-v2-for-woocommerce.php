@@ -245,8 +245,8 @@ if ( ! class_exists( 'WC_Ecster' ) ) {
 			include_once WC_ECSTER_PLUGIN_PATH . '/includes/requests/class-wc-ecster-request-annul-order.php';
 			include_once WC_ECSTER_PLUGIN_PATH . '/includes/requests/class-wc-ecster-request-debit-order.php';
 			include_once WC_ECSTER_PLUGIN_PATH . '/includes/requests/class-wc-ecster-request-credit-order.php';
-			include_once WC_ECSTER_PLUGIN_PATH . '/includes/requests/helpers/class-wc-ecster-request-swish-order.php';
-			include_once WC_ECSTER_PLUGIN_PATH . '/includes/requests/helpers/class-wc-ecster-swish-poll-refund.php';
+			include_once WC_ECSTER_PLUGIN_PATH . '/includes/requests/class-wc-ecster-request-credit-swish-order.php';
+			include_once WC_ECSTER_PLUGIN_PATH . '/includes/requests/class-wc-ecster-swish-poll-refund.php';
 
 			include_once WC_ECSTER_PLUGIN_PATH . '/includes/requests/helpers/class-wc-ecster-request-header.php';
 			include_once WC_ECSTER_PLUGIN_PATH . '/includes/requests/helpers/class-wc-ecster-request-cart.php';
