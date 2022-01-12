@@ -8,7 +8,7 @@ if ( ! defined( 'ABSPATH' ) ) {
  *
  * @since 1.0
  */
-class WC_Ecster_Request_Swish_Order extends WC_Ecster_Request {
+class WC_Ecster_Request_Credit_Swish_Order extends WC_Ecster_Request {
 
 	/** @var string Ecster API request path. */
 	private $request_path = 'v1/orders';
@@ -25,7 +25,7 @@ class WC_Ecster_Request_Swish_Order extends WC_Ecster_Request {
 		$request_url = $this->base_url_public . $this->request_path . '/' . get_post_meta( $order_id, '_transaction_id', true ) . '/refunds';
 		$request     = wp_remote_request( $request_url, $this->get_request_args( $order_id, $amount, $reason ) );
 
-		WC_Gateway_Ecster::log( 'Ecster swish order request response (URL ' . $request_url . '): ' . stripslashes_deep( json_encode( $request ) ) );
+		WC_Gateway_Ecster::log( 'Ecster swish credit order request response (URL ' . $request_url . '): ' . stripslashes_deep( json_encode( $request ) ) );
 
 		return $request;
 	}

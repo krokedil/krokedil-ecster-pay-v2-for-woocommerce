@@ -130,6 +130,13 @@ class WC_Ecster_Order_Management {
 		}
 	}
 
+	/**
+	 * Retry Swish refund after elapsed time.
+	 *
+	 * @param string $order_id The WooCommerce order id.
+	 * @param string $amount The order total amount.
+	 * @return void
+	 */
 	public function ecster_poll_swish_refund_cb( $order_id ) {
 
 		$order = wc_get_order( $order_id );
@@ -137,6 +144,8 @@ class WC_Ecster_Order_Management {
 		$ecster_poll_refund_retry = new WC_Ecster_Swish_Poll_Refund( $this->api_key, $this->merchant_key, $this->testmode );
 		$swish_response           = $ecster_poll_refund_retry->response( get_post_meta( $order_id, '_transaction_id', true ) );
 		$swish_response_decoded   = json_decode( $swish_response['body'], true );
+
+		$amount = get_post_meta( $order_id, '_wc_ecster_order_amount', true );
 
 		if ( 'ONGOING' === $swish_response_decoded['status'] ) {
 
@@ -146,14 +155,12 @@ class WC_Ecster_Order_Management {
 
 		} elseif ( 'SUCCESS' === $swish_response_decoded['status'] ) {
 
-			$order->add_order_note( sprintf( __( 'TEST refund success', 'krokedil-ecster-pay-for-woocommerce' ) ) );
-			update_post_meta( $order_id, '_ecster_refund_id_' . 'TRANSACTION REFERENCE', 'TRANSACTION ID' );
-			update_post_meta( $order_id, '_ecster_refund_id_' . 'TRANSACTION REFERENCE' . '_invoice', 'TRANSACTION ID' );
+			$order->add_order_note( sprintf( __( 'Ecster order credited with %1$s.', 'krokedil-ecster-pay-for-woocommerce' ), wc_price( $amount ) ) );
 			return true;
 
 		} else {
-			// TODO - Decide on response values.
-			$order->add_order_note( sprintf( __( 'Ecster credit order failed. Code: %1$s. Type: %2$s. Message: %3$s', 'krokedil-ecster-pay-for-woocommerce' ), $decoded->code, $decoded->type, $decoded->message ) );
+
+			$order->add_order_note( sprintf( __( 'Ecster credit order failed.', 'krokedil-ecster-pay-for-woocommerce' ) ) );
 			return false;
 
 		}
