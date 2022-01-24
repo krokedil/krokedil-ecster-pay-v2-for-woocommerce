@@ -70,7 +70,7 @@ class WC_Ecster_Request_Credit_Swish_Order extends WC_Ecster_Request {
 		$formatted_request_body = array(
 			'amount'           => round( $amount * 100 ),
 			'debitTransaction' => get_post_meta( $order_id, '_wc_ecster_swish_id', true ),
-			'message'          => 'Products refund',
+			'message'          => $reason,
 		);
 
 		WC_Gateway_Ecster::log( 'Ecster swish order request body: ' . stripslashes_deep( json_encode( $formatted_request_body ) ) );
