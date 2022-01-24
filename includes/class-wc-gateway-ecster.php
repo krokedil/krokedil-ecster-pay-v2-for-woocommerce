@@ -56,6 +56,7 @@ class WC_Gateway_Ecster extends WC_Payment_Gateway {
 			$this->description .= ' TEST MODE ENABLED';
 			$this->description  = trim( $this->description );
 		}
+
 		// Hooks.
 		add_action( 'admin_notices', array( $this, 'admin_notices' ) );
 		add_action( 'woocommerce_update_options_payment_gateways_' . $this->id, array( $this, 'process_admin_options' ) );
@@ -63,7 +64,6 @@ class WC_Gateway_Ecster extends WC_Payment_Gateway {
 		add_action( 'woocommerce_api_wc_gateway_ecster', array( $this, 'osn_listener' ) );
 		add_action( 'woocommerce_thankyou', array( $this, 'ecster_thankyou' ) );
 		add_action( 'woocommerce_checkout_order_processed', array( $this, 'save_ecster_temp_order_id_to_order' ), 10, 3 );
-
 	}
 
 	/**
@@ -172,7 +172,6 @@ class WC_Gateway_Ecster extends WC_Payment_Gateway {
 		return apply_filters( 'woocommerce_gateway_icon', $icon, $this->id );
 	}
 
-
 	/**
 	 * Check if SSL is enabled and notify the user
 	 */
@@ -274,7 +273,6 @@ class WC_Gateway_Ecster extends WC_Payment_Gateway {
 		return false;
 	}
 
-
 	/**
 	 * Add Ecster iframe to thankyou page.
 	 */
@@ -289,18 +287,46 @@ class WC_Gateway_Ecster extends WC_Payment_Gateway {
 		// Check if amount equals total order
 		$order = wc_get_order( $order_id );
 
-		$credit_order = new WC_Ecster_Request_Credit_Order( $this->api_key, $this->merchant_key, $this->testmode );
-		$response     = $credit_order->response( $order_id, $amount, $reason );
-		$decoded      = json_decode( $response['body'] );
+		$ecster_swish_order = new WC_Ecster_Request_Credit_Swish_Order( $this->api_key, $this->merchant_key, $this->testmode );
+		$credit_order       = new WC_Ecster_Request_Credit_Order( $this->api_key, $this->merchant_key, $this->testmode );
 
-		if ( 201 == $response['response']['code'] && $decoded->transaction->amount == ( $amount * 100 ) ) {
-			$order->add_order_note( sprintf( __( 'Ecster order credited with %1$s. Transaction reference %2$s. <a href="%3$s" target="_blank">Credit invoice</a>.', 'krokedil-ecster-pay-for-woocommerce' ), wc_price( $amount ), $decoded->transaction->transactionReference, $decoded->transaction->billPdfUrl ) );
-			update_post_meta( $order_id, '_ecster_refund_id_' . $decoded->transaction->transactionReference, $decoded->transaction->id );
-			update_post_meta( $order_id, '_ecster_refund_id_' . $decoded->transaction->transactionReference . '_invoice', $decoded->transaction->billPdfUrl );
-			return true;
+		if ( '' !== get_post_meta( $order_id, '_wc_ecster_swish_id', true ) ) {
+
+			$response = $ecster_swish_order->response( $order_id, $amount, $reason );
+			$decoded  = json_decode( $response['body'], true );
+
+			update_post_meta( $order_id, '_wc_ecster_order_amount', $amount );
+
+			if ( 'ONGOING' === $decoded['status'] ) {
+
+				// Poll status and possibly reschedule a new check.
+				return wc_ecster_handle_swish_refund_status( $order_id, $amount );
+
+			} elseif ( 'SUCCESS' === $decoded['status'] ) {
+
+				$order->add_order_note( sprintf( __( 'Ecster order credited with %1$s. ', 'krokedil-ecster-pay-for-woocommerce' ), wc_price( $amount ) ) );
+				return true;
+
+			} else {
+
+				$order->add_order_note( sprintf( __( 'Ecster credit order failed.', 'krokedil-ecster-pay-for-woocommerce' ) ) );
+				return false;
+			}
 		} else {
-			$order->add_order_note( sprintf( __( 'Ecster credit order failed. Code: %1$s. Type: %2$s. Message: %3$s', 'krokedil-ecster-pay-for-woocommerce' ), $decoded->code, $decoded->type, $decoded->message ) );
-			return false;
+
+			$response = $credit_order->response( $order_id, $amount, $reason );
+			$decoded  = json_decode( $response['body'] );
+
+			if ( 201 == $response['response']['code'] && $decoded->transaction->amount == ( $amount * 100 ) ) {
+				$order->add_order_note( sprintf( __( 'Ecster order credited with %1$s. Transaction reference %2$s. <a href="%3$s" target="_blank">Credit invoice</a>.', 'krokedil-ecster-pay-for-woocommerce' ), wc_price( $amount ), $decoded->transaction->transactionReference, $decoded->transaction->billPdfUrl ) );
+				update_post_meta( $order_id, '_ecster_refund_id_' . $decoded->transaction->transactionReference, $decoded->transaction->id );
+				update_post_meta( $order_id, '_ecster_refund_id_' . $decoded->transaction->transactionReference . '_invoice', $decoded->transaction->billPdfUrl );
+				return true;
+			} else {
+				$order->add_order_note( sprintf( __( 'Ecster credit order failed. Code: %1$s. Type: %2$s. Message: %3$s', 'krokedil-ecster-pay-for-woocommerce' ), $decoded->code, $decoded->type, $decoded->message ) );
+				return false;
+
+			}
 		}
 	}
 }
