@@ -29,7 +29,7 @@ class WC_Ecster_Order_Management {
 
 		add_action( 'woocommerce_order_status_completed', array( $this, 'complete_ecster_order' ) );
 		add_action( 'woocommerce_order_status_cancelled', array( $this, 'cancel_ecster_order' ) );
-		add_action( 'ecster_poll_swish_refund', array( $this, 'ecster_poll_swish_refund_cb' ) );
+		add_action( 'ecster_poll_swish_refund', array( $this, 'ecster_poll_swish_refund_cb' ), 10, 2 );
 	}
 
 	/**
@@ -137,33 +137,8 @@ class WC_Ecster_Order_Management {
 	 * @param string $amount The order total amount.
 	 * @return void
 	 */
-	public function ecster_poll_swish_refund_cb( $order_id ) {
-
-		$order = wc_get_order( $order_id );
-
-		$ecster_poll_refund_retry = new WC_Ecster_Swish_Poll_Refund( $this->api_key, $this->merchant_key, $this->testmode );
-		$swish_response           = $ecster_poll_refund_retry->response( get_post_meta( $order_id, '_transaction_id', true ) );
-		$swish_response_decoded   = json_decode( $swish_response['body'], true );
-
-		$amount = get_post_meta( $order_id, '_wc_ecster_order_amount', true );
-
-		if ( 'ONGOING' === $swish_response_decoded['status'] ) {
-
-			as_schedule_single_action( time() + 180, 'ecster_poll_swish_refund', array( $order_id ) );
-			$order->add_order_note( __( 'Refund is pending in Ecsters system. New status check scheduled to be performed in 3 minutes.', 'krokedil-ecster-pay-for-woocommerce' ) );
-			return true;
-
-		} elseif ( 'SUCCESS' === $swish_response_decoded['status'] ) {
-
-			$order->add_order_note( sprintf( __( 'Ecster order credited with %1$s.', 'krokedil-ecster-pay-for-woocommerce' ), wc_price( $amount ) ) );
-			return true;
-
-		} else {
-
-			$order->add_order_note( sprintf( __( 'Ecster credit order failed.', 'krokedil-ecster-pay-for-woocommerce' ) ) );
-			return false;
-
-		}
+	public function ecster_poll_swish_refund_cb( $order_id, $amount ) {
+		wc_ecster_handle_swish_refund_status( $order_id, $amount );
 	}
 
 

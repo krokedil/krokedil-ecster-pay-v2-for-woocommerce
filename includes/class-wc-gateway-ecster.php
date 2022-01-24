@@ -299,26 +299,9 @@ class WC_Gateway_Ecster extends WC_Payment_Gateway {
 
 			if ( 'ONGOING' === $decoded['status'] ) {
 
-				$ecster_poll_refund     = new WC_Ecster_Swish_Poll_Refund( $this->api_key, $this->merchant_key, $this->testmode );
-				$swish_response         = $ecster_poll_refund->response( get_post_meta( $order_id, '_transaction_id', true ) );
-				$swish_response_decoded = json_decode( $swish_response['body'], true );
+				// Poll status and possibly reschedule a new check.
+				return wc_ecster_handle_swish_refund_status( $order_id, $amount );
 
-				if ( 'ONGOING' === $swish_response_decoded['status'] ) {
-
-					as_schedule_single_action( time() + 180, 'ecster_poll_swish_refund', array( $order_id ) );
-					$order->add_order_note( __( 'Refund is pending in Ecsters system. New status check scheduled to be performed in 3 minutes.', 'krokedil-ecster-pay-for-woocommerce' ) );
-					return true;
-
-				} elseif ( 'SUCCESS' === $swish_response_decoded['status'] ) {
-
-					$order->add_order_note( sprintf( __( 'Ecster order credited with %1$s.', 'krokedil-ecster-pay-for-woocommerce' ), wc_price( $amount ) ) );
-					return true;
-
-				} else {
-					$order->add_order_note( sprintf( __( 'Ecster credit order failed.', 'krokedil-ecster-pay-for-woocommerce' ) ) );
-					return false;
-
-				}
 			} elseif ( 'SUCCESS' === $decoded['status'] ) {
 
 				$order->add_order_note( sprintf( __( 'Ecster order credited with %1$s. ', 'krokedil-ecster-pay-for-woocommerce' ), wc_price( $amount ) ) );

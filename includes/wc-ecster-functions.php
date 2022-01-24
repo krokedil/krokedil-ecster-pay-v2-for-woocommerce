@@ -288,3 +288,48 @@ function wc_ecster_confirm_order( $order_id, $internal_reference, $response_body
 		$order->add_order_note( __( 'No Ecster order status was decected in Woo process_payment sequenze.', 'krokedil-ecster-pay-for-woocommerce' ) );
 	}
 }
+
+/**
+ * Poll Swish refund status and possibly reschedule a new check.
+ *
+ * @param string $order_id WooCommerce order ID.
+ * @param string $amount Refund order amount.
+ * @return bool.
+ */
+function wc_ecster_handle_swish_refund_status( $order_id, $amount ) {
+
+	$ecster_settings    = get_option( 'woocommerce_ecster_settings' );
+	$testmode           = 'yes' === $ecster_settings['testmode'];
+	$api_key            = $ecster_settings['api_key'];
+	$merchant_key       = $ecster_settings['merchant_key'];
+	$order              = wc_get_order( $order_id );
+	$ecster_poll_refund = new WC_Ecster_Swish_Poll_Refund( $api_key, $merchant_key, $testmode );
+	$swish_response     = $ecster_poll_refund->response( get_post_meta( $order_id, '_transaction_id', true ) );
+
+	// Handle error.
+	if ( is_wp_error( $swish_response ) ) {
+		$error_title  = $swish_response->get_error_code();
+		$error_detail = $swish_response->get_error_message();
+		$order->add_order_note( sprintf( __( 'Ecster poll Swish refund request failed. Error code: %1$s. Error message: %2$s', 'krokedil-ecster-pay-for-woocommerce' ), $swish_response->get_error_code(), $swish_response->get_error_message() ) );
+		return false;
+	}
+
+	$swish_response_decoded = json_decode( $swish_response['body'], true );
+
+	if ( 'ONGOING' === $swish_response_decoded['status'] ) {
+
+		as_schedule_single_action( time() + 180, 'ecster_poll_swish_refund', array( $order_id, $amount ) );
+		$order->add_order_note( __( 'Refund is pending in Ecsters system. New status check scheduled to be performed in 3 minutes.', 'krokedil-ecster-pay-for-woocommerce' ) );
+		return true;
+
+	} elseif ( 'SUCCESS' === $swish_response_decoded['status'] ) {
+
+		$order->add_order_note( sprintf( __( 'Ecster order credited with %1$s.', 'krokedil-ecster-pay-for-woocommerce' ), wc_price( $amount ) ) );
+		return true;
+
+	} else {
+		$order->add_order_note( sprintf( __( 'Ecster credit Swish order failed.', 'krokedil-ecster-pay-for-woocommerce' ) ) );
+		return false;
+
+	}
+}
