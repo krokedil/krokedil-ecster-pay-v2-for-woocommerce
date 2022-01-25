@@ -85,8 +85,13 @@
           "tested" : "5.7.2"
      },
      "3.0.5" : {
-          "description" : "<ul><li>Fix - Improved tax calculation for free items.",
+          "description" : "<ul><li>Fix - Improved tax calculation for free items.</li></ul>",
           "requires" : "4.7.0",
           "tested" : "5.8"
+     },
+     "3.1.0" : {
+          "description" : "<ul><li>Feature - Add support for refunds even for Swish payments.</li><li>Tweak - Bump required PHP version to 7.0.</li><li>Tweak - Update old Docs links to the current ones.</li><li>Tweak - Improve logging messages.</li></ul>",
+          "requires" : "4.7.0",
+          "tested" : "5.8.3"
      }
 }

@@ -29,6 +29,7 @@ class WC_Ecster_Order_Management {
 
 		add_action( 'woocommerce_order_status_completed', array( $this, 'complete_ecster_order' ) );
 		add_action( 'woocommerce_order_status_cancelled', array( $this, 'cancel_ecster_order' ) );
+		add_action( 'ecster_poll_swish_refund', array( $this, 'ecster_poll_swish_refund_cb' ), 10, 2 );
 	}
 
 	/**
@@ -127,6 +128,17 @@ class WC_Ecster_Order_Management {
 				}
 			}
 		}
+	}
+
+	/**
+	 * Retry Swish refund after elapsed time.
+	 *
+	 * @param string $order_id The WooCommerce order id.
+	 * @param string $amount The order total amount.
+	 * @return void
+	 */
+	public function ecster_poll_swish_refund_cb( $order_id, $amount ) {
+		wc_ecster_handle_swish_refund_status( $order_id, $amount );
 	}
 
 

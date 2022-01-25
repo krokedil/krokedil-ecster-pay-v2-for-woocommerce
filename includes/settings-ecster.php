@@ -67,7 +67,7 @@ return apply_filters(
 		'manage_ecster_orders'       => array(
 			'title'   => __( 'Manage orders', 'krokedil-ecster-pay-for-woocommerce' ),
 			'type'    => 'checkbox',
-			'label'   => sprintf( __( 'Enable WooCommerce to manage orders in Ecsters backend (when order status changes to Cancelled and Completed in WooCommerce). Learn more in the <a href="%s" target="_blank">documentation</a>.', 'krokedil-ecster-pay-for-woocommerce' ), 'http://docs.krokedil.com/documentation/ecster-pay-woocommerce/ecster-pay-order-management/' ),
+			'label'   => sprintf( __( 'Enable WooCommerce to manage orders in Ecsters backend (when order status changes to Cancelled and Completed in WooCommerce). Learn more in the <a href="%s" target="_blank">documentation</a>.', 'krokedil-ecster-pay-for-woocommerce' ), 'https://docs.krokedil.com/ecster-pay-for-woocommerce/get-started/order-management/' ),
 			'default' => 'no',
 		),
 		'customer_types'             => array(

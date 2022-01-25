@@ -5,14 +5,14 @@
  * Description: Take payments in your store using Ecster Pay.
  * Author: Krokedil
  * Author URI: https://krokedil.se/
- * Version: 3.0.5
+ * Version: 3.1.0
  * Text Domain: krokedil-ecster-pay-for-woocommerce
  * Domain Path: /languages
  *
  * WC requires at least: 4.0.0
- * WC tested up to: 5.6.0
+ * WC tested up to: 6.1.1
  *
- * Copyright (c) 2021 Krokedil
+ * Copyright (c) 2020-2022 Krokedil
  *
  * This program is free software: you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -35,7 +35,7 @@ if ( ! defined( 'ABSPATH' ) ) {
 /**
  * Required minimums and constants
  */
-define( 'WC_ECSTER_VERSION', '3.0.5' );
+define( 'WC_ECSTER_VERSION', '3.1.0' );
 define( 'WC_ECSTER_MIN_PHP_VER', '5.6.0' );
 define( 'WC_ECSTER_MIN_WC_VER', '4.0.0' );
 define( 'WC_ECSTER_MAIN_FILE', __FILE__ );
@@ -77,12 +77,12 @@ if ( ! class_exists( 'WC_Ecster' ) ) {
 		private function __clone() {}
 
 		/**
-		 * Private unserialize method to prevent unserializing of the *Singleton*
+		 * Public unserialize method to prevent unserializing of the *Singleton*
 		 * instance.
 		 *
 		 * @return void
 		 */
-		private function __wakeup() {}
+		public function __wakeup() {}
 
 		/**
 		 * Notices (array)
@@ -245,6 +245,8 @@ if ( ! class_exists( 'WC_Ecster' ) ) {
 			include_once WC_ECSTER_PLUGIN_PATH . '/includes/requests/class-wc-ecster-request-annul-order.php';
 			include_once WC_ECSTER_PLUGIN_PATH . '/includes/requests/class-wc-ecster-request-debit-order.php';
 			include_once WC_ECSTER_PLUGIN_PATH . '/includes/requests/class-wc-ecster-request-credit-order.php';
+			include_once WC_ECSTER_PLUGIN_PATH . '/includes/requests/class-wc-ecster-request-credit-swish-order.php';
+			include_once WC_ECSTER_PLUGIN_PATH . '/includes/requests/class-wc-ecster-swish-poll-refund.php';
 
 			include_once WC_ECSTER_PLUGIN_PATH . '/includes/requests/helpers/class-wc-ecster-request-header.php';
 			include_once WC_ECSTER_PLUGIN_PATH . '/includes/requests/helpers/class-wc-ecster-request-cart.php';
