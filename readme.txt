@@ -2,10 +2,10 @@
 Contributors: krokedil, niklashogefjord
 Tags: ecommerce, e-commerce, woocommerce, ecster
 Requires at least: 4.5
-Tested up to: 5.8.3
+Tested up to: 5.9.1
 Requires PHP: 7.0
 WC requires at least: 4.0.0
-WC tested up to: 6.1.1
+WC tested up to: 6.2.0
 License: GPLv3
 License URI: http://www.gnu.org/licenses/gpl-3.0.html
 Stable tag: trunk
