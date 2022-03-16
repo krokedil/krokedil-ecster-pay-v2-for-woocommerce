@@ -5,12 +5,12 @@
  * Description: Take payments in your store using Ecster Pay.
  * Author: Krokedil
  * Author URI: https://krokedil.se/
- * Version: 3.1.0
+ * Version: 3.1.1
  * Text Domain: krokedil-ecster-pay-for-woocommerce
  * Domain Path: /languages
  *
  * WC requires at least: 4.0.0
- * WC tested up to: 6.1.1
+ * WC tested up to: 6.3.1
  *
  * Copyright (c) 2020-2022 Krokedil
  *
@@ -35,7 +35,7 @@ if ( ! defined( 'ABSPATH' ) ) {
 /**
  * Required minimums and constants
  */
-define( 'WC_ECSTER_VERSION', '3.1.0' );
+define( 'WC_ECSTER_VERSION', '3.1.1' );
 define( 'WC_ECSTER_MIN_PHP_VER', '5.6.0' );
 define( 'WC_ECSTER_MIN_WC_VER', '4.0.0' );
 define( 'WC_ECSTER_MAIN_FILE', __FILE__ );

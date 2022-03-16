@@ -161,10 +161,11 @@ jQuery(function($) {
 							ecster_wc.wc_ecster_fail_local_order('denied');
 						},
 						onBeforeSubmit: function (data, callback) {
+							ecster_wc.logToFile( 'Received "onBeforeSubmit" callback from Ecster.' );
 							console.log('onBeforeSubmit');
 							console.log( data);
 							console.log( callback);
-							
+
 							ecster_wc.processWooCheckout(data, callback );
 						},
 					});
