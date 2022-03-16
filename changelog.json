@@ -93,5 +93,10 @@
           "description" : "<ul><li>Feature - Add support for refunds even for Swish payments.</li><li>Tweak - Bump required PHP version to 7.0.</li><li>Tweak - Update old Docs links to the current ones.</li><li>Tweak - Improve logging messages.</li></ul>",
           "requires" : "4.7.0",
           "tested" : "5.8.3"
+     },
+     "3.1.1" : {
+          "description" : "<ul><li>Tweak - Enhanced logging when onBeforeSubmit JS event is triggered from Ecster.</li><li>Fix - Only decode the response in capture request if it is not a WP Error.</li></ul>",
+          "requires" : "4.7.0",
+          "tested" : "5.9.2"
      }
 }

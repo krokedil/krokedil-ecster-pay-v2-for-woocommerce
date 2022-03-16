@@ -2,10 +2,10 @@
 Contributors: krokedil, niklashogefjord
 Tags: ecommerce, e-commerce, woocommerce, ecster
 Requires at least: 4.5
-Tested up to: 5.9.1
+Tested up to: 5.9.2
 Requires PHP: 7.0
 WC requires at least: 4.0.0
-WC tested up to: 6.2.0
+WC tested up to: 6.3.1
 License: GPLv3
 License URI: http://www.gnu.org/licenses/gpl-3.0.html
 Stable tag: trunk
@@ -31,6 +31,10 @@ More information on how to get started can be found in the [plugin documentation
 
 
 == CHANGELOG ==
+
+= 2022.03.16        - version 3.1.1 =
+* Tweak             - Enhanced logging when onBeforeSubmit JS event is triggered from Ecster.
+* Fix               - Only decode the response in capture request if it is not a WP Error.
 
 = 2022.01.25        - version 3.1.0 =
 * Feature           - Add support for refunds even for Swish payments.
