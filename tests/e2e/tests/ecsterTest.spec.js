@@ -30,8 +30,6 @@ describe("Ecster Checkout E2E tests", () => {
 	beforeAll(async () => {
 		try {
 			json = await setup.setupStore(json);
-			// json = JSON.parse('');
-
 			await utils.setOptions();
 
 		} catch (e) {
@@ -46,19 +44,15 @@ describe("Ecster Checkout E2E tests", () => {
 	}),
 
 		afterEach(async () => {
-			// if (!page.isClosed()) {
-			// 	browser.close();
-			// }
+			if (!page.isClosed()) {
+				browser.close();
+			}
 			API.clearWCSession();
 		}),
 
 		test.each(tests)(
 			"$name",
 			async (args) => {
-
-
-
-				// console.log(JSON.stringify(json));
 
 				// --------------- GUEST/LOGGED IN --------------- //
 				if (args.loggedIn) {
