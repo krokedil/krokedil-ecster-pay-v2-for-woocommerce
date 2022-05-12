@@ -67,6 +67,10 @@ class WC_Ecster_Request_Cart {
 			}
 		}
 
+		$rounded_fee         = self::add_rounding_line( $ecster_cart_amount );
+		$ecster_cart_amount += $rounded_fee['unitAmount'];
+		$ecster_cart_rows[]  = $rounded_fee;
+
 		$ecster_cart['amount']   = $ecster_cart_amount;
 		$ecster_cart['currency'] = get_woocommerce_currency();
 		$ecster_cart['rows']     = $ecster_cart_rows;
@@ -203,4 +207,30 @@ class WC_Ecster_Request_Cart {
 		return $external_reference;
 	}
 
+	/**
+	 * @param $cart_item
+	 *
+	 * @return mixed
+	 */
+	private static function add_rounding_line( $ecster_cart_amount ) {
+
+		$shipping_total = round( ( WC()->cart->get_shipping_total() ) * 100 );
+		$shipping_tax   = round( WC()->cart->get_shipping_tax() * 100 );
+		$order_amount   = round( WC()->cart->total * 100 );
+
+		$amount_to_adjust = $order_amount - ( $ecster_cart_amount + ( $shipping_total + $shipping_tax ) );
+
+		$ecster_rounding_line = array(
+			'name'       => 'rounding-fee', // Mandatory.
+			'quantity'   => 1,                     // Mandatory
+			'unitAmount' => 0,     // Mandatory.
+			'vatRate'    => 0,       // Mandatory.
+		);
+
+		if ( 0 !== $amount_to_adjust ) {
+			$ecster_rounding_line['unitAmount'] = $amount_to_adjust;
+		}
+
+		return $ecster_rounding_line;
+	}
 }
