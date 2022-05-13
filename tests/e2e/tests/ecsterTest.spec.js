@@ -66,7 +66,7 @@ describe("Ecster Checkout E2E tests", () => {
 
 				// --------------- ADD PRODUCTS TO CART --------------- //
 				await utils.addMultipleProductsToCart(page, args.products, json);
-				// await page.waitForTimeout(3 * timeOutTime);
+				await page.waitForTimeout(timeOutTime);
 
 				// --------------- GO TO CHECKOUT --------------- //
 				await page.goto(urls.CHECKOUT);
@@ -79,11 +79,9 @@ describe("Ecster Checkout E2E tests", () => {
 				await utils.applyCoupons(page, args.coupons);
 
 				// // --------------- START OF IFRAME --------------- //
-
 				await page.waitForTimeout(timeOutTime);
 				let frameContainer = await page.$('iframe[id="ecster-pay"]')
 				let ecsterIframe = await frameContainer.contentFrame();
-
 
 				// --------------- CUSTOMER DATA --------------- //
 				await iframeHandler.handleCustomerCredentials(page, ecsterIframe);
@@ -92,12 +90,10 @@ describe("Ecster Checkout E2E tests", () => {
 				const ecsterOrderTotalAsFloat = await iframeHandler.paymentMethodSelector(page, ecsterIframe);
 
 				// --------------- GET ECSTER AMOUNT ----------- //
-
 				let ecsterTotalSansFloat = ecsterOrderTotalAsFloat.split('.')[0]
 				let finalDigit = ecsterTotalSansFloat[ecsterTotalSansFloat.length - 1];
 
 				// --------------- POST PURCHASE CHECKS --------------- //
-
 				await page.waitForTimeout(timeOutTime);
 
 				if ('9' == finalDigit ) {
@@ -116,6 +112,11 @@ describe("Ecster Checkout E2E tests", () => {
 
 					// Get the thankyou page total and run checks.
 					expect(wooOrderTotalAsFloat).toBe(ecsterOrderTotalAsFloat);
+
+					if( args.expectedTotal !== "" ) {
+						expect( parseFloat(wooOrderTotalAsFloat)).toBe(args.expectedTotal);
+						expect( parseFloat(ecsterOrderTotalAsFloat)).toBe(args.expectedTotal);
+					}
 				}
 			}, 250000);
 });
