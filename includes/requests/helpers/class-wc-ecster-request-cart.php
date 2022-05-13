@@ -67,6 +67,7 @@ class WC_Ecster_Request_Cart {
 			}
 		}
 
+		// Check for differences in amounts after rounding.
 		$rounded_fee         = self::add_rounding_line( $ecster_cart_amount );
 		$ecster_cart_amount += $rounded_fee['unitAmount'];
 		$ecster_cart_rows[]  = $rounded_fee;
@@ -208,9 +209,10 @@ class WC_Ecster_Request_Cart {
 	}
 
 	/**
-	 * @param $cart_item
+	 * Add line to equalize rounded amounts in Ecster and WooCommerce cart.
 	 *
-	 * @return mixed
+	 * @param int $ecster_cart_amount Total amount in Ecster cart.
+	 * @return array
 	 */
 	private static function add_rounding_line( $ecster_cart_amount ) {
 
@@ -222,7 +224,7 @@ class WC_Ecster_Request_Cart {
 
 		$ecster_rounding_line = array(
 			'name'       => 'rounding-fee', // Mandatory.
-			'quantity'   => 1,                     // Mandatory
+			'quantity'   => 1,                     // Mandatory.
 			'unitAmount' => 0,     // Mandatory.
 			'vatRate'    => 0,       // Mandatory.
 		);
