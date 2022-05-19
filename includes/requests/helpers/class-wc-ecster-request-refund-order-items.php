@@ -61,6 +61,10 @@ class WC_Ecster_Get_Refund_Order_Items {
 				);
 				array_push( $items, $formated_item );
 			}
+
+			$rounding_item = self::rounding_item( $items, $amount );
+			array_push( $items, $rounding_item );
+
 			update_post_meta( $refund_id, '_krokedil_refunded', 'true' );
 		} else {
 			// Log empty response?
@@ -91,6 +95,37 @@ class WC_Ecster_Get_Refund_Order_Items {
 			'quantity'   => abs( $item['qty'] ),
 		);
 	}
+
+	/**
+	 * Rounding adjustment for total amount.
+	 *
+	 * @param array $items Order lines array.
+	 * @param int   $amount Total order amount.
+	 * @return array
+	 */
+	private static function rounding_item( $items, $amount ) {
+
+		$formatted_total_amount = 0;
+		foreach ( $items as $key ) {
+			$formatted_total_amount += ( $key['unitAmount'] * $key['quantity'] );
+		}
+
+		$amount_to_adjust = round( ( $amount * 100 ) - $formatted_total_amount );
+
+		$ecster_rounding_line = array(
+			'name'       => 'rounding-fee', // Mandatory.
+			'unitAmount' => 0,     // Mandatory.
+			'vatRate'    => 0,       // Mandatory.
+			'quantity'   => 1,                     // Mandatory
+		);
+
+		if ( 0 !== $amount_to_adjust ) {
+			$ecster_rounding_line['unitAmount'] = $amount_to_adjust;
+		}
+
+		return $ecster_rounding_line;
+	}
+
 
 	/**
 	 * Gets shipping
