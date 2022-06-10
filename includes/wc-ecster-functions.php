@@ -34,8 +34,8 @@ function wc_ecster_get_payment_method_name( $payment_method ) {
  */
 function ecster_wc_show_snippet() {
 	?>
-		<div id="ecster-pay-ctr">
-		</div>
+	<div id="ecster-pay-ctr">
+	</div>
 	<?php
 }
 /**
@@ -61,12 +61,12 @@ function ecster_maybe_create_order() {
 function ecster_create_order() {
 	// Set temp order ID. Used for callbacks uhntil we have a WC order.
 	WC()->session->set( 'ecster_temp_order_id', 'tmp' . md5( uniqid( wp_rand(), true ) ) );
-	$ecster_settings = get_option( 'woocommerce_ecster_settings' );
-	$testmode        = 'yes' === $ecster_settings['testmode'];
-	$api_key         = $ecster_settings['api_key'];
-	$merchant_key    = $ecster_settings['merchant_key'];
+	$ecster_settings     = get_option( 'woocommerce_ecster_settings' );
+	$order_items_taxmode = 'yes' === $ecster_settings['testmode'];
+	$api_key             = $ecster_settings['api_key'];
+	$merchant_key        = $ecster_settings['merchant_key'];
 
-	$request  = new WC_Ecster_Request_Create_Cart( $api_key, $merchant_key, $testmode );
+	$request  = new WC_Ecster_Request_Create_Cart( $api_key, $merchant_key, $order_items_taxmode );
 	$response = $request->response();
 
 	if ( ! is_wp_error( $response ) && 201 == $response['response']['code'] ) {
@@ -107,7 +107,6 @@ function ecster_get_order( $checkout_cart_key ) {
  * Unset Ecster session
  */
 function wc_ecster_unset_sessions() {
-
 	if ( method_exists( WC()->session, '__unset' ) ) {
 		if ( WC()->session->get( 'order_awaiting_payment' ) ) {
 			WC()->session->__unset( 'order_awaiting_payment' );
@@ -201,10 +200,10 @@ function wc_ecster_get_default_customer_type() {
  * Confirm order
  */
 function wc_ecster_confirm_order( $order_id, $internal_reference, $response_body = false ) {
-	$ecster_settings = get_option( 'woocommerce_ecster_settings' );
-	$testmode        = 'yes' === $ecster_settings['testmode'];
-	$api_key         = $ecster_settings['api_key'];
-	$merchant_key    = $ecster_settings['merchant_key'];
+	$ecster_settings     = get_option( 'woocommerce_ecster_settings' );
+	$order_items_taxmode = 'yes' === $ecster_settings['testmode'];
+	$api_key             = $ecster_settings['api_key'];
+	$merchant_key        = $ecster_settings['merchant_key'];
 
 	$order = wc_get_order( $order_id );
 
@@ -212,12 +211,12 @@ function wc_ecster_confirm_order( $order_id, $internal_reference, $response_body
 	update_post_meta( $order_id, '_wc_ecster_internal_reference', $internal_reference );
 
 	// Update reference.
-	$request  = new WC_Ecster_Request_Update_Reference( $api_key, $merchant_key, $testmode );
+	$request  = new WC_Ecster_Request_Update_Reference( $api_key, $merchant_key, $order_items_taxmode );
 	$response = $request->response( $internal_reference, $order->get_order_number() );
 
 	// Get purchase data from Ecster if bnot already passed into the function.
 	if ( empty( $response_body ) ) {
-		$request       = new WC_Ecster_Request_Get_Order( $api_key, $merchant_key, $testmode );
+		$request       = new WC_Ecster_Request_Get_Order( $api_key, $merchant_key, $order_items_taxmode );
 		$response      = $request->response( $internal_reference );
 		$response_body = json_decode( $response['body'] );
 
@@ -239,13 +238,49 @@ function wc_ecster_confirm_order( $order_id, $internal_reference, $response_body
 
 	// Check if we have an invoice fee.
 	if ( isset( $response_body->properties->invoiceFee ) ) {
-		$ecster_fee = new WC_Order_Item_Fee();
-		$ecster_fee->set_name( __( 'Invoice Fee', 'krokedil-ecster-pay-for-woocommerce' ) );
-		$ecster_fee->set_total( $response_body->properties->invoiceFee / 100 );
-		$ecster_fee->set_tax_status( 'none' );
-		$ecster_fee->save();
-		$order->add_item( $ecster_fee );
-		$order->calculate_totals();
+
+		$tax_classes = WC_Tax::get_tax_classes();
+
+		$order_items_tax       = $order->get_items( 'tax' );
+		$ecster_response_items = ( $response_body->transactions )[0]->rows;
+
+		// For each Ecster Invoice, calculate and add appropriate VAT and untaxed amount to the WC order.
+		foreach ( $ecster_response_items as $response_order_line ) {
+
+			if ( 'INVOICE_FEE' === $response_order_line->feeType ) {
+
+				$ecster_order_line_total_amount = $response_order_line->unitAmount;
+				$ecster_fee                     = new WC_Order_Item_Fee();
+
+				foreach ( $order_items_tax as $item_id ) {
+
+					if ( 'INVOICE_FEE' === $response_order_line->feeType && $item_id->get_rate_percent() * 100 == $response_order_line->vatRate ) {
+
+						$ecster_fee_vat_percent   = $response_order_line->vatRate / 100;
+						$ecster_fee_amount_no_tax = ( $ecster_order_line_total_amount / ( 100 + $ecster_fee_vat_percent ) ) * 100;
+						$ecster_fee_tax           = $ecster_order_line_total_amount - $ecster_fee_amount_no_tax;
+
+						foreach ( $tax_classes as $tax_class_key => $value ) {
+							if ( $item_id->get_data()['label'] === $value ) {
+								$ecster_fee_tax_class = $value;
+							}
+						}
+
+						$ecster_fee_tax_rate_id = $item_id->get_rate_id();
+					}
+				}
+
+				$ecster_fee->set_name( __( 'Invoice Fee', 'krokedil-ecster-pay-for-woocommerce' ) );
+				$ecster_fee->set_total( round( $ecster_fee_amount_no_tax / 100, 2 ) );
+				$ecster_fee->set_tax_class( $ecster_fee_tax_class );
+				$ecster_fee->set_taxes( array( 'total' => array( $ecster_fee_tax_rate_id => $ecster_fee_tax / 100 ) ) );
+
+				$ecster_fee->save();
+
+				$order->add_item( $ecster_fee );
+				$order->calculate_totals();
+			}
+		}
 	}
 
 	$ecster_status = $response_body->status;
@@ -276,10 +311,10 @@ function wc_ecster_confirm_order( $order_id, $internal_reference, $response_body
 				break;
 			case 'READY': // Card payment/invoice
 			case 'FULLY_DELIVERED': // Card payment
-					$order->payment_complete( $internal_reference );
+				$order->payment_complete( $internal_reference );
 				break;
 			default:
-					$order->add_order_note( __( 'Confirmation payment sequenze in Woo triggered but purchase in Ecster is not finalized. Ecster status: ' . $ecster_status, 'krokedil-ecster-pay-for-woocommerce' ) );
+				$order->add_order_note( __( 'Confirmation payment sequenze in Woo triggered but purchase in Ecster is not finalized. Ecster status: ' . $ecster_status, 'krokedil-ecster-pay-for-woocommerce' ) );
 				break;
 		}
 	} else {
