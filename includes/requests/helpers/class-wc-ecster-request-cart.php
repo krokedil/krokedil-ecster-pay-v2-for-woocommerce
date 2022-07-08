@@ -45,6 +45,7 @@ class WC_Ecster_Request_Cart {
 		}
 
 		// Fees.
+		WC()->cart->calculate_fees();
 		if ( WC()->cart->get_fees() ) {
 			foreach ( WC()->cart->get_fees() as $fee ) {
 				// @TODO: Throw an error if tax rate is not in the array
