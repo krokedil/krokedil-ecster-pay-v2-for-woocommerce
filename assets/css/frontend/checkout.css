@@ -8,8 +8,8 @@
 	display: none;
 }
 
-#ecster-checkout-select-other{
-	margin-top:20px;
+#ecster-checkout-select-other {
+	margin-top: 20px;
 }
 
 .ecster-selected #ecster-pay-ctr {
@@ -22,7 +22,85 @@
 }
 
 /* B2B B2C switcher **/
-label[for=ecster-b2c],
-label[for=ecster-b2b] {
+label[for="ecster-b2c"],
+label[for="ecster-b2b"] {
 	display: inline;
+}
+
+/* Storefront light */
+.ecster-two-column-left-sf .woocommerce-info {
+	background-color: #eeeeee;
+	color: #6d6d6d;
+}
+
+.ecster-two-column-left-sf .woocommerce-info:before {
+	color: #6d6d6d;
+}
+
+.ecster-two-column-left-sf .woocommerce-info a,
+.ecster-two-column-left-sf .woocommerce-info a:hover {
+	color: #6d6d6d;
+}
+
+.ecster-two-column-left-sf .woocommerce-checkout-review-order-table th,
+.ecster-two-column-left-sf .woocommerce-checkout-review-order-table td {
+	padding: 1em 0.41575em;
+}
+
+.ecster-two-column-left-sf .woocommerce-checkout-review-order-table thead {
+	display: none;
+}
+
+.ecster-two-column-left-sf .woocommerce-checkout-review-order-table:not(.has-background) th,
+.ecster-two-column-left-sf .woocommerce-checkout-review-order-table:not(.has-background) tbody td {
+	background-color: #fdfdfd;
+}
+
+.ecster-two-column-left-sf .cart-subtotal th,
+.ecster-two-column-left-sf .cart-subtotal td {
+	border-top: 0.0625rem solid #e6e6e6;
+}
+
+.ecster-two-column-left-sf textarea {
+	background-color: transparent;
+	border: 0.0625rem solid #e6e6e6;
+}
+
+.ecster-two-column-left-sf .woocommerce-checkout-review-order-table {
+	padding-top: 1.5rem;
+}
+
+@media only screen and (min-width: 769px) {
+
+	/* Two-layout, Ecster on left column. */
+	.ecster-two-column-left #ecster-wrapper,
+	.ecster-two-column-left-sf #ecster-wrapper {
+		display: grid;
+		grid-template-columns: 6fr 4fr;
+		grid-column-gap: 70px;
+	}
+
+	.ecster-two-column-left #ecster-iframe,
+	.ecster-two-column-left #ecster-order-review,
+	.ecster-two-column-left-sf #ecster-iframe,
+	.ecster-two-column-left-sf #ecster-order-review {
+		width: 100%;
+	}
+
+	.ecster-two-column-left #ecster-order-review,
+	.ecster-two-column-left-sf #ecster-order-review {
+		order: 2;
+	}
+
+	.ecster-two-column-left #ecster-wc-form,
+	.ecster-two-column-left-sf #ecster-wc-form {
+		order: 1;
+	}
+
+	/* Two-layout, Ecster on left column. */
+	.ecster-two-column-right #ecster-wrapper {
+		display: grid;
+		grid-template-columns: 4fr 6fr;
+		grid-column-gap: 70px;
+	}
 }

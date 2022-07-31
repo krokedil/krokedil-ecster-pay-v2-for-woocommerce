@@ -17,6 +17,9 @@ class Ecster_For_WooCommerce_Templates {
 		add_action( 'ecster_wc_after_order_review', array( $this, 'add_extra_checkout_fields' ), 10 );
 		add_action( 'ecster_wc_after_order_review', 'wc_ecster_show_another_gateway_button', 30 );
 		add_action( 'ecster_wc_before_snippet', array( $this, 'add_customer_type_switch' ), 10 );
+
+		// Adds the required CSS classes for the checkout layout.
+		add_filter( 'body_class', array( $this, 'add_body_class' ) );
 	}
 	/**
 	 * Overrides checkout form template if PaysonCheckout is the selected payment method.
@@ -117,6 +120,48 @@ class Ecster_For_WooCommerce_Templates {
 			<input type="radio" name="ecster-customer-type" id="ecster-b2b" value="b2b" <?php ( 'b2bc' === $customer_type ) ? esc_attr_e( 'checked' ) : ''; ?>>
 			<?php
 		}
+	}
+
+	/**
+	 * Add checkout page body class, depending on checkout page layout settings.
+	 *
+	 * @param array $class CSS classes used in body tag.
+	 * @return array The same input array with the addition of our custom classes.
+	 */
+	public function add_body_class( $class ) {
+		if ( ! is_checkout() || is_wc_endpoint_url( 'order-received' ) ) {
+			return $class;
+		}
+
+		if ( method_exists( WC()->cart, 'needs_payment' ) && ! WC()->cart->needs_payment() ) {
+			return $class;
+		}
+
+		$settings        = get_option( 'woocommerce_ecster_settings' );
+		$checkout_layout = $settings['checkout_layout'] ?? 'two_column_right';
+
+		$first_gateway = '';
+		if ( WC()->session->get( 'chosen_payment_method' ) ) {
+			$first_gateway = WC()->session->get( 'chosen_payment_method' );
+		} else {
+			$available_payment_gateways = WC()->payment_gateways->get_available_payment_gateways();
+			reset( $available_payment_gateways );
+			$first_gateway = key( $available_payment_gateways );
+		}
+
+		if ( 'ecster' === $first_gateway && 'two_column_left' === $checkout_layout ) {
+			$class[] = 'ecster-two-column-left';
+		}
+
+		if ( 'ecster' === $first_gateway && 'two_column_left_sf' === $checkout_layout ) {
+			$class[] = 'ecster-two-column-left-sf';
+		}
+
+		if ( 'ecster' === $first_gateway && 'two_column_right' === $checkout_layout ) {
+			$class[] = 'ecster-two-column-right';
+		}
+
+		return $class;
 	}
 }
 new Ecster_For_WooCommerce_Templates();
