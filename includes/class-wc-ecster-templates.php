@@ -138,7 +138,7 @@ class Ecster_For_WooCommerce_Templates {
 		}
 
 		$settings        = get_option( 'woocommerce_ecster_settings' );
-		$checkout_layout = $settings['checkout_layout'] ?? 'two_column_right';
+		$checkout_layout = $settings['checkout_layout'] ?? 'one_column_checkout';
 
 		$first_gateway = '';
 		if ( WC()->session->get( 'chosen_payment_method' ) ) {
