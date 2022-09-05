@@ -220,9 +220,11 @@ function wc_ecster_confirm_order( $order_id, $internal_reference, $response_body
 		$request       = new WC_Ecster_Request_Get_Order( $api_key, $merchant_key, $testmode );
 		$response      = $request->response( $internal_reference );
 		$response_body = json_decode( $response['body'] );
+	}
 
+	// Swish transaction id.
+	if ( isset( $response_body->properties->method ) && 'SWISH' === $response_body->properties->method ) {
 		$ecster_swish_id = '';
-
 		if ( $response_body->transactions ) {
 
 			foreach ( $response_body->transactions as $key ) {
