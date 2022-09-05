@@ -69,9 +69,13 @@ class WC_Ecster_Request_Cart {
 		}
 
 		// Check for differences in amounts after rounding.
-		$rounded_fee         = self::add_rounding_line( $ecster_cart_amount );
-		$ecster_cart_amount += $rounded_fee['unitAmount'];
-		$ecster_cart_rows[]  = $rounded_fee;
+		$rounded_fee = self::add_rounding_line( $ecster_cart_amount );
+
+		// Add the rounding item to the Ecster items only if the price is not zero.
+		if ( ! empty( $rounded_fee['unitAmount'] ) ) {
+			$ecster_cart_amount += $rounded_fee['unitAmount'];
+			$ecster_cart_rows[]  = $rounded_fee;
+		}
 
 		$ecster_cart['amount']   = $ecster_cart_amount;
 		$ecster_cart['currency'] = get_woocommerce_currency();

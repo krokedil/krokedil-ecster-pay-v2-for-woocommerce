@@ -63,7 +63,11 @@ class WC_Ecster_Get_Refund_Order_Items {
 			}
 
 			$rounding_item = self::rounding_item( $items, $amount );
-			array_push( $items, $rounding_item );
+
+			// Add the rounding item to the Ecster items only if the price is not zero.
+			if ( ! empty( $rounding_item['unitAmount'] ) ) {
+				array_push( $items, $rounding_item );
+			}
 
 			update_post_meta( $refund_id, '_krokedil_refunded', 'true' );
 		} else {

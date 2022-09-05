@@ -41,7 +41,10 @@ class WC_Ecster_Get_Order_Items {
 		}
 
 		$rounding_item = self::rounding_item( $items, $order_id );
-		array_push( $items, $rounding_item );
+		// Add the rounding item to the Ecster items only if the price is not zero.
+		if ( ! empty( $rounding_item['unitAmount'] ) ) {
+			array_push( $items, $rounding_item );
+		}
 
 		return $items;
 	}
