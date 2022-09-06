@@ -1,11 +1,11 @@
 === Ecster Pay v2 for WooCommerce ===
 Contributors: krokedil, niklashogefjord
 Tags: ecommerce, e-commerce, woocommerce, ecster
-Requires at least: 4.5
-Tested up to: 5.9.2
+Requires at least: 5.0
+Tested up to: 6.0.2
 Requires PHP: 7.0
 WC requires at least: 4.0.0
-WC tested up to: 6.3.1
+WC tested up to: 6.8.2
 License: GPLv3
 License URI: http://www.gnu.org/licenses/gpl-3.0.html
 Stable tag: trunk
@@ -31,6 +31,13 @@ More information on how to get started can be found in the [plugin documentation
 
 
 == CHANGELOG ==
+
+= 2022.09.06        - version 3.2.0 =
+* Feature           - Adds support for multiple checkout layouts. This can be changed via the new Checkout layout setting.
+* Tweak             - Remove max-width 840px for checkout page. Ecster doesn't limit its checkout width anymore.
+* Tweak             - Adds rounding order line if order total differs between WooCommerce and Ecster.
+* Fix               - Calculate fees before processing cart sent to Ecster. This is required for adding custom fees through hooks.
+* Fix               - Only save _wc_ecster_swish_id to WC order if payment method is Swish. Could cause issues with refunds.
 
 = 2022.03.16        - version 3.1.1 =
 * Tweak             - Enhanced logging when onBeforeSubmit JS event is triggered from Ecster.

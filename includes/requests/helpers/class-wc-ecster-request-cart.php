@@ -45,6 +45,7 @@ class WC_Ecster_Request_Cart {
 		}
 
 		// Fees.
+		WC()->cart->calculate_fees();
 		if ( WC()->cart->get_fees() ) {
 			foreach ( WC()->cart->get_fees() as $fee ) {
 				// @TODO: Throw an error if tax rate is not in the array
@@ -65,6 +66,15 @@ class WC_Ecster_Request_Cart {
 				);
 				$ecster_cart_amount += round( ( $fee->amount + $fee->tax ) * 100 );
 			}
+		}
+
+		// Check for differences in amounts after rounding.
+		$rounded_fee = self::add_rounding_line( $ecster_cart_amount );
+
+		// Add the rounding item to the Ecster items only if the price is not zero.
+		if ( ! empty( $rounded_fee['unitAmount'] ) ) {
+			$ecster_cart_amount += $rounded_fee['unitAmount'];
+			$ecster_cart_rows[]  = $rounded_fee;
 		}
 
 		$ecster_cart['amount']   = $ecster_cart_amount;
@@ -203,4 +213,31 @@ class WC_Ecster_Request_Cart {
 		return $external_reference;
 	}
 
+	/**
+	 * Add line to equalize rounded amounts in Ecster and WooCommerce cart.
+	 *
+	 * @param int $ecster_cart_amount Total amount in Ecster cart.
+	 * @return array
+	 */
+	private static function add_rounding_line( $ecster_cart_amount ) {
+
+		$shipping_total = round( ( WC()->cart->get_shipping_total() ) * 100 );
+		$shipping_tax   = round( WC()->cart->get_shipping_tax() * 100 );
+		$order_amount   = round( WC()->cart->total * 100 );
+
+		$amount_to_adjust = $order_amount - ( $ecster_cart_amount + ( $shipping_total + $shipping_tax ) );
+
+		$ecster_rounding_line = array(
+			'name'       => 'rounding-fee', // Mandatory.
+			'quantity'   => 1,                     // Mandatory.
+			'unitAmount' => 0,     // Mandatory.
+			'vatRate'    => 0,       // Mandatory.
+		);
+
+		if ( 0 !== $amount_to_adjust ) {
+			$ecster_rounding_line['unitAmount'] = $amount_to_adjust;
+		}
+
+		return $ecster_rounding_line;
+	}
 }

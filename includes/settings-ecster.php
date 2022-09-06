@@ -82,5 +82,17 @@ return apply_filters(
 			),
 			'default'     => 'b2c',
 		),
+		'checkout_layout'            => array(
+			'title'    => __( 'Checkout layout', 'krokedil-ecster-pay-for-woocommerce' ),
+			'type'     => 'select',
+			'options'  => array(
+				'one_column_checkout' => __( 'One column checkout', 'krokedil-ecster-pay-for-woocommerce' ),
+				'two_column_right'    => __( 'Two column checkout (Ecster Pay in right column)', 'krokedil-ecster-pay-for-woocommerce' ),
+				'two_column_left'     => __( 'Two column checkout (Ecster Pay in left column)', 'krokedil-ecster-pay-for-woocommerce' ),
+				'two_column_left_sf'  => __( 'Two column checkout (Ecster Pay in left column) - Storefront light', 'krokedil-ecster-pay-for-woocommerce' ),
+			),
+			'default'  => 'one_column_checkout',
+			'desc_tip' => false,
+		),
 	)
 );
