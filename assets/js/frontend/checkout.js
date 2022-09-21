@@ -24,9 +24,7 @@ jQuery(function($) {
 				$(document).ready( ecster_wc.documentReady() );
 
 				// Update Ecster payment.
-				// ecster_wc.bodyEl.on('updated_checkout', ecster_wc.wc_ecster_update_cart);
-				ecster_wc.bodyEl.on('update_checkout', ecster_wc.wc_ecster_update_cart);
-				ecster_wc.bodyEl.on('updated_checkout', ecster_wc.updateEcsterCart);
+				ecster_wc.bodyEl.on('updated_checkout', ecster_wc.wc_ecster_update_cart);
 			}
 
 			ecster_wc.bodyEl.on('change', 'input[name="payment_method"]', ecster_wc.maybeChangeToEcster);
@@ -36,14 +34,6 @@ jQuery(function($) {
 			
 			// Update Ecster cart when changing between B2B/B2C
 			ecster_wc.bodyEl.on('change', 'input[name="ecster-customer-type"]', ecster_wc.wc_ecster_update_cart);
-		},
-
-		updateEcsterCart: function() {
-			console.log('updateEcsterCart');
-			console.log($('#ecster_cart_key').val());
-			
-			// EcsterPay.updateCart($('#ecster_cart_key').val());
-			updated_cart_callback($('#ecster_cart_key').val());
 		},
 
 		/*
@@ -116,7 +106,6 @@ jQuery(function($) {
 						showCart: false,
 						showPaymentResult: false,
 						onCheckoutStartInit: function () {
-							console.log('onCheckoutStartInit');
 							$("#order_review").block({
 								message: null,
 								overlayCSS: {
@@ -128,8 +117,7 @@ jQuery(function($) {
 						onCheckoutStartSuccess: function () {
 							$("#order_review").unblock();
 							ecster_wc.wc_ecster_initialized = true; // Mark Ecster as initialized on success
-							console.log('onCheckoutStartSuccess');
-							// $("body").trigger("update_checkout");
+							$("body").trigger("update_checkout");
 						},
 						onCheckoutStartFailure: function (failureData) {
 							$("#order_review").unblock();
@@ -138,7 +126,6 @@ jQuery(function($) {
 							ecster_wc.wc_ecster_on_checkout_start_failure(failureData);
 						},
 						onCheckoutUpdateInit: function () {
-							console.log('onCheckoutUpdateInit');
 							$("#order_review").block({
 								message: null,
 								overlayCSS: {
@@ -148,12 +135,10 @@ jQuery(function($) {
 							});
 						},
 						onCheckoutUpdateSuccess: function () {
-							console.log('onCheckoutUpdateSuccess');
 							$("#order_review").unblock();
 							$('#ecster-pay-ctr').unblock();
 						},
 						onCheckoutUpdateFailure: function () {
-							console.log('onCheckoutUpdateFailure');
 							$("#order_review").unblock();
 						},
 						onCustomerAuthenticated: function (authenticatedData) {
@@ -199,8 +184,6 @@ jQuery(function($) {
 				return;
 			}
 
-			var updated_cart_callback = EcsterPay.updateCart($('#ecster_cart_key').val());
-			/*
 			var updated_cart_callback = EcsterPay.updateCart(ecster_wc.ecster_cart_key);
 			var customer_type = ( $('input[name="ecster-customer-type"]:checked').val() ) ? $('input[name="ecster-customer-type"]:checked').val() : null;
 			$.ajax(
@@ -233,7 +216,6 @@ jQuery(function($) {
 					}
 				}
 			);
-			*/
 		},
 	
 		wc_ecster_fail_local_order: function(reason) {
