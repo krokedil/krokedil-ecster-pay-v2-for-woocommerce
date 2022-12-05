@@ -113,10 +113,8 @@ if ( ! class_exists( 'WC_Ecster' ) ) {
 				return;
 			}
 
-			// Init the gateway itself
+			// Init the gateway itself.
 			$this->init_gateways();
-
-			include_once plugin_basename( 'includes/class-wc-ecster-ajax.php' );
 
 			add_filter( 'plugin_action_links_' . plugin_basename( __FILE__ ), array( $this, 'plugin_action_links' ) );
 		}
@@ -239,7 +237,7 @@ if ( ! class_exists( 'WC_Ecster' ) ) {
 			}
 
 			if ( 'embedded' === $this->checkout_flow ) {
-				include_once WC_ECSTER_PLUGIN_PATH . '/includes/class-wc-ecster-templates.php';
+				include_once WC_ECSTER_PLUGIN_PATH . '/classes/class-wc-ecster-templates.php';
 			}
 
 			include_once WC_ECSTER_PLUGIN_PATH . '/classes/class-wc-ecster-api.php';
@@ -261,21 +259,22 @@ if ( ! class_exists( 'WC_Ecster' ) ) {
 			include_once WC_ECSTER_PLUGIN_PATH . '/classes/requests/order-management/post/class-wc-ecster-request-credit-swish-order.php';
 			include_once WC_ECSTER_PLUGIN_PATH . '/classes/requests/order-management/post/class-wc-ecster-request-debit-order.php';
 
-			include_once WC_ECSTER_PLUGIN_PATH . '/includes/class-wc-gateway-ecster.php';
+			include_once WC_ECSTER_PLUGIN_PATH . '/classes/class-wc-gateway-ecster.php';
 
-			include_once WC_ECSTER_PLUGIN_PATH . '/includes/requests/helpers/class-wc-ecster-request-header.php';
-			include_once WC_ECSTER_PLUGIN_PATH . '/includes/requests/helpers/class-wc-ecster-request-cart.php';
-			include_once WC_ECSTER_PLUGIN_PATH . '/includes/requests/helpers/class-wc-ecster-request-delivery-methods.php';
-			include_once WC_ECSTER_PLUGIN_PATH . '/includes/requests/helpers/class-wc-ecster-request-customer.php';
-			include_once WC_ECSTER_PLUGIN_PATH . '/includes/requests/helpers/class-wc-ecster-request-order-items.php';
-			include_once WC_ECSTER_PLUGIN_PATH . '/includes/requests/helpers/class-wc-ecster-request-refund-order-items.php';
-			include_once WC_ECSTER_PLUGIN_PATH . '/includes/requests/helpers/class-wc-ecster-request-parameters.php';
+			include_once WC_ECSTER_PLUGIN_PATH . '/classes/requests/helpers/class-wc-ecster-request-header.php';
+			include_once WC_ECSTER_PLUGIN_PATH . '/classes/requests/helpers/class-wc-ecster-request-cart.php';
+			include_once WC_ECSTER_PLUGIN_PATH . '/classes/requests/helpers/class-wc-ecster-request-delivery-methods.php';
+			include_once WC_ECSTER_PLUGIN_PATH . '/classes/requests/helpers/class-wc-ecster-request-customer.php';
+			include_once WC_ECSTER_PLUGIN_PATH . '/classes/requests/helpers/class-wc-ecster-request-order-items.php';
+			include_once WC_ECSTER_PLUGIN_PATH . '/classes/requests/helpers/class-wc-ecster-request-refund-order-items.php';
+			include_once WC_ECSTER_PLUGIN_PATH . '/classes/requests/helpers/class-wc-ecster-request-parameters.php';
 
-			include_once WC_ECSTER_PLUGIN_PATH . '/includes/krokedil-wc-compatability.php';
+			include_once WC_ECSTER_PLUGIN_PATH . '/classes/krokedil-wc-compatability.php';
 			include_once WC_ECSTER_PLUGIN_PATH . '/includes/wc-ecster-functions.php';
 			include_once WC_ECSTER_PLUGIN_PATH . '/includes/wc-ecster-country-functions.php';
-			include_once WC_ECSTER_PLUGIN_PATH . '/includes/class-wc-ecster-api-callbacks.php';
-			include_once WC_ECSTER_PLUGIN_PATH . '/includes/class-wc-ecster-confirmation.php';
+			include_once WC_ECSTER_PLUGIN_PATH . '/classes/class-wc-ecster-api-callbacks.php';
+			include_once WC_ECSTER_PLUGIN_PATH . '/classes/class-wc-ecster-confirmation.php';
+			include_once WC_ECSTER_PLUGIN_PATH . '/classes/class-wc-ecster-ajax.php';
 
 			$this->api = new WC_Ecster_API();
 
