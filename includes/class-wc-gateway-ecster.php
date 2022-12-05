@@ -51,6 +51,7 @@ class WC_Gateway_Ecster extends WC_Payment_Gateway {
 		$this->api_key                    = $this->get_option( 'api_key' );
 		$this->merchant_key               = $this->get_option( 'merchant_key' );
 		$this->select_another_method_text = $this->get_option( 'select_another_method_text' );
+		$this->checkout_flow              = $this->settings['checkout_flow'] ?? 'embedded';
 
 		if ( $this->testmode ) {
 			$this->description .= ' TEST MODE ENABLED';
@@ -60,7 +61,6 @@ class WC_Gateway_Ecster extends WC_Payment_Gateway {
 		// Hooks.
 		add_action( 'admin_notices', array( $this, 'admin_notices' ) );
 		add_action( 'woocommerce_update_options_payment_gateways_' . $this->id, array( $this, 'process_admin_options' ) );
-		add_action( 'wp_enqueue_scripts', array( $this, 'checkout_scripts' ) );
 		add_action( 'woocommerce_api_wc_gateway_ecster', array( $this, 'osn_listener' ) );
 		add_action( 'woocommerce_thankyou', array( $this, 'ecster_thankyou' ) );
 		add_action( 'woocommerce_checkout_order_processed', array( $this, 'save_ecster_temp_order_id_to_order' ), 10, 3 );
@@ -109,54 +109,7 @@ class WC_Gateway_Ecster extends WC_Payment_Gateway {
 		header( 'HTTP/1.0 200 OK' );
 	}
 
-	/**
-	 * Enqueue checkout page scripts
-	 */
-	function checkout_scripts() {
-		if ( is_checkout() && ! is_wc_endpoint_url( 'order-received' ) ) {
-			$checkout_cart_key = ecster_maybe_create_order();
-			if ( $this->testmode ) {
-				wp_register_script( 'ecster_pay', 'https://labs.ecster.se/pay/integration/ecster-pay-labs.js', array(), false, false );
-			} else {
-				wp_register_script( 'ecster_pay', 'https://secure.ecster.se/pay/integration/ecster-pay.js', array(), false, true );
-			}
-			$suffix = defined( 'SCRIPT_DEBUG' ) && SCRIPT_DEBUG ? '' : '.min';
-			wp_register_script(
-				'ecster_checkout',
-				WC_ECSTER_PLUGIN_URL . '/assets/js/frontend/checkout' . $suffix . '.js',
-				array( 'ecster_pay', 'jquery' ),
-				WC_ECSTER_VERSION,
-				true
-			);
 
-			$standard_woo_checkout_fields = array( 'billing_first_name', 'billing_last_name', 'billing_address_1', 'billing_address_2', 'billing_postcode', 'billing_city', 'billing_phone', 'billing_email', 'billing_state', 'billing_country', 'billing_company', 'shipping_first_name', 'shipping_last_name', 'shipping_address_1', 'shipping_address_2', 'shipping_postcode', 'shipping_city', 'shipping_state', 'shipping_country', 'shipping_company', 'terms', 'terms-field', '_wp_http_referer' );
-
-			wp_localize_script(
-				'ecster_checkout',
-				'ecster_wc_params',
-				array(
-					'ajaxurl'                      => admin_url( 'admin-ajax.php' ),
-					'terms'                        => wc_get_page_permalink( 'terms' ),
-					'wc_ecster_nonce'              => wp_create_nonce( 'wc_ecster_nonce' ),
-					'wc_change_to_ecster_nonce'    => wp_create_nonce( 'wc_change_to_ecster_nonce' ),
-					'standard_woo_checkout_fields' => $standard_woo_checkout_fields,
-					'ecster_checkout_cart_key'     => $checkout_cart_key,
-					'timeout_time'                 => 9,
-					'timeout_message'              => __( 'Please try again, something went wrong with processing your order.', 'krokedil-ecster-pay-for-woocommerce' ),
-					'default_customer_type'        => wc_ecster_get_default_customer_type(),
-					'submit_order'                 => WC_AJAX::get_endpoint( 'checkout' ),
-				)
-			);
-			wp_enqueue_script( 'ecster_checkout' );
-			wp_register_style(
-				'ecster_checkout',
-				WC_ECSTER_PLUGIN_URL . '/assets/css/frontend/checkout' . $suffix . '.css',
-				array(),
-				WC_ECSTER_VERSION
-			);
-			wp_enqueue_style( 'ecster_checkout' );
-		}
-	}
 
 	/**
 	 * Get_icon function.
@@ -231,25 +184,16 @@ class WC_Gateway_Ecster extends WC_Payment_Gateway {
 	 */
 	public function process_payment( $order_id, $retry = false ) {
 		$order = wc_get_order( $order_id );
-		// 1. Process the payment.
-		// 2. Redirect to confirmation page.
-		if ( $this->process_payment_handler( $order_id ) ) {
-			$confirmation_url = add_query_arg(
-				array(
-					'ecster_confirm' => 'yes',
-					'wc_order_id'    => $order_id,
-				),
-				$this->get_return_url( $order )
-			);
-			return array(
-				'result'       => 'success',
-				'redirect_url' => $confirmation_url,
-			);
-		} else {
-			return array(
-				'result' => 'error',
-			);
+
+		// Embedded flow.
+		if ( 'embedded' === $this->checkout_flow && ! is_wc_endpoint_url( 'order-pay' ) ) {
+			// Save payment type, card details & run $order->payment_complete() if all looks good.
+			return $this->process_embedded_handler( $order_id );
 		}
+
+		// Redirect flow.
+		// $response = Nets_Easy()->api->create_nets_easy_order( 'redirect', $order_id );
+		return $this->process_redirect_handler( $order_id, array() );
 	}
 
 	/**
@@ -259,18 +203,61 @@ class WC_Gateway_Ecster extends WC_Payment_Gateway {
 	 *
 	 * @return mixed
 	 */
-	public function process_payment_handler( $order_id ) {
+	public function process_embedded_handler( $order_id ) {
 		// Get the order object.
 		$order = wc_get_order( $order_id );
 
-		if ( $order_id ) {
+		// Let other plugins hook into this sequence.
+		do_action( 'ecster_wc_process_payment', $order_id );
 
-			// Let other plugins hook into this sequence.
-			do_action( 'ecster_wc_process_payment', $order_id );
-			return true;
+		// 1. Process the payment.
+		// 2. Return confirmation page url.
+		$confirmation_url = add_query_arg(
+			array(
+				'ecster_confirm' => 'yes',
+				'wc_order_id'    => $order_id,
+			),
+			$this->get_return_url( $order )
+		);
+		return array(
+			'result'       => 'success',
+			'redirect_url' => $confirmation_url,
+		);
+	}
+
+	/**
+	 * @param int   $order_id The WooCommerce order id.
+	 * @param array $response The response from payment.
+	 *
+	 * @return array|string[]
+	 */
+	protected function process_redirect_handler( $order_id, $response ) {
+		$order = wc_get_order( $order_id );
+
+		$ecster_order = Ecster_WC()->api->create_ecster_cart( $order_id );
+		if ( is_wp_error( $ecster_order ) || ! isset( $ecster_order['checkoutCart']['key'] ) ) {
+			return array(
+				'result'  => 'error',
+				'message' => 'Error when creating Ecster session',
+			);
 		}
-		// Return false if we get here. Something went wrong.
-		return false;
+
+		// Save internal reference to WC order.
+		update_post_meta( $order_id, '_wc_ecster_internal_reference', $ecster_order['checkoutCart']['key'] );
+
+		return array(
+			'result'   => 'success',
+			'redirect' => $order->get_checkout_payment_url( true ),
+		);
+	}
+
+	/**
+	 * Receipt page.
+	 *
+	 * @param int $order_id The WooCommerce order ID.
+	 * @return void
+	 */
+	public function receipt_page( $order_id ) {
 	}
 
 	/**
@@ -284,49 +271,45 @@ class WC_Gateway_Ecster extends WC_Payment_Gateway {
 	 * Process refunds.
 	 */
 	public function process_refund( $order_id, $amount = null, $reason = '' ) {
-		// Check if amount equals total order
-		$order = wc_get_order( $order_id );
 
-		$ecster_swish_order = new WC_Ecster_Request_Credit_Swish_Order( $this->api_key, $this->merchant_key, $this->testmode );
-		$credit_order       = new WC_Ecster_Request_Credit_Order( $this->api_key, $this->merchant_key, $this->testmode );
+		$order = wc_get_order( $order_id );
 
 		if ( '' !== get_post_meta( $order_id, '_wc_ecster_swish_id', true ) ) {
 
-			$response = $ecster_swish_order->response( $order_id, $amount, $reason );
-			$decoded  = json_decode( $response['body'], true );
+			$response = Ecster_WC()->api->refund_ecster_swish_order( $order_id, $amount, $reason );
+
+			if ( is_wp_error( $response ) ) {
+				$order->add_order_note( sprintf( __( 'Ecster credit Swish order failed. Code: %1$s. Type: %2$s. Message: %3$s', 'krokedil-ecster-pay-for-woocommerce' ), $response->get_error_code(), $response->get_error_message() ) );
+				return false;
+			}
 
 			update_post_meta( $order_id, '_wc_ecster_order_amount', $amount );
 
-			if ( 'ONGOING' === $decoded['status'] ) {
+			if ( 'ONGOING' === $response['status'] ) {
 
 				// Poll status and possibly reschedule a new check.
 				return wc_ecster_handle_swish_refund_status( $order_id, $amount );
 
-			} elseif ( 'SUCCESS' === $decoded['status'] ) {
-
+			} elseif ( 'SUCCESS' === $response['status'] ) {
 				$order->add_order_note( sprintf( __( 'Ecster order credited with %1$s. ', 'krokedil-ecster-pay-for-woocommerce' ), wc_price( $amount ) ) );
 				return true;
-
 			} else {
-
 				$order->add_order_note( sprintf( __( 'Ecster credit order failed.', 'krokedil-ecster-pay-for-woocommerce' ) ) );
 				return false;
 			}
 		} else {
 
-			$response = $credit_order->response( $order_id, $amount, $reason );
-			$decoded  = json_decode( $response['body'] );
+			$response = Ecster_WC()->api->refund_ecster_order( $order_id, $amount, $reason );
 
-			if ( 201 == $response['response']['code'] && $decoded->transaction->amount == ( $amount * 100 ) ) {
-				$order->add_order_note( sprintf( __( 'Ecster order credited with %1$s. Transaction reference %2$s. <a href="%3$s" target="_blank">Credit invoice</a>.', 'krokedil-ecster-pay-for-woocommerce' ), wc_price( $amount ), $decoded->transaction->transactionReference, $decoded->transaction->billPdfUrl ) );
-				update_post_meta( $order_id, '_ecster_refund_id_' . $decoded->transaction->transactionReference, $decoded->transaction->id );
-				update_post_meta( $order_id, '_ecster_refund_id_' . $decoded->transaction->transactionReference . '_invoice', $decoded->transaction->billPdfUrl );
-				return true;
-			} else {
-				$order->add_order_note( sprintf( __( 'Ecster credit order failed. Code: %1$s. Type: %2$s. Message: %3$s', 'krokedil-ecster-pay-for-woocommerce' ), $decoded->code, $decoded->type, $decoded->message ) );
+			if ( is_wp_error( $response ) ) {
+				$order->add_order_note( sprintf( __( 'Ecster credit order failed. Code: %1$s. Type: %2$s. Message: %3$s', 'krokedil-ecster-pay-for-woocommerce' ), $response->get_error_code(), $response->get_error_message() ) );
 				return false;
-
 			}
+
+			$order->add_order_note( sprintf( __( 'Ecster order credited with %1$s. Transaction reference %2$s. <a href="%3$s" target="_blank">Credit invoice</a>.', 'krokedil-ecster-pay-for-woocommerce' ), wc_price( $amount ), $response['transaction']['transactionReference'], $response['transaction']['billPdfUrl'] ) );
+			update_post_meta( $order_id, '_ecster_refund_id_' . $response['transaction']['transactionReference'], $response['transaction']['id'] );
+			update_post_meta( $order_id, '_ecster_refund_id_' . $response['transaction']['transactionReference'] . '_invoice', $response['transaction']['billPdfUrl'] );
+			return true;
 		}
 	}
 }
