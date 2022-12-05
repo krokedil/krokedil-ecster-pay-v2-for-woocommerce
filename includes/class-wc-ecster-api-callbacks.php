@@ -44,12 +44,19 @@ class Ecster_Api_Callbacks {
 	public function execute_osn_callback( $decoded, $ecster_temp_order_id = '' ) {
 		$internal_reference = $decoded['orderId'];
 		$external_reference = $decoded['orderReference'];
+		/*
 		$request            = new WC_Ecster_Request_Get_Order( $this->api_key, $this->merchant_key, $this->testmode );
 		$response           = $request->response( $internal_reference );
 		$response_body      = json_decode( $response['body'] );
+		*/
+		$ecster_order = Ecster_WC()->api->get_ecster_order( $internal_reference );
+
+		if ( is_wp_error( $ecster_order ) ) {
+			return;
+		}
 
 		WC_Gateway_Ecster::log( 'OSN callback executed. Tmp order ID:' . $ecster_temp_order_id ); // Input var okay.
-		WC_Gateway_Ecster::log( 'OSN callback executed. Response body:' . wp_json_encode( $response_body ) );
+		// WC_Gateway_Ecster::log( 'OSN callback executed. Response body:' . wp_json_encode( $response_body ) );
 
 		$order_id = $this->get_order_id_from_internal_reference( $internal_reference );
 
@@ -59,10 +66,10 @@ class Ecster_Api_Callbacks {
 
 		if ( ! empty( $order_id ) ) { // Input var okay.
 
-			$this->update_woocommerce_order( $response_body, $order_id, $internal_reference );
+			$this->update_woocommerce_order( $ecster_order, $order_id, $internal_reference );
 
 		} else { // We can't find a coresponding Order ID.
-			WC_Gateway_Ecster::log( 'OSN callback. No corresponding order ID in Woo. Ecster order status: ' . $response_body->status . '. Woo order ID: ' . $order_id . '.' ); // Input var okay.
+			WC_Gateway_Ecster::log( 'OSN callback. No corresponding order ID in Woo. Ecster order status: ' . $ecster_order['status'] . '. Woo order ID: ' . $order_id . '.' ); // Input var okay.
 		} // End if().
 	}
 
@@ -112,7 +119,7 @@ class Ecster_Api_Callbacks {
 	 *
 	 * @throws Exception WC_Data_Exception.
 	 */
-	private function update_woocommerce_order( $response_body, $order_id, $internal_reference ) {
+	private function update_woocommerce_order( $ecster_order, $order_id, $internal_reference ) {
 
 		$order = wc_get_order( $order_id );
 
@@ -121,21 +128,21 @@ class Ecster_Api_Callbacks {
 			return;
 		}
 
-		switch ( $response_body->status ) {
+		switch ( $ecster_order['status'] ) {
 			case 'AWAITING_CONTRACT': // Do nothing - these order statuses should be handled in process_payment().
 				break;
 			case 'READY':
 				if ( empty( $order->get_date_paid() ) ) {
-					wc_ecster_confirm_order( $order_id, $internal_reference, $response_body );
+					wc_ecster_confirm_order( $order_id, $internal_reference, $ecster_order );
 					$order->add_order_note( __( 'Ecster reported order status ready.', 'krokedil-ecster-pay-for-woocommerce' ) );
 				}
 				break;
 			case 'FULLY_DELIVERED':
-				if ( 'INVOICE' == $response_body->properties->method || 'ACCOUNT' == $response_body->properties->method ) {
+				if ( 'INVOICE' == $ecster_order['properties']['method'] || 'ACCOUNT' == $ecster_order['properties']['method'] ) {
 					$order->add_order_note( __( 'Ecster reported order fully delivered.', 'krokedil-ecster-pay-for-woocommerce' ) );
 				}
 				if ( empty( $order->get_date_paid() ) ) {
-					wc_ecster_confirm_order( $order_id, $internal_reference, $response_body );
+					wc_ecster_confirm_order( $order_id, $internal_reference, $ecster_order );
 					$order->add_order_note( __( 'Ecster reported order status fully delivered.', 'krokedil-ecster-pay-for-woocommerce' ) );
 				}
 				break;
