@@ -93,7 +93,7 @@ class WC_Ecster_Ajax {
 	/**
 	 * Updates Ecster cart.
 	 */
-	function ajax_update_cart() {
+	public function ajax_update_cart() {
 		if ( ! wp_verify_nonce( $_REQUEST['nonce'], 'wc_ecster_nonce' ) ) {
 			WC_Gateway_Ecster::log( 'Nonce can not be verified - update_cart.' );
 			exit( 'Nonce can not be verified.' );
@@ -110,33 +110,23 @@ class WC_Ecster_Ajax {
 
 		$customer_type = ! empty( $_POST['customer_type'] ) ? $_POST['customer_type'] : null;
 		$cart_key      = $_POST['cart_key'];
-		$data          = array();
-		$request       = new WC_Ecster_Request_Update_Cart( $this->api_key, $this->merchant_key, $this->testmode );
-		$response      = $request->response( $cart_key, $customer_type );
-		$response_body = json_decode( $response['body'] );
+		$ecster_order  = Ecster_WC()->api->update_ecster_cart( $cart_key, $customer_type );
 
-		WC()->session->set( 'ecster_checkout_cart_key', $response_body->checkoutCart->key );
-
-		if ( ! is_wp_error( $response ) && 200 == $response['response']['code'] ) {
-			$decoded = json_decode( $response['body'] );
-			if ( is_string( $decoded->checkoutCart->key ) ) {
-				$data['ecster_cart_key'] = $decoded->checkoutCart->key;
-				wp_send_json_success( $data );
-			}
-		} else {
-			if ( is_wp_error( $response ) ) {
-				$error_title  = $response->get_error_code();
-				$error_detail = $response->get_error_message();
-			} else {
-				$decoded      = json_decode( $response['body'] );
-				$error_title  = $decoded->title;
-				$error_detail = $decoded->detail;
-			}
-			WC_Gateway_Ecster::log( 'Ecster update cart ' . $error_title . ': ' . $error_detail );
-			$data['error_message'] = __( 'Ecster Pay update cart request failed ' . $error_title . ' (' . $error_detail . ').', 'krokedil-ecster-pay-for-woocommerce' );
+		// If the update failed - unset sessions and return error.
+		if ( is_wp_error( $ecster_order ) ) {
+			// Unset sessions.
+			wc_ecster_unset_sessions();
+			WC_Ecster_Logger::log( 'Ecster update request failed in update Ecster function. Clearing Ecster session.' );
+			wc_add_notice( 'Ecster update request failed.', 'error' );
+			WC()->session->reload_checkout = true;
+			$data['error_message']         = __( 'Ecster Pay update cart request failed', 'krokedil-ecster-pay-for-woocommerce' );
 			wp_send_json_error( $data );
+		} else {
+
+			WC()->session->set( 'ecster_checkout_cart_key', $ecster_order['checkoutCart']['key'] );
+			$data['ecster_cart_key'] = $ecster_order['checkoutCart']['key'];
+			wp_send_json_success( $data );
 		}
-		wp_die();
 	}
 
 	/**
