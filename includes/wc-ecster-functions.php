@@ -214,21 +214,17 @@ function wc_ecster_get_default_customer_type() {
 function wc_ecster_confirm_order( $order_id, $internal_reference, $ecster_order = false ) {
 	$ecster_settings = get_option( 'woocommerce_ecster_settings' );
 	$testmode        = 'yes' === $ecster_settings['testmode'];
-	$api_key         = $ecster_settings['api_key'];
-	$merchant_key    = $ecster_settings['merchant_key'];
+	$checkout_flow   = $ecster_settings['checkout_flow'] ?? 'embedded';
 
 	$order = wc_get_order( $order_id );
 
 	// Save internal reference to WC order.
 	update_post_meta( $order_id, '_wc_ecster_internal_reference', $internal_reference );
 
-	// Update reference.
-	/*
-	$request  = new WC_Ecster_Request_Update_Reference( $api_key, $merchant_key, $testmode );
-	$response = $request->response( $internal_reference, $order->get_order_number() );
-	*/
-
-	// $response = Ecster_WC()->api->update_ecster_order_reference( $internal_reference, $order_id );
+	// Update order reference.
+	if ( 'embedded' === $checkout_flow ) {
+		$response = Ecster_WC()->api->update_ecster_order_reference( $internal_reference, $order_id );
+	}
 
 	// Get purchase data from Ecster if bnot already passed into the function.
 	if ( empty( $ecster_order ) ) {
