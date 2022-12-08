@@ -94,13 +94,19 @@ class WC_Ecster_Order_Management {
 
 			// Something went wrong.
 			if ( is_wp_error( $response ) ) {
+				if ( is_array( $response->get_error_message() ) ) {
+					$error_response = $response->get_error_message();
+					$error_message  = $error_response['message'] ?? json_encode( $error_response );
+					$error_code     = $error_response['code'] ?? $response->get_error_code();
+				}
+
 				// translators: %s the error code, %s the error message.
-				$order->add_order_note( sprintf( __( 'Ecster debit request failed. Error code: %1$s. Error message: %2$s', 'krokedil-ecster-pay-for-woocommerce' ), $response->get_error_code(), $response->get_error_message() ) );
+				$order->add_order_note( sprintf( __( 'Ecster debit request failed. Error code: %1$s. Error message: %2$s', 'krokedil-ecster-pay-for-woocommerce' ), $error_code, $error_message ) );
 
 				// Maybe change order status to On hold.
 				// Don't change it if status code is 4424 (order is not in a valid state).
 				// This could indicate that the order already has been activated in Ecters backend.
-				if ( 4424 !== $response->get_error_code() ) {
+				if ( 4424 !== $error_code ) {
 					$order->update_status( apply_filters( 'ecster_failed_capture_status', 'on-hold', $order_id ) );
 					$order->save();
 				}
