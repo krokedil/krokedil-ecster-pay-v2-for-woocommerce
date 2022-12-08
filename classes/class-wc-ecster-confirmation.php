@@ -47,9 +47,11 @@ class WC_Ecster_Confirmation {
 	 * Confirm order
 	 */
 	public function confirm_order() {
-		$ecster_confirm     = filter_input( INPUT_GET, 'ecster_confirm', FILTER_SANITIZE_STRING );
-		$internal_reference = filter_input( INPUT_GET, 'ecster_order_id', FILTER_SANITIZE_STRING );
-		$order_key          = filter_input( INPUT_GET, 'key', FILTER_SANITIZE_STRING );
+		$ecster_confirm              = filter_input( INPUT_GET, 'ecster_confirm', FILTER_SANITIZE_STRING );
+		$order_key                   = filter_input( INPUT_GET, 'key', FILTER_SANITIZE_STRING );
+		$internal_reference_embedded = filter_input( INPUT_GET, 'ecster_order_id', FILTER_SANITIZE_STRING );
+		$internal_reference_redirect = filter_input( INPUT_GET, 'internalReference', FILTER_SANITIZE_STRING );
+		$internal_reference          = ! empty( $internal_reference_embedded ) ? $internal_reference_embedded : $internal_reference_redirect;
 
 		// Return if we dont have our parameters set.
 		if ( empty( $ecster_confirm ) || empty( $internal_reference ) || empty( $order_key ) ) {
@@ -72,9 +74,6 @@ class WC_Ecster_Confirmation {
 
 		wc_ecster_confirm_order( $order_id, $internal_reference );
 	}
-
-
-
 
 
 }

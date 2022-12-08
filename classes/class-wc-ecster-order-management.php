@@ -54,25 +54,20 @@ class WC_Ecster_Order_Management {
 				$order->add_order_note( __( 'Ecster reservation is already cancelled.', 'krokedil-ecster-pay-for-woocommerce' ) );
 				return;
 			}
-			$request  = new WC_Ecster_Request_Annul_Order( $this->api_key, $this->merchant_key, $this->testmode );
-			$response = $request->response( $order_id );
-			$decoded  = json_decode( $response['body'] );
 
-			if ( 201 == $response['response']['code'] ) {
-				if ( 'ANNULLED' == $decoded->orderStatus ) {
-					// Add transaction id, used to prevent duplicate cancellations for the same order.
-					update_post_meta( $order_id, '_ecster_order_cancelled_id', $decoded->transaction->id );
-					$order->add_order_note( sprintf( __( 'Ecster payment was successfully cancelled (transaction id %s).', 'krokedil-ecster-pay-for-woocommerce' ), $decoded->transaction->id ) );
-				}
-			} else {
-				if ( $decoded->message ) {
-					$error_message = $decoded->message;
-					$error_code    = $decoded->code;
-				} else {
-					$error_message = $response['response']['message'];
-					$error_code    = $response['response']['code'];
-				}
-				$order->add_order_note( sprintf( __( 'Ecster annul request failed. Error code: %1$s. Error message: %2$s', 'krokedil-ecster-pay-for-woocommerce' ), $error_code, $error_message ) );
+			$response = Ecster_WC()->api->cancel_ecster_order( $order_id );
+
+			// Something went wrong.
+			if ( is_wp_error( $response ) ) {
+				$order->add_order_note( sprintf( __( 'Ecster annul request failed. Error code: %1$s. Error message: %2$s', 'krokedil-ecster-pay-for-woocommerce' ), $response->get_error_code(), $response->get_error_message() ) );
+				return;
+			}
+
+			// All ok.
+			if ( 'ANNULLED' === $response['orderStatus'] ) {
+				// Add transaction id, used to prevent duplicate cancellations for the same order.
+				update_post_meta( $order_id, '_ecster_order_cancelled_id', $response['transaction']['id'] );
+				$order->add_order_note( sprintf( __( 'Ecster payment was successfully cancelled (transaction id %s).', 'krokedil-ecster-pay-for-woocommerce' ), $response['transaction']['id'] ) );
 			}
 		}
 	}
@@ -94,48 +89,42 @@ class WC_Ecster_Order_Management {
 				$order->add_order_note( __( 'Ecster reservation is already captured.', 'krokedil-ecster-pay-for-woocommerce' ) );
 				return;
 			}
-			$request  = new WC_Ecster_Request_Debit_Order( $this->api_key, $this->merchant_key, $this->testmode );
-			$response = $request->response( $order_id );
 
-			if ( ! is_wp_error( $response ) ) {
-				$decoded = json_decode( $response['body'] );
+			$response = Ecster_WC()->api->activate_ecster_order( $order_id );
 
-				if ( 201 == $response['response']['code'] ) {
-					if ( 'FULLY_DELIVERED' == $decoded->orderStatus ) {
-						// Add transaction id, used to prevent duplicate cancellations for the same order.
-						update_post_meta( $order_id, '_ecster_order_captured_id', $decoded->transaction->id );
-						$order->add_order_note( sprintf( __( 'Ecster payment debited (transaction id %s).', 'krokedil-ecster-pay-for-woocommerce' ), $decoded->transaction->id ) );
-					} else {
-						if ( $decoded->transaction->id ) {
-							update_post_meta( $order_id, '_ecster_order_captured_id', $decoded->transaction->id );
-						}
-						$order->add_order_note( sprintf( __( 'Ecster debit request problem. Ecster order status: %s', 'krokedil-ecster-pay-for-woocommerce' ), $decoded->orderStatus ) );
-						$order->update_status( apply_filters( 'ecster_failed_capture_status', 'on-hold', $order_id ) );
-					}
-				} else {
-					if ( $decoded->message ) {
-						$error_message = $decoded->message;
-						$error_code    = $decoded->code;
-					} else {
-						$error_message = $response['response']['message'];
-						$error_code    = $response['response']['code'];
-					}
-					$order->add_order_note( sprintf( __( 'Ecster debit request failed. Error code: %1$s. Error message: %2$s', 'krokedil-ecster-pay-for-woocommerce' ), $error_code, $error_message ) );
-
-					// Maybe change order status to On hold.
-					// Don't change it if status code is 4424 (order is not in a valid state).
-					// This could indicate that the order already has been activated in Ecters backend.
-					if ( 4424 !== $decoded->code ) {
-						$order->update_status( apply_filters( 'ecster_failed_capture_status', 'on-hold', $order_id ) );
-					}
+			// Something went wrong.
+			if ( is_wp_error( $response ) ) {
+				if ( is_array( $response->get_error_message() ) ) {
+					$error_response = $response->get_error_message();
+					$error_message  = $error_response['message'] ?? json_encode( $error_response );
+					$error_code     = $error_response['code'] ?? $response->get_error_code();
 				}
-			} else {
-				$error_code    = $response->get_error_code();
-				$error_message = $response->get_error_message();
+
 				// translators: %s the error code, %s the error message.
 				$order->add_order_note( sprintf( __( 'Ecster debit request failed. Error code: %1$s. Error message: %2$s', 'krokedil-ecster-pay-for-woocommerce' ), $error_code, $error_message ) );
 
-				WC_Gateway_Ecster::log( sprintf( 'Ecster debit request failed for %s due to %s: %s', $error_code, $error_message, $order->get_transaction_id() ) );
+				// Maybe change order status to On hold.
+				// Don't change it if status code is 4424 (order is not in a valid state).
+				// This could indicate that the order already has been activated in Ecters backend.
+				if ( 4424 !== $error_code ) {
+					$order->update_status( apply_filters( 'ecster_failed_capture_status', 'on-hold', $order_id ) );
+					$order->save();
+				}
+				return;
+			}
+
+			// All ok.
+			if ( 'FULLY_DELIVERED' === $response['orderStatus'] ) {
+				// Add transaction id, used to prevent duplicate cancellations for the same order.
+				update_post_meta( $order_id, '_ecster_order_captured_id', $response['transaction']['id'] );
+				$order->add_order_note( sprintf( __( 'Ecster payment debited (transaction id %s).', 'krokedil-ecster-pay-for-woocommerce' ), $response['transaction']['id'] ) );
+			} else {
+				if ( $response['transaction']['id'] ) {
+					update_post_meta( $order_id, '_ecster_order_captured_id', $response['transaction']['id'] );
+				}
+				// Request was ok but the order is not fully FULLY_DELIVERED.
+				$order->add_order_note( sprintf( __( 'Ecster debit request problem. Ecster order status: %s', 'krokedil-ecster-pay-for-woocommerce' ), $response['orderStatus'] ) );
+				$order->update_status( apply_filters( 'ecster_failed_capture_status', 'on-hold', $order_id ) );
 			}
 		}
 	}

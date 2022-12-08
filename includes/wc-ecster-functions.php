@@ -61,6 +61,7 @@ function ecster_maybe_create_order() {
 function ecster_create_order() {
 	// Set temp order ID. Used for callbacks uhntil we have a WC order.
 	WC()->session->set( 'ecster_temp_order_id', 'tmp' . md5( uniqid( wp_rand(), true ) ) );
+	/*
 	$ecster_settings = get_option( 'woocommerce_ecster_settings' );
 	$testmode        = 'yes' === $ecster_settings['testmode'];
 	$api_key         = $ecster_settings['api_key'];
@@ -87,6 +88,16 @@ function ecster_create_order() {
 		WC_Gateway_Ecster::log( 'Ecster create cart ' . $error_title . ': ' . $error_detail );
 		return __( 'Error: Ecster Pay create cart request failed ' . $error_title . ' (' . $error_detail . ').', 'krokedil-ecster-pay-for-woocommerce' );
 	}
+	*/
+	$ecster_order = Ecster_WC()->api->create_ecster_cart();
+	if ( is_wp_error( $ecster_order ) || ! isset( $ecster_order['checkoutCart']['key'] ) ) {
+		// If failed then bail.
+		return;
+	}
+
+	WC()->session->set( 'ecster_checkout_cart_key', $ecster_order['checkoutCart']['key'] );
+	WC()->session->set( 'ecster_last_update_hash', WC()->cart->get_cart_hash() );
+	return $ecster_order['checkoutCart']['key'];
 }
 
 /**
@@ -200,36 +211,38 @@ function wc_ecster_get_default_customer_type() {
 /**
  * Confirm order
  */
-function wc_ecster_confirm_order( $order_id, $internal_reference, $response_body = false ) {
+function wc_ecster_confirm_order( $order_id, $internal_reference, $ecster_order = false ) {
 	$ecster_settings = get_option( 'woocommerce_ecster_settings' );
 	$testmode        = 'yes' === $ecster_settings['testmode'];
-	$api_key         = $ecster_settings['api_key'];
-	$merchant_key    = $ecster_settings['merchant_key'];
+	$checkout_flow   = $ecster_settings['checkout_flow'] ?? 'embedded';
 
 	$order = wc_get_order( $order_id );
 
 	// Save internal reference to WC order.
 	update_post_meta( $order_id, '_wc_ecster_internal_reference', $internal_reference );
 
-	// Update reference.
-	$request  = new WC_Ecster_Request_Update_Reference( $api_key, $merchant_key, $testmode );
-	$response = $request->response( $internal_reference, $order->get_order_number() );
+	// Update order reference.
+	if ( 'embedded' === $checkout_flow ) {
+		$response = Ecster_WC()->api->update_ecster_order_reference( $internal_reference, $order_id );
+	}
 
 	// Get purchase data from Ecster if bnot already passed into the function.
-	if ( empty( $response_body ) ) {
-		$request       = new WC_Ecster_Request_Get_Order( $api_key, $merchant_key, $testmode );
-		$response      = $request->response( $internal_reference );
-		$response_body = json_decode( $response['body'] );
+	if ( empty( $ecster_order ) ) {
+		$ecster_order = Ecster_WC()->api->get_ecster_order( $internal_reference );
+	}
+
+	if ( is_wp_error( $ecster_order ) ) {
+		return;
 	}
 
 	// Swish transaction id.
-	if ( isset( $response_body->properties->method ) && 'SWISH' === $response_body->properties->method ) {
+	if ( isset( $ecster_order['properties']['method'] ) && 'SWISH' === $ecster_order['properties']['method'] ) {
 		$ecster_swish_id = '';
-		if ( $response_body->transactions ) {
+		if ( $ecster_order['transactions'] ) {
 
-			foreach ( $response_body->transactions as $key ) {
-				if ( 'DEBIT' === $key->type ) {
-					$ecster_swish_id = $key->id;
+			foreach ( $ecster_order['transactions'] as $key ) {
+				if ( 'DEBIT' === $key['type'] ) {
+					$ecster_swish_id = $key['id'];
 				}
 			}
 
@@ -240,31 +253,31 @@ function wc_ecster_confirm_order( $order_id, $internal_reference, $response_body
 	}
 
 	// Check if we have an invoice fee.
-	if ( isset( $response_body->properties->invoiceFee ) ) {
+	if ( isset( $ecster_order['properties']['invoiceFee'] ) ) {
 		$ecster_fee = new WC_Order_Item_Fee();
 		$ecster_fee->set_name( __( 'Invoice Fee', 'krokedil-ecster-pay-for-woocommerce' ) );
-		$ecster_fee->set_total( $response_body->properties->invoiceFee / 100 );
+		$ecster_fee->set_total( $ecster_order['properties']['invoiceFee'] / 100 );
 		$ecster_fee->set_tax_status( 'none' );
 		$ecster_fee->save();
 		$order->add_item( $ecster_fee );
 		$order->calculate_totals();
 	}
 
-	$ecster_status = $response_body->status;
+	$ecster_status = $ecster_order['status'];
 
-	WC_Gateway_Ecster::log( 'Confirm order ID ' . $order_id . '. Ecster internal reference ' . $internal_reference . '. Response body - ' . json_encode( $response_body ) );
+	WC_Gateway_Ecster::log( 'Confirm order ID ' . $order_id . '. Ecster internal reference ' . $internal_reference );
 
 	// Add email to order.
 	// In some cases we don't receive email on address update event and it is therefore not available in front end form submission.
-	$order->set_billing_email( sanitize_email( $response_body->consumer->contactInfo->email ) );
+	$order->set_billing_email( sanitize_email( $ecster_order['consumer']['contactInfo']['email'] ) );
 
 	// Add phone to order.
 	// In some cases we don't receive phone on address update event and it is therefore not available in front end form submission.
-	$order->set_billing_phone( sanitize_text_field( $response_body->consumer->contactInfo->cellular->number ) );
+	$order->set_billing_phone( sanitize_text_field( $ecster_order['consumer']['contactInfo']['cellular']['number'] ) );
 
 	// Payment method title.
-	$payment_method_title = wc_ecster_get_payment_method_name( $response_body->properties->method );
-	update_post_meta( $order_id, '_wc_ecster_payment_method', $response_body->properties->method );
+	$payment_method_title = wc_ecster_get_payment_method_name( $ecster_order['properties']['method'] );
+	update_post_meta( $order_id, '_wc_ecster_payment_method', $ecster_order['properties']['method'] );
 	$order->add_order_note( sprintf( __( 'Payment via Ecster Pay %s.', 'krokedil-ecster-pay-for-woocommerce' ), $payment_method_title ) );
 	$order->set_payment_method_title( apply_filters( 'wc_ecster_payment_method_title', sprintf( __( '%s via Ecster Pay', 'krokedil-ecster-pay-for-woocommerce' ), $payment_method_title ), $payment_method_title ) );
 	$order->save();
@@ -299,31 +312,25 @@ function wc_ecster_confirm_order( $order_id, $internal_reference, $response_body
  */
 function wc_ecster_handle_swish_refund_status( $order_id, $amount ) {
 
-	$ecster_settings    = get_option( 'woocommerce_ecster_settings' );
-	$testmode           = 'yes' === $ecster_settings['testmode'];
-	$api_key            = $ecster_settings['api_key'];
-	$merchant_key       = $ecster_settings['merchant_key'];
-	$order              = wc_get_order( $order_id );
-	$ecster_poll_refund = new WC_Ecster_Swish_Poll_Refund( $api_key, $merchant_key, $testmode );
-	$swish_response     = $ecster_poll_refund->response( get_post_meta( $order_id, '_transaction_id', true ) );
+	$ecster_settings = get_option( 'woocommerce_ecster_settings' );
+	$testmode        = 'yes' === $ecster_settings['testmode'];
+	$order           = wc_get_order( $order_id );
+
+	$response = Ecster_WC()->api->poll_swish_refund( get_post_meta( $order_id, '_wc_ecster_internal_reference', true ) );
 
 	// Handle error.
-	if ( is_wp_error( $swish_response ) ) {
-		$error_title  = $swish_response->get_error_code();
-		$error_detail = $swish_response->get_error_message();
-		$order->add_order_note( sprintf( __( 'Ecster poll Swish refund request failed. Error code: %1$s. Error message: %2$s', 'krokedil-ecster-pay-for-woocommerce' ), $swish_response->get_error_code(), $swish_response->get_error_message() ) );
+	if ( is_wp_error( $response ) ) {
+		$order->add_order_note( sprintf( __( 'Ecster poll Swish refund request failed. Error code: %1$s. Error message: %2$s', 'krokedil-ecster-pay-for-woocommerce' ), $response->get_error_code(), $response->get_error_message() ) );
 		return false;
 	}
 
-	$swish_response_decoded = json_decode( $swish_response['body'], true );
-
-	if ( 'ONGOING' === $swish_response_decoded['status'] ) {
+	if ( 'ONGOING' === $response['status'] ) {
 
 		as_schedule_single_action( time() + 180, 'ecster_poll_swish_refund', array( $order_id, $amount ) );
 		$order->add_order_note( __( 'Refund is pending in Ecsters system. New status check scheduled to be performed in 3 minutes.', 'krokedil-ecster-pay-for-woocommerce' ) );
 		return true;
 
-	} elseif ( 'SUCCESS' === $swish_response_decoded['status'] ) {
+	} elseif ( 'SUCCESS' === $response['status'] ) {
 
 		$order->add_order_note( sprintf( __( 'Ecster order credited with %1$s.', 'krokedil-ecster-pay-for-woocommerce' ), wc_price( $amount ) ) );
 		return true;
@@ -332,5 +339,31 @@ function wc_ecster_handle_swish_refund_status( $order_id, $amount ) {
 		$order->add_order_note( sprintf( __( 'Ecster credit Swish order failed.', 'krokedil-ecster-pay-for-woocommerce' ) ) );
 		return false;
 
+	}
+}
+
+/**
+ * Prints error message as notices.
+ *
+ * @param WP_Error $wp_error A WordPress error object.
+ *
+ * @return void
+ */
+function ecster_print_error_message( $wp_error ) {
+	$error_message = $wp_error->get_error_message();
+
+	if ( is_array( $error_message ) ) {
+		// Rather than assuming the first element is a string, we'll force a string conversion instead.
+		$error_message = implode( ' ', $error_message );
+	}
+
+	if ( is_ajax() ) {
+		if ( function_exists( 'wc_add_notice' ) ) {
+			wc_add_notice( $error_message, 'error' );
+		}
+	} else {
+		if ( function_exists( 'wc_print_notice' ) ) {
+			wc_print_notice( $error_message, 'error' );
+		}
 	}
 }
