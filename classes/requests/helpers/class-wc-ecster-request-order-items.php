@@ -87,8 +87,8 @@ class WC_Ecster_Get_Order_Items {
 		}
 
 		$order            = wc_get_order( $order_id );
-		$amount           = ( $order->get_total() ) * 100;
-		$amount_to_adjust = $amount - $formatted_total_amount;
+		$amount           = $order->get_total();
+		$amount_to_adjust = round( ( $amount * 100 ) - $formatted_total_amount );
 
 		$ecster_rounding_line = array(
 			'name'       => 'rounding-fee', // Mandatory.

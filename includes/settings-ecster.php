@@ -64,6 +64,17 @@ return apply_filters(
 			'default'     => '',
 			'desc_tip'    => true,
 		),
+		'checkout_flow'              => array(
+			'title'       => __( 'Checkout flow', 'krokedil-ecster-pay-for-woocommerce' ),
+			'type'        => 'select',
+			'options'     => array(
+				'embedded' => __( 'Embedded', 'krokedil-ecster-pay-for-woocommerce' ),
+				'redirect' => __( 'Redirect', 'krokedil-ecster-pay-for-woocommerce' ),
+			),
+			'description' => __( 'Select how Ecster Pay should be integrated in WooCommerce. <strong>Embedded</strong> – the checkout is embedded in the WooCommerce checkout page and partially replaces the checkout form. <strong>Redirect</strong> – the customer is redirected to payment page hosted by Ecster.', 'krokedil-ecster-pay-for-woocommerce' ),
+			'default'     => 'embedded',
+			'desc_tip'    => false,
+		),
 		'manage_ecster_orders'       => array(
 			'title'   => __( 'Manage orders', 'krokedil-ecster-pay-for-woocommerce' ),
 			'type'    => 'checkbox',

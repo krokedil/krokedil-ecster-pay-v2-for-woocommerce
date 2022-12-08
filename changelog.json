@@ -103,5 +103,10 @@
           "description" : "<ul><li>Feature - Adds support for multiple checkout layouts. This can be changed via the new Checkout layout setting.</li><li>Tweak - Remove max-width 840px for checkout page. Ecster doesn't limit its checkout width anymore.</li><li>Tweak - Adds rounding order line if order total differs between WooCommerce and Ecster.</li><li>Fix - Calculate fees before processing cart sent to Ecster. This is required for adding custom fees through hooks.</li><li>Fix - Only save _wc_ecster_swish_id to WC order if payment method is Swish. Could cause issues with refunds.</li></ul>",
           "requires" : "5.0",
           "tested" : "6.0.2"
+     },
+     "3.3.0" : {
+          "description" : "<ul><li>Feature - Adds support for redirect checkout flow. With this flow the regular WooCommerce checkout is used and customer is redirected to Ecsters hosted payment page.</li><li> Tweak - Improved logging in plugin.</li><li>Tweak - Rewrite of http request class logic.</li></ul>",
+          "requires" : "5.0",
+          "tested" : "6.1.1"
      }
 }
