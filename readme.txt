@@ -2,10 +2,10 @@
 Contributors: krokedil, niklashogefjord
 Tags: ecommerce, e-commerce, woocommerce, ecster
 Requires at least: 5.0
-Tested up to: 6.0.2
+Tested up to: 6.1.1
 Requires PHP: 7.0
-WC requires at least: 4.0.0
-WC tested up to: 7.0.0
+WC requires at least: 5.0.0
+WC tested up to: 7.1.1
 License: GPLv3
 License URI: http://www.gnu.org/licenses/gpl-3.0.html
 Stable tag: trunk
@@ -31,6 +31,11 @@ More information on how to get started can be found in the [plugin documentation
 
 
 == CHANGELOG ==
+
+= 2022.12.08        - version 3.3.0 =
+* Feature           - Adds support for redirect checkout flow. With this flow the regular WooCommerce checkout is used and customer is redirected to Ecsters hosted payment page.
+* Tweak             - Improved logging in plugin.
+* Tweak             - Rewrite of http request class logic.
 
 = 2022.09.06        - version 3.2.0 =
 * Feature           - Adds support for multiple checkout layouts. This can be changed via the new Checkout layout setting.
