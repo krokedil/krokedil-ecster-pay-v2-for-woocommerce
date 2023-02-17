@@ -192,7 +192,6 @@ class WC_Gateway_Ecster extends WC_Payment_Gateway {
 		}
 
 		// Redirect flow.
-		// $response = Nets_Easy()->api->create_nets_easy_order( 'redirect', $order_id );
 		return $this->process_redirect_handler( $order_id, array() );
 	}
 
