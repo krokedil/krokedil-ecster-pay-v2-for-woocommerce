@@ -64,6 +64,10 @@ class WC_Ecster_Request_Customer {
 			$adress['line2'] = $order->get_billing_address_2();
 		}
 
+		if ( $order->get_billing_company() ) {
+			$adress['line2'] = $order->get_billing_company();
+		}
+
 		return $adress;
 	}
 

@@ -72,6 +72,13 @@ class WC_Ecster_Request_Create_Cart extends WC_Ecster_Request_Post {
 			// $body['parameters']['showPaymentResult'] = true;
 			$body['orderReference'] = $order->get_order_number();
 			$body['consumer']       = WC_Ecster_Request_Customer::customer( $this->arguments['order_id'] );
+
+			// B2B/B2C.
+			if ( $order->get_billing_company() ) {
+				$body['parameters']['purchaseType']['type'] = 'B2B';
+			} else {
+				$body['parameters']['purchaseType']['type'] = 'B2C';
+			}
 		} else {
 			$body['cart']           = WC_Ecster_Request_Cart::cart();
 			$body['orderReference'] = 'TempOrderRef';
