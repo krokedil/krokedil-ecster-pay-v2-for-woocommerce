@@ -108,5 +108,10 @@
           "description" : "<ul><li>Feature - Adds support for redirect checkout flow. With this flow the regular WooCommerce checkout is used and customer is redirected to Ecsters hosted payment page.</li><li> Tweak - Improved logging in plugin.</li><li>Tweak - Rewrite of http request class logic.</li></ul>",
           "requires" : "5.0",
           "tested" : "6.1.1"
+     },
+     "3.3.1" : {
+          "description" : "<ul><li>Fix - Adds support for B2B purchases in redirect checkout flow.</li></ul>",
+          "requires" : "5.0",
+          "tested" : "6.1.1"
      }
 }
