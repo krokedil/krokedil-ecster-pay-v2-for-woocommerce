@@ -32,6 +32,9 @@ More information on how to get started can be found in the [plugin documentation
 
 == CHANGELOG ==
 
+= 2023.04.28        - version 3.3.2 =
+* Note              - Important information from Ecster: Ecster's owner, Handelsbanken, has made a decision to gradually phase out Ecster's operations. The last day to place new orders is May 1, 2023.
+
 = 2023.02.17        - version 3.3.1 =
 * Fix               - Adds support for B2B purchases in redirect checkout flow.
 

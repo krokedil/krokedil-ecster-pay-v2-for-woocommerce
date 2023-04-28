@@ -113,5 +113,10 @@
           "description" : "<ul><li>Fix - Adds support for B2B purchases in redirect checkout flow.</li></ul>",
           "requires" : "5.0",
           "tested" : "6.1.1"
+     },
+     "3.3.2" : {
+          "description" : "<ul><li>Note - Important information from Ecster: Ecster's owner, Handelsbanken, has made a decision to gradually phase out Ecster's operations. The last day to place new orders is May 1, 2023.</li></ul>",
+          "requires" : "5.0",
+          "tested" : "6.1.1"
      }
 }

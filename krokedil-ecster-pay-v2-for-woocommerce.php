@@ -5,7 +5,7 @@
  * Description: Take payments in your store using Ecster Pay.
  * Author: Krokedil
  * Author URI: https://krokedil.se/
- * Version: 3.3.1
+ * Version: 3.3.2
  * Text Domain: krokedil-ecster-pay-for-woocommerce
  * Domain Path: /languages
  *
@@ -35,7 +35,7 @@ if ( ! defined( 'ABSPATH' ) ) {
 /**
  * Required minimums and constants
  */
-define( 'WC_ECSTER_VERSION', '3.3.1' );
+define( 'WC_ECSTER_VERSION', '3.3.2' );
 define( 'WC_ECSTER_MIN_PHP_VER', '7.2' );
 define( 'WC_ECSTER_MIN_WC_VER', '5.0.0' );
 define( 'WC_ECSTER_MAIN_FILE', __FILE__ );
@@ -113,6 +113,8 @@ if ( ! class_exists( 'WC_Ecster' ) ) {
 				return;
 			}
 
+			add_action( 'admin_notices', array( $this, 'phase_out_warning' ) );
+
 			// Init the gateway itself.
 			$this->init_gateways();
 
@@ -141,6 +143,19 @@ if ( ! class_exists( 'WC_Ecster' ) ) {
 				deactivate_plugins( plugin_basename( __FILE__ ) );
 				wp_die( $environment_warning );
 			}
+		}
+
+		/**
+		 * Show warning on admin pages about phasing out the plugin.
+		 *
+		 * @return void
+		 */
+		public function phase_out_warning() {
+			?>
+			<div class="notice notice-error">
+		<p><?php _e( 'Viktig information från Ecster: Ecsters ägare, Handelsbanken, har fattat beslut om att successivt avveckla Ecsters verksamhet. Sista dag för att lägga nya ordrar är 1:a maj 2023. Läs frågor och svar om detta <a href="https://www.ecster.se/avveckling" target="_blank">här</a>.', 'krokedil-ecster-pay-for-woocommerce' ); ?></p>
+	</div>
+			<?php
 		}
 
 		/**
